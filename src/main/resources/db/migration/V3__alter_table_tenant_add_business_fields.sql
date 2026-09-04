@@ -1,0 +1,32 @@
+ALTER TABLE tenant
+ADD COLUMN razao_social VARCHAR(255);
+
+ALTER TABLE tenant
+ADD COLUMN cnpj VARCHAR(20);
+
+ALTER TABLE tenant
+ADD COLUMN responsavel VARCHAR(255);
+
+ALTER TABLE tenant
+ADD COLUMN endereco VARCHAR(255);
+
+ALTER TABLE tenant
+ADD COLUMN cidade VARCHAR(100);
+
+ALTER TABLE tenant
+ADD COLUMN uf VARCHAR(2);
+
+ALTER TABLE tenant
+ADD COLUMN logo_url VARCHAR(500);
+
+ALTER TABLE tenant
+ADD COLUMN cor_primaria VARCHAR(20);
+
+ALTER TABLE tenant
+ADD COLUMN cor_secundaria VARCHAR(20);
+
+ALTER TABLE tenant
+ADD COLUMN marketing_ia_habilitado BOOLEAN NOT NULL DEFAULT FALSE;
+
+ALTER TABLE tenant
+ADD COLUMN delivery_habilitado BOOLEAN NOT NULL DEFAULT FALSE;
