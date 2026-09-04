@@ -30,9 +30,36 @@ public class TenantController {
         return tenantService.salvar(tenant);
     }
 
+    @PutMapping("/{id}")
+    public Tenant atualizar(
+            @PathVariable UUID id,
+            @RequestBody Tenant tenant) {
+
+        return tenantService.atualizar(
+                id,
+                tenant);
+
+    }
+
     @DeleteMapping("/{id}")
     public void excluir(
             @PathVariable UUID id) {
         tenantService.excluir(id);
+    }
+
+    @GetMapping("/slug/{slug}")
+    public Tenant buscarPorSlug(
+            @PathVariable String slug) {
+
+        return tenantService.buscarPorSlug(
+                slug);
+
+    }
+
+    @GetMapping("/teste")
+    public String teste() {
+
+        return "OKOKOK";
+
     }
 }

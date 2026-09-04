@@ -18,6 +18,8 @@ public class Tenant {
 
     private String nome;
 
+    private String slug;
+
     private String email;
 
     private String telefone;
@@ -42,6 +44,9 @@ public class Tenant {
 
     @Column(name = "logo_url")
     private String logoUrl;
+
+    @Column(name = "favicon_url")
+    private String faviconUrl;
 
     @Column(name = "cor_primaria")
     private String corPrimaria;

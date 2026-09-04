@@ -1,0 +1,2 @@
+ALTER TABLE tenant
+ADD COLUMN slug VARCHAR(100);

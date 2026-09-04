@@ -10,22 +10,74 @@ import java.util.UUID;
 @Service
 public class TenantService {
 
-    private final TenantRepository tenantRepository;
+        private final TenantRepository tenantRepository;
 
-    public TenantService(
-            TenantRepository tenantRepository) {
-        this.tenantRepository = tenantRepository;
-    }
+        public TenantService(
+                        TenantRepository tenantRepository) {
+                this.tenantRepository = tenantRepository;
+        }
 
-    public List<Tenant> listarTodos() {
-        return tenantRepository.findAll();
-    }
+        public List<Tenant> listarTodos() {
+                return tenantRepository.findAll();
+        }
 
-    public Tenant salvar(Tenant tenant) {
-        return tenantRepository.save(tenant);
-    }
+        public Tenant salvar(Tenant tenant) {
+                return tenantRepository.save(tenant);
+        }
 
-    public void excluir(UUID id) {
-        tenantRepository.deleteById(id);
-    }
+        public void excluir(UUID id) {
+                tenantRepository.deleteById(id);
+        }
+
+        public Tenant buscarPorSlug(
+                        String slug) {
+
+                return tenantRepository
+                                .findBySlug(slug)
+                                .orElse(null);
+
+        }
+
+        public Tenant atualizar(
+                        UUID id,
+                        Tenant tenantAtualizado) {
+
+                Tenant tenant = tenantRepository
+                                .findById(id)
+                                .orElseThrow();
+
+                tenant.setNome(
+                                tenantAtualizado.getNome());
+
+                tenant.setResponsavel(
+                                tenantAtualizado.getResponsavel());
+
+                tenant.setEmail(
+                                tenantAtualizado.getEmail());
+
+                tenant.setCidade(
+                                tenantAtualizado.getCidade());
+
+                tenant.setAtivo(
+                                tenantAtualizado.getAtivo());
+
+                tenant.setSlug(
+                                tenantAtualizado.getSlug());
+
+                tenant.setLogoUrl(
+                                tenantAtualizado.getLogoUrl());
+
+                tenant.setFaviconUrl(
+                                tenantAtualizado.getFaviconUrl());
+
+                tenant.setCorPrimaria(
+                                tenantAtualizado.getCorPrimaria());
+
+                tenant.setCorSecundaria(
+                                tenantAtualizado.getCorSecundaria());
+
+                return tenantRepository.save(
+                                tenant);
+        }
+
 }
