@@ -8,6 +8,9 @@ import br.com.stockflow.stockflow_api.repository.UsuarioRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
+
 @Service
 public class AuthService {
 
@@ -32,7 +35,8 @@ public class AuthService {
                 .findByEmail(
                         request.email())
                 .orElseThrow(
-                        () -> new RuntimeException(
+                        () -> new ResponseStatusException(
+                                HttpStatus.UNAUTHORIZED,
                                 "Usuário ou senha inválidos."));
 
         boolean senhaValida = passwordEncoder.matches(
@@ -40,7 +44,11 @@ public class AuthService {
                 usuario.getSenha());
 
         if (!senhaValida) {
-            throw new RuntimeException("Usuário ou senha inválidos.");
+
+            throw new ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED,
+                    "Usuário ou senha inválidos.");
+
         }
 
         return new LoginResponse(
