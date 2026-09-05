@@ -18,15 +18,13 @@ public class SecurityConfig {
 
     @Bean
     SecurityFilterChain securityFilterChain(
-            HttpSecurity http
-    ) throws Exception {
+            HttpSecurity http) throws Exception {
 
         http
-            .cors(Customizer.withDefaults())
-            .csrf(csrf -> csrf.disable())
-            .authorizeHttpRequests(auth -> auth
-                .anyRequest().permitAll()
-            );
+                .cors(Customizer.withDefaults())
+                .csrf(csrf -> csrf.disable())
+                .authorizeHttpRequests(auth -> auth
+                        .anyRequest().permitAll());
 
         return http.build();
     }
@@ -34,28 +32,27 @@ public class SecurityConfig {
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
 
-        CorsConfiguration configuration =
-            new CorsConfiguration();
+        CorsConfiguration configuration = new CorsConfiguration();
 
-        configuration.setAllowedOrigins(
-            List.of("http://localhost:4200")
-        );
+        configuration.setAllowedOriginPatterns(
+                List.of(
+                        "http://localhost:4200",
+                        "https://*.app.github.dev"));
 
         configuration.setAllowedMethods(
-            List.of("*")
-        );
+                List.of("*"));
 
         configuration.setAllowedHeaders(
-            List.of("*")
-        );
+                List.of("*"));
 
-        UrlBasedCorsConfigurationSource source =
-            new UrlBasedCorsConfigurationSource();
+        configuration.setAllowCredentials(
+                true);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
 
         source.registerCorsConfiguration(
-            "/**",
-            configuration
-        );
+                "/**",
+                configuration);
 
         return source;
     }

@@ -11,76 +11,91 @@ import java.util.UUID;
 @Service
 public class UsuarioService {
 
-    private final UsuarioRepository usuarioRepository;
+        private final UsuarioRepository usuarioRepository;
 
-    public UsuarioService(
-            UsuarioRepository usuarioRepository) {
+        public UsuarioService(
+                        UsuarioRepository usuarioRepository) {
 
-        this.usuarioRepository = usuarioRepository;
+                this.usuarioRepository = usuarioRepository;
 
-    }
+        }
 
-    public List<Usuario> listarTodos() {
+        public List<Usuario> listarTodos() {
 
-        return usuarioRepository
-                .findAll();
+                return usuarioRepository
+                                .findAll();
 
-    }
+        }
 
-    public Usuario salvar(
-            Usuario usuario) {
+        public Usuario salvar(
+                        Usuario usuario) {
 
-        return usuarioRepository
-                .save(usuario);
+                usuarioRepository
+                                .findByEmail(
+                                                usuario.getEmail())
+                                .ifPresent(u -> {
 
-    }
+                                        throw new RuntimeException(
+                                                        "Já existe um usuário com este e-mail.");
 
-    public void excluir(
-            UUID id) {
+                                });
 
-        usuarioRepository
-                .deleteById(id);
+                return usuarioRepository
+                                .save(usuario);
 
-    }
+        }
 
-    public Usuario atualizar(
-            UUID id,
-            Usuario usuarioAtualizado) {
+        public void excluir(
+                        UUID id) {
 
-        Usuario usuario = usuarioRepository
-                .findById(id)
-                .orElseThrow();
+                usuarioRepository
+                                .deleteById(id);
 
-        usuario.setNome(
-                usuarioAtualizado.getNome());
+        }
 
-        usuario.setEmail(
-                usuarioAtualizado.getEmail());
+        public Usuario atualizar(
+                        UUID id,
+                        Usuario usuarioAtualizado) {
 
-        usuario.setSenha(
-                usuarioAtualizado.getSenha());
+                Usuario usuario = usuarioRepository
+                                .findById(id)
+                                .orElseThrow();
 
-        usuario.setAtivo(
-                usuarioAtualizado.getAtivo());
+                usuario.setNome(
+                                usuarioAtualizado.getNome());
 
-        usuario.setPerfil(
-                usuarioAtualizado.getPerfil());
+                usuario.setEmail(
+                                usuarioAtualizado.getEmail());
 
-        usuario.setTenant(
-                usuarioAtualizado.getTenant());
+                if (usuarioAtualizado.getSenha() != null &&
+                                !usuarioAtualizado.getSenha().isBlank()) {
 
-        return usuarioRepository
-                .save(usuario);
+                        usuario.setSenha(
+                                        usuarioAtualizado.getSenha());
 
-    }
+                }
 
-    public List<Usuario> listarPorTenant(
-            UUID tenantId) {
+                usuario.setAtivo(
+                                usuarioAtualizado.getAtivo());
 
-        return usuarioRepository
-                .findByTenantId(
-                        tenantId);
+                usuario.setPerfil(
+                                usuarioAtualizado.getPerfil());
 
-    }
+                usuario.setTenant(
+                                usuarioAtualizado.getTenant());
+
+                return usuarioRepository
+                                .save(usuario);
+
+        }
+
+        public List<Usuario> listarPorTenant(
+                        UUID tenantId) {
+
+                return usuarioRepository
+                                .findByTenantId(
+                                                tenantId);
+
+        }
 
 }
