@@ -11,49 +11,59 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+
 import java.util.List;
 
 @Configuration
 public class SecurityConfig {
 
-    @Bean
-    SecurityFilterChain securityFilterChain(
-            HttpSecurity http) throws Exception {
+        @Bean
+        SecurityFilterChain securityFilterChain(
+                        HttpSecurity http) throws Exception {
 
-        http
-                .cors(Customizer.withDefaults())
-                .csrf(csrf -> csrf.disable())
-                .authorizeHttpRequests(auth -> auth
-                        .anyRequest().permitAll());
+                http
+                                .cors(Customizer.withDefaults())
+                                .csrf(csrf -> csrf.disable())
+                                .authorizeHttpRequests(auth -> auth
+                                                .anyRequest().permitAll());
 
-        return http.build();
-    }
+                return http.build();
+        }
 
-    @Bean
-    CorsConfigurationSource corsConfigurationSource() {
+        @Bean
+        CorsConfigurationSource corsConfigurationSource() {
 
-        CorsConfiguration configuration = new CorsConfiguration();
+                CorsConfiguration configuration = new CorsConfiguration();
 
-        configuration.setAllowedOriginPatterns(
-                List.of(
-                        "http://localhost:4200",
-                        "https://*.app.github.dev"));
+                configuration.setAllowedOriginPatterns(
+                                List.of(
+                                                "http://localhost:4200",
+                                                "https://*.app.github.dev"));
 
-        configuration.setAllowedMethods(
-                List.of("*"));
+                configuration.setAllowedMethods(
+                                List.of("*"));
 
-        configuration.setAllowedHeaders(
-                List.of("*"));
+                configuration.setAllowedHeaders(
+                                List.of("*"));
 
-        configuration.setAllowCredentials(
-                true);
+                configuration.setAllowCredentials(
+                                true);
 
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+                UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
 
-        source.registerCorsConfiguration(
-                "/**",
-                configuration);
+                source.registerCorsConfiguration(
+                                "/**",
+                                configuration);
 
-        return source;
-    }
+                return source;
+        }
+
+        @Bean
+        PasswordEncoder passwordEncoder() {
+
+                return new BCryptPasswordEncoder();
+
+        }
 }

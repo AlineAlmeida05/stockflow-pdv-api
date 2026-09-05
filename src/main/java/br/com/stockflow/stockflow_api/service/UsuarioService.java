@@ -5,6 +5,8 @@ import br.com.stockflow.stockflow_api.repository.UsuarioRepository;
 
 import org.springframework.stereotype.Service;
 
+import org.springframework.security.crypto.password.PasswordEncoder;
+
 import java.util.List;
 import java.util.UUID;
 
@@ -12,11 +14,15 @@ import java.util.UUID;
 public class UsuarioService {
 
         private final UsuarioRepository usuarioRepository;
+        private final PasswordEncoder passwordEncoder;
 
         public UsuarioService(
-                        UsuarioRepository usuarioRepository) {
+                        UsuarioRepository usuarioRepository,
+                        PasswordEncoder passwordEncoder) {
 
                 this.usuarioRepository = usuarioRepository;
+
+                this.passwordEncoder = passwordEncoder;
 
         }
 
@@ -39,6 +45,10 @@ public class UsuarioService {
                                                         "Já existe um usuário com este e-mail.");
 
                                 });
+
+                usuario.setSenha(
+                                passwordEncoder.encode(
+                                                usuario.getSenha()));
 
                 return usuarioRepository
                                 .save(usuario);
@@ -71,7 +81,8 @@ public class UsuarioService {
                                 !usuarioAtualizado.getSenha().isBlank()) {
 
                         usuario.setSenha(
-                                        usuarioAtualizado.getSenha());
+                                        passwordEncoder.encode(
+                                                        usuarioAtualizado.getSenha()));
 
                 }
 
