@@ -10,19 +10,27 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import java.util.List;
 import java.util.UUID;
 
+import br.com.stockflow.stockflow_api.security.UsuarioAutenticadoService;
+
+import br.com.stockflow.stockflow_api.entity.Perfil;
+
 @Service
 public class UsuarioService {
 
         private final UsuarioRepository usuarioRepository;
         private final PasswordEncoder passwordEncoder;
+        private final UsuarioAutenticadoService usuarioAutenticadoService;
 
         public UsuarioService(
                         UsuarioRepository usuarioRepository,
-                        PasswordEncoder passwordEncoder) {
+                        PasswordEncoder passwordEncoder,
+                        UsuarioAutenticadoService usuarioAutenticadoService) {
 
                 this.usuarioRepository = usuarioRepository;
 
                 this.passwordEncoder = passwordEncoder;
+
+                this.usuarioAutenticadoService = usuarioAutenticadoService;
 
         }
 
@@ -35,6 +43,35 @@ public class UsuarioService {
 
         public Usuario salvar(
                         Usuario usuario) {
+
+                Usuario usuarioLogado = usuarioAutenticadoService
+                                .usuarioLogado();
+                if (usuarioLogado != null
+                                &&
+                                usuarioLogado.getPerfil() != Perfil.SUPER_ADMIN
+                                &&
+                                !usuarioLogado.getTenant()
+                                                .getId()
+                                                .equals(
+                                                                usuario.getTenant()
+                                                                                .getId())) {
+
+                        throw new RuntimeException(
+                                        "Você não pode criar usuários em outro tenant.");
+
+                }
+                if (usuarioLogado != null) {
+
+                        if (!podeGerenciarPerfil(
+                                        usuarioLogado.getPerfil(),
+                                        usuario.getPerfil())) {
+
+                                throw new RuntimeException(
+                                                "Você não possui permissão para criar este perfil.");
+
+                        }
+
+                }
 
                 usuarioRepository
                                 .findByEmail(
@@ -55,22 +92,83 @@ public class UsuarioService {
 
         }
 
-        public void excluir(
-                        UUID id) {
+        public void excluir(UUID id) {
 
-                usuarioRepository
-                                .deleteById(id);
+                Usuario usuarioAlvo = usuarioRepository
+                                .findById(id)
+                                .orElseThrow();
+
+                Usuario usuarioLogado = usuarioAutenticadoService
+                                .usuarioLogado();
+
+                if (usuarioLogado.getPerfil() != Perfil.SUPER_ADMIN
+                                &&
+                                !pertenceAoMesmoTenant(
+                                                usuarioLogado,
+                                                usuarioAlvo)) {
+
+                        throw new RuntimeException(
+                                        "Você não possui permissão para acessar usuários de outro tenant.");
+
+                }
+
+                if (usuarioLogado.getId()
+                                .equals(usuarioAlvo.getId())) {
+
+                        throw new RuntimeException(
+                                        "Você não pode excluir seu próprio usuário.");
+
+                }
+
+                if (usuarioLogado != null) {
+
+                        if (!podeGerenciarPerfil(
+                                        usuarioLogado.getPerfil(),
+                                        usuarioAlvo.getPerfil())) {
+
+                                throw new RuntimeException(
+                                                "Você não possui permissão para excluir este usuário.");
+
+                        }
+
+                }
+
+                usuarioRepository.deleteById(id);
 
         }
 
-        public Usuario atualizar(
-                        UUID id,
-                        Usuario usuarioAtualizado) {
+        public Usuario atualizar(UUID id, Usuario usuarioAtualizado) {
 
                 Usuario usuario = usuarioRepository
                                 .findById(id)
                                 .orElseThrow();
 
+                Usuario usuarioLogado = usuarioAutenticadoService
+                                .usuarioLogado();
+
+                if (usuarioLogado.getPerfil() != Perfil.SUPER_ADMIN
+                                &&
+                                !pertenceAoMesmoTenant(
+                                                usuarioLogado,
+                                                usuario)) {
+
+                        throw new RuntimeException(
+                                        "Você não possui permissão para editar usuários de outro tenant.");
+
+                }
+
+                if (usuarioLogado != null) {
+
+                        if (!podeGerenciarPerfil(
+                                        usuarioLogado.getPerfil(),
+                                        usuario.getPerfil())) {
+
+                                throw new RuntimeException(
+                                                "Você não possui permissão para editar este usuário.");
+
+                        }
+
+                }
                 usuario.setNome(
                                 usuarioAtualizado.getNome());
 
@@ -89,11 +187,25 @@ public class UsuarioService {
                 usuario.setAtivo(
                                 usuarioAtualizado.getAtivo());
 
-                usuario.setPerfil(
-                                usuarioAtualizado.getPerfil());
+                if (usuarioLogado != null) {
 
-                usuario.setTenant(
-                                usuarioAtualizado.getTenant());
+                        if (!podeGerenciarPerfil(
+                                        usuarioLogado.getPerfil(),
+                                        usuarioAtualizado.getPerfil())) {
+
+                                throw new RuntimeException(
+                                                "Você não possui permissão para atribuir este perfil.");
+
+                        }
+
+                        if (usuarioLogado.getPerfil() == Perfil.SUPER_ADMIN) {
+
+                                usuario.setTenant(
+                                                usuarioAtualizado.getTenant());
+
+                        }
+
+                }
 
                 return usuarioRepository
                                 .save(usuario);
@@ -103,10 +215,45 @@ public class UsuarioService {
         public List<Usuario> listarPorTenant(
                         UUID tenantId) {
 
+                Usuario usuarioLogado = usuarioAutenticadoService
+                                .usuarioLogado();
+
+                if (usuarioLogado != null
+                                &&
+                                usuarioLogado.getPerfil() != Perfil.SUPER_ADMIN
+                                &&
+                                !usuarioLogado.getTenant()
+                                                .getId()
+                                                .equals(tenantId)) {
+
+                        throw new RuntimeException(
+                                        "Você não possui acesso a este tenant.");
+
+                }
+
                 return usuarioRepository
                                 .findByTenantId(
                                                 tenantId);
 
         }
 
+        private boolean podeGerenciarPerfil(
+                        Perfil perfilLogado,
+                        Perfil perfilAlvo) {
+
+                return perfilLogado.getNivel() > perfilAlvo.getNivel();
+
+        }
+
+        private boolean pertenceAoMesmoTenant(
+                        Usuario usuario1,
+                        Usuario usuario2) {
+
+                return usuario1.getTenant()
+                                .getId()
+                                .equals(
+                                                usuario2.getTenant()
+                                                                .getId());
+
+        }
 }

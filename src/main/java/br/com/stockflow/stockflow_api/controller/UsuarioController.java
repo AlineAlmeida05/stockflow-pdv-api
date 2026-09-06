@@ -1,6 +1,7 @@
 package br.com.stockflow.stockflow_api.controller;
 
 import br.com.stockflow.stockflow_api.entity.Usuario;
+import br.com.stockflow.stockflow_api.security.UsuarioAutenticadoService;
 import br.com.stockflow.stockflow_api.service.UsuarioService;
 
 import org.springframework.http.ResponseEntity;
@@ -14,64 +15,77 @@ import java.util.UUID;
 @CrossOrigin(origins = "*")
 public class UsuarioController {
 
-    private final UsuarioService usuarioService;
+        private final UsuarioService usuarioService;
 
-    public UsuarioController(
-            UsuarioService usuarioService) {
+        private final UsuarioAutenticadoService usuarioAutenticadoService;
 
-        this.usuarioService = usuarioService;
+        public UsuarioController(
+                        UsuarioService usuarioService,
+                        UsuarioAutenticadoService usuarioAutenticadoService) {
 
-    }
+                this.usuarioService = usuarioService;
+                this.usuarioAutenticadoService = usuarioAutenticadoService;
 
-    @GetMapping
-    public List<Usuario> listarTodos() {
+        }
 
-        return usuarioService
-                .listarTodos();
+        @GetMapping
+        public List<Usuario> listarTodos() {
+                var usuario = usuarioAutenticadoService
+                                .usuarioLogado();
 
-    }
+                System.out.println(
+                                "USUARIO AUTENTICADO: "
+                                                + usuario.getEmail());
 
-    @PostMapping
-    public Usuario salvar(
-            @RequestBody Usuario usuario) {
+                System.out.println(
+                                "PERFIL: "
+                                                + usuario.getPerfil());
+                return usuarioService
+                                .listarTodos();
 
-        return usuarioService
-                .salvar(usuario);
+        }
 
-    }
+        @PostMapping
+        public Usuario salvar(
+                        @RequestBody Usuario usuario) {
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> excluir(
-            @PathVariable UUID id) {
+                return usuarioService
+                                .salvar(usuario);
 
-        usuarioService.excluir(id);
+        }
 
-        return ResponseEntity
-                .noContent()
-                .build();
+        @DeleteMapping("/{id}")
+        public ResponseEntity<Void> excluir(
+                        @PathVariable UUID id) {
 
-    }
+                usuarioService.excluir(id);
 
-    @PutMapping("/{id}")
-    public Usuario atualizar(
-            @PathVariable UUID id,
-            @RequestBody Usuario usuario) {
+                return ResponseEntity
+                                .noContent()
+                                .build();
 
-        return usuarioService
-                .atualizar(
-                        id,
-                        usuario);
+        }
 
-    }
+        @PutMapping("/{id}")
+        public Usuario atualizar(
+                        @PathVariable UUID id,
+                        @RequestBody Usuario usuario) {
 
-    @GetMapping("/tenant/{tenantId}")
-    public List<Usuario> listarPorTenant(
-            @PathVariable UUID tenantId) {
+                return usuarioService
+                                .atualizar(
+                                                id,
+                                                usuario);
 
-        return usuarioService
-                .listarPorTenant(
-                        tenantId);
+        }
 
-    }
+        @GetMapping("/tenant/{tenantId}")
+        public List<Usuario> listarPorTenant(
+                        @PathVariable UUID tenantId) {
+
+                return usuarioService
+                                .listarPorTenant(
+                                                tenantId);
+
+        }
 
 }

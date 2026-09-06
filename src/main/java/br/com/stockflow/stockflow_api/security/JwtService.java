@@ -8,46 +8,72 @@ import org.springframework.stereotype.Service;
 import javax.crypto.SecretKey;
 import java.util.Date;
 
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
+
 @Service
 public class JwtService {
 
-    private static final String SECRET =
-            "stockflow-pdv-super-secret-key-2026-stockflow-api";
+        private static final String SECRET = "stockflow-pdv-super-secret-key-2026-stockflow-api";
 
-    private final SecretKey key =
-            Keys.hmacShaKeyFor(
-                    SECRET.getBytes()
-            );
+        private final SecretKey key = Keys.hmacShaKeyFor(
+                        SECRET.getBytes());
 
-    public String gerarToken(
-            Usuario usuario) {
+        public String gerarToken(
+                        Usuario usuario) {
 
-        return Jwts.builder()
-                .subject(
-                        usuario.getEmail()
-                )
-                .claim(
-                        "perfil",
-                        usuario.getPerfil().name()
-                )
-                .claim(
-                        "tenantId",
-                        usuario.getTenant()
-                                .getId()
-                                .toString()
-                )
-                .issuedAt(
-                        new Date()
-                )
-                .expiration(
-                        new Date(
-                                System.currentTimeMillis()
-                                        + 1000L * 60 * 60 * 24
-                        )
-                )
-                .signWith(key)
-                .compact();
+                return Jwts.builder()
+                                .subject(
+                                                usuario.getEmail())
+                                .claim(
+                                                "perfil",
+                                                usuario.getPerfil().name())
+                                .claim(
+                                                "tenantId",
+                                                usuario.getTenant()
+                                                                .getId()
+                                                                .toString())
+                                .issuedAt(
+                                                new Date())
+                                .expiration(
+                                                new Date(
+                                                                System.currentTimeMillis()
+                                                                                + 1000L * 60 * 60 * 24))
+                                .signWith(key)
+                                .compact();
 
-    }
+        }
+
+        public String extrairEmail(
+                        String token) {
+
+                return Jwts.parser()
+                                .verifyWith(key)
+                                .build()
+                                .parseSignedClaims(token)
+                                .getPayload()
+                                .getSubject();
+
+        }
+
+        public boolean validarToken(
+                        String token) {
+
+                try {
+
+                        Jwts.parser()
+                                        .verifyWith(key)
+                                        .build()
+                                        .parseSignedClaims(token);
+
+                        return true;
+
+                } catch (JwtException e) {
+
+                        return false;
+
+                }
+
+        }
 
 }
