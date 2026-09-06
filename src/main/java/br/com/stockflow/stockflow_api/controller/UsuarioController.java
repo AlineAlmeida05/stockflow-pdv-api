@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
 
+import br.com.stockflow.stockflow_api.dto.AlterarSenhaRequest;
+
 @RestController
 @RequestMapping("/api/usuarios")
 @CrossOrigin(origins = "*")
@@ -85,6 +87,19 @@ public class UsuarioController {
                 return usuarioService
                                 .listarPorTenant(
                                                 tenantId);
+
+        }
+
+        @PutMapping("/alterar-senha")
+        public ResponseEntity<Void> alterarSenha(
+                        @RequestBody AlterarSenhaRequest request) {
+
+                usuarioService.alterarSenha(
+                                request);
+
+                return ResponseEntity
+                                .ok()
+                                .build();
 
         }
 

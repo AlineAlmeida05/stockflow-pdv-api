@@ -13,6 +13,7 @@ import java.util.UUID;
 import br.com.stockflow.stockflow_api.security.UsuarioAutenticadoService;
 
 import br.com.stockflow.stockflow_api.entity.Perfil;
+import br.com.stockflow.stockflow_api.dto.AlterarSenhaRequest;
 
 @Service
 public class UsuarioService {
@@ -34,6 +35,7 @@ public class UsuarioService {
 
         }
 
+        
         public List<Usuario> listarTodos() {
 
                 return usuarioRepository
@@ -41,6 +43,7 @@ public class UsuarioService {
 
         }
 
+        
         public Usuario salvar(
                         Usuario usuario) {
 
@@ -107,6 +110,7 @@ public class UsuarioService {
 
         }
 
+        
         public void excluir(UUID id) {
 
                 Usuario usuarioAlvo = usuarioRepository
@@ -127,18 +131,7 @@ public class UsuarioService {
                         throw new RuntimeException(
                                         "Você não possui permissão para excluir usuários de outro tenant.");
 
-                }
-
-                if (usuarioLogado.getPerfil() != Perfil.SUPER_ADMIN
-                                &&
-                                !pertenceAoMesmoTenant(
-                                                usuarioLogado,
-                                                usuarioAlvo)) {
-
-                        throw new RuntimeException(
-                                        "Você não possui permissão para acessar usuários de outro tenant.");
-
-                }
+                }                
 
                 if (usuarioLogado.getId()
                                 .equals(usuarioAlvo.getId())) {
@@ -165,6 +158,7 @@ public class UsuarioService {
 
         }
 
+        
         public Usuario atualizar(UUID id, Usuario usuarioAtualizado) {
 
                 Usuario usuario = usuarioRepository
@@ -172,31 +166,7 @@ public class UsuarioService {
                                 .orElseThrow();
 
                 Usuario usuarioLogado = usuarioAutenticadoService
-                                .usuarioLogado();
-
-                if (usuarioLogado != null
-                                &&
-                                usuarioLogado.getPerfil() != Perfil.SUPER_ADMIN
-                                &&
-                                !pertenceAoMesmoTenant(
-                                                usuarioLogado,
-                                                usuario)) {
-
-                        throw new RuntimeException(
-                                        "Você não possui permissão para editar usuários de outro tenant.");
-
-                }
-
-                if (usuarioLogado.getPerfil() != Perfil.SUPER_ADMIN
-                                &&
-                                !pertenceAoMesmoTenant(
-                                                usuarioLogado,
-                                                usuario)) {
-
-                        throw new RuntimeException(
-                                        "Você não possui permissão para editar usuários de outro tenant.");
-
-                }
+                                .usuarioLogado();                
 
                 if (usuarioLogado != null) {
 
@@ -253,6 +223,7 @@ public class UsuarioService {
 
         }
 
+        
         public List<Usuario> listarPorTenant(
                         UUID tenantId) {
 
@@ -278,6 +249,7 @@ public class UsuarioService {
 
         }
 
+        
         private boolean pertenceAoMesmoTenant(
                         Usuario usuario1,
                         Usuario usuario2) {
@@ -290,6 +262,7 @@ public class UsuarioService {
 
         }
 
+        
         private boolean podeGerenciarPerfil(
                         Perfil perfilLogado,
                         Perfil perfilAlvo) {
@@ -297,5 +270,61 @@ public class UsuarioService {
                 return perfilLogado.getNivel() > perfilAlvo.getNivel();
 
         }
+
         
+        public void alterarSenha(
+                        AlterarSenhaRequest request) {
+
+                Usuario usuarioLogado = usuarioAutenticadoService
+                                .usuarioLogado();
+
+                if (usuarioLogado == null) {
+
+                        throw new RuntimeException(
+                                        "Usuário não autenticado.");
+
+                }
+
+                if (request.novaSenha().isBlank()) {
+
+                        throw new RuntimeException(
+                                        "A nova senha é obrigatória.");
+
+                }
+
+                if (request.novaSenha().length() < 6) {
+
+                        throw new RuntimeException(
+                                        "A senha deve possuir pelo menos 6 caracteres.");
+
+                }
+
+                boolean senhaCorreta = passwordEncoder.matches(
+                                request.senhaAtual(),
+                                usuarioLogado.getSenha());
+
+                if (!senhaCorreta) {
+
+                        throw new RuntimeException(
+                                        "Senha atual inválida.");
+
+                }
+
+                if (!request.novaSenha()
+                                .equals(request.confirmarSenha())) {
+
+                        throw new RuntimeException(
+                                        "As senhas não conferem.");
+
+                }
+
+                usuarioLogado.setSenha(
+                                passwordEncoder.encode(
+                                                request.novaSenha()));
+
+                usuarioRepository.save(
+                                usuarioLogado);
+
+        }
+
 }
