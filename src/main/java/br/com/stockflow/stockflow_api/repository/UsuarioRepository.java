@@ -14,6 +14,10 @@ public interface UsuarioRepository
         Optional<Usuario> findByEmail(
                         String email);
 
+        Optional<Usuario> findByEmailAndTenant_Slug(
+                        String email,
+                        String slug);
+
         List<Usuario> findByTenantId(
                         UUID tenantId);
 

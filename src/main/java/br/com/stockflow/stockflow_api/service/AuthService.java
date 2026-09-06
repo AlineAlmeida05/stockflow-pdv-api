@@ -10,68 +10,80 @@ import org.springframework.stereotype.Service;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
+import br.com.stockflow.stockflow_api.security.JwtService;
 
 @Service
 public class AuthService {
 
-    private final UsuarioRepository usuarioRepository;
+        private final UsuarioRepository usuarioRepository;
 
-    private final PasswordEncoder passwordEncoder;
+        private final PasswordEncoder passwordEncoder;
 
-    public AuthService(
-            UsuarioRepository usuarioRepository,
-            PasswordEncoder passwordEncoder) {
+        private final JwtService jwtService;
 
-        this.usuarioRepository = usuarioRepository;
+        public AuthService(
+                        UsuarioRepository usuarioRepository,
+                        PasswordEncoder passwordEncoder,
+                        JwtService jwtService) {
 
-        this.passwordEncoder = passwordEncoder;
+                this.usuarioRepository = usuarioRepository;
 
-    }
+                this.passwordEncoder = passwordEncoder;
 
-    public LoginResponse login(
-            LoginRequest request) {
-
-        Usuario usuario = usuarioRepository
-                .findByEmail(
-                        request.email())
-                .orElseThrow(
-                        () -> new ResponseStatusException(
-                                HttpStatus.UNAUTHORIZED,
-                                "Usuário ou senha inválidos."));
-
-        boolean senhaValida = passwordEncoder.matches(
-                request.senha(),
-                usuario.getSenha());
-
-        if (!senhaValida) {
-
-            throw new ResponseStatusException(
-                    HttpStatus.UNAUTHORIZED,
-                    "Usuário ou senha inválidos.");
+                this.jwtService = jwtService;
 
         }
 
-        return new LoginResponse(
+        public LoginResponse login(
+                        LoginRequest request) {
 
-                usuario.getId()
-                        .toString(),
+                Usuario usuario = usuarioRepository
+                                .findByEmailAndTenant_Slug(
+                                                request.email(),
+                                                request.slug())
+                                .orElseThrow(
+                                                () -> new ResponseStatusException(
+                                                                HttpStatus.UNAUTHORIZED,
+                                                                "Usuário ou senha inválidos."));
 
-                usuario.getNome(),
+                boolean senhaValida = passwordEncoder.matches(
+                                request.senha(),
+                                usuario.getSenha());
 
-                usuario.getEmail(),
+                if (!senhaValida) {
 
-                usuario.getPerfil()
-                        .name(),
+                        throw new ResponseStatusException(
+                                        HttpStatus.UNAUTHORIZED,
+                                        "Usuário ou senha inválidos.");
 
-                usuario.getTenant()
-                        .getId()
-                        .toString(),
+                }
 
-                usuario.getTenant()
-                        .getNome()
+                String token = jwtService.gerarToken(
+                                usuario);
 
-        );
+                return new LoginResponse(
 
-    }
+                                usuario.getId()
+                                                .toString(),
+
+                                usuario.getNome(),
+
+                                usuario.getEmail(),
+
+                                usuario.getPerfil()
+                                                .name(),
+
+                                usuario.getTenant()
+                                                .getId()
+                                                .toString(),
+
+                                usuario.getTenant()
+                                                .getNome(),
+
+                                token
+
+                );
+
+        }
 
 }
