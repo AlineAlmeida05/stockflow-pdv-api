@@ -22,7 +22,50 @@ public class TenantService {
         }
 
         public Tenant salvar(Tenant tenant) {
-                return tenantRepository.save(tenant);
+
+                if (tenant.getCodigoTenant() == null
+                                ||
+                                tenant.getCodigoTenant().isBlank()) {
+
+                        tenant.setCodigoTenant(
+                                        gerarCodigoTenant(
+                                                        tenant.getNome()));
+
+                }
+
+                return tenantRepository.save(
+                                tenant);
+
+        }
+
+        private String gerarCodigoTenant(
+                        String nome) {
+
+                String[] palavras = nome.trim()
+                                .split("\\s+");
+
+                if (palavras.length >= 2) {
+
+                        String codigo = palavras[0].substring(0, 1)
+                                        +
+                                        palavras[1].substring(
+                                                        0,
+                                                        Math.min(
+                                                                        2,
+                                                                        palavras[1].length()));
+
+                        return codigo.toUpperCase();
+
+                }
+
+                return nome
+                                .substring(
+                                                0,
+                                                Math.min(
+                                                                3,
+                                                                nome.length()))
+                                .toUpperCase();
+
         }
 
         public void excluir(UUID id) {
@@ -63,6 +106,9 @@ public class TenantService {
 
                 tenant.setSlug(
                                 tenantAtualizado.getSlug());
+
+                tenant.setCodigoTenant(
+                                tenantAtualizado.getCodigoTenant());
 
                 tenant.setLogoUrl(
                                 tenantAtualizado.getLogoUrl());

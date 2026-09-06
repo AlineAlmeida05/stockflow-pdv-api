@@ -20,6 +20,9 @@ public class Tenant {
 
     private String slug;
 
+    @Column(name = "codigo_tenant")
+    private String codigoTenant;
+
     private String email;
 
     private String telefone;
