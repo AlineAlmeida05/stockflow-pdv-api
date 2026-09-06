@@ -46,6 +46,21 @@ public class UsuarioService {
 
                 Usuario usuarioLogado = usuarioAutenticadoService
                                 .usuarioLogado();
+
+                if (usuarioLogado != null
+                                &&
+                                usuarioLogado.getPerfil() != Perfil.SUPER_ADMIN
+                                &&
+                                !usuarioLogado.getTenant()
+                                                .getId()
+                                                .equals(
+                                                                usuario.getTenant()
+                                                                                .getId())) {
+
+                        throw new RuntimeException(
+                                        "Você não pode criar usuários em outro tenant.");
+
+                }
                 if (usuarioLogado != null
                                 &&
                                 usuarioLogado.getPerfil() != Perfil.SUPER_ADMIN
@@ -101,6 +116,19 @@ public class UsuarioService {
                 Usuario usuarioLogado = usuarioAutenticadoService
                                 .usuarioLogado();
 
+                if (usuarioLogado != null
+                                &&
+                                usuarioLogado.getPerfil() != Perfil.SUPER_ADMIN
+                                &&
+                                !pertenceAoMesmoTenant(
+                                                usuarioLogado,
+                                                usuarioAlvo)) {
+
+                        throw new RuntimeException(
+                                        "Você não possui permissão para excluir usuários de outro tenant.");
+
+                }
+
                 if (usuarioLogado.getPerfil() != Perfil.SUPER_ADMIN
                                 &&
                                 !pertenceAoMesmoTenant(
@@ -145,6 +173,19 @@ public class UsuarioService {
 
                 Usuario usuarioLogado = usuarioAutenticadoService
                                 .usuarioLogado();
+
+                if (usuarioLogado != null
+                                &&
+                                usuarioLogado.getPerfil() != Perfil.SUPER_ADMIN
+                                &&
+                                !pertenceAoMesmoTenant(
+                                                usuarioLogado,
+                                                usuario)) {
+
+                        throw new RuntimeException(
+                                        "Você não possui permissão para editar usuários de outro tenant.");
+
+                }
 
                 if (usuarioLogado.getPerfil() != Perfil.SUPER_ADMIN
                                 &&
@@ -237,14 +278,6 @@ public class UsuarioService {
 
         }
 
-        private boolean podeGerenciarPerfil(
-                        Perfil perfilLogado,
-                        Perfil perfilAlvo) {
-
-                return perfilLogado.getNivel() > perfilAlvo.getNivel();
-
-        }
-
         private boolean pertenceAoMesmoTenant(
                         Usuario usuario1,
                         Usuario usuario2) {
@@ -256,4 +289,13 @@ public class UsuarioService {
                                                                 .getId());
 
         }
+
+        private boolean podeGerenciarPerfil(
+                        Perfil perfilLogado,
+                        Perfil perfilAlvo) {
+
+                return perfilLogado.getNivel() > perfilAlvo.getNivel();
+
+        }
+        
 }
