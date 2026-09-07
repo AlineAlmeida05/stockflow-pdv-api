@@ -12,69 +12,72 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/produtos")
 public class ProdutoController {
-    private final ProdutoService produtoService;
+        private final ProdutoService produtoService;
 
-    public ProdutoController(
-        ProdutoService produtoService) {
+        public ProdutoController(
+                        ProdutoService produtoService) {
 
-    this.produtoService = produtoService;
+                this.produtoService = produtoService;
 
-}
+        }
 
-@GetMapping
-public ResponseEntity<List<Produto>> listar() {
+        @GetMapping
+        public ResponseEntity<List<Produto>> listar() {
 
-    return ResponseEntity.ok(
-            produtoService.listar()
-    );
+                return ResponseEntity.ok(
+                                produtoService.listar());
 
-}
+        }
 
-@GetMapping("/{id}")
-public ResponseEntity<Produto> buscarPorId(
-        @PathVariable UUID id) {
+        @GetMapping("/{id}")
+        public ResponseEntity<Produto> buscarPorId(
+                        @PathVariable UUID id) {
 
-    return ResponseEntity.ok(
-            produtoService.buscarPorId(id)
-    );
+                return ResponseEntity.ok(
+                                produtoService.buscarPorId(id));
 
-}
+        }
 
-@PostMapping
-public ResponseEntity<Produto> salvar(
-        @RequestBody Produto produto) {
+        @PostMapping
+        public ResponseEntity<Produto> salvar(
+                        @RequestBody Produto produto) {
 
-    return ResponseEntity.ok(
-            produtoService.salvar(produto)
-    );
+                return ResponseEntity.ok(
+                                produtoService.salvar(produto));
 
-}
+        }
 
-@PutMapping("/{id}")
-public ResponseEntity<Produto> atualizar(
-        @PathVariable UUID id,
-        @RequestBody Produto produto) {
+        @PutMapping("/{id}")
+        public ResponseEntity<Produto> atualizar(
+                        @PathVariable UUID id,
+                        @RequestBody Produto produto) {
 
-    return ResponseEntity.ok(
-            produtoService.atualizar(
-                    id,
-                    produto
-            )
-    );
+                return ResponseEntity.ok(
+                                produtoService.atualizar(
+                                                id,
+                                                produto));
 
-}
+        }
 
-@DeleteMapping("/{id}")
-public ResponseEntity<Void> excluir(
-        @PathVariable UUID id) {
+        @DeleteMapping("/{id}")
+        public ResponseEntity<Void> excluir(
+                        @PathVariable UUID id) {
 
-    produtoService.excluir(id);
+                produtoService.excluir(id);
 
-    return ResponseEntity
-            .noContent()
-            .build();
+                return ResponseEntity
+                                .noContent()
+                                .build();
 
-}
+        }
 
+        @PutMapping("/{id}/reativar")
+        public void reativar(
+                        @PathVariable UUID id) {
+
+                produtoService.reativar(
+                                id);
+
+        }
 
 }

@@ -14,5 +14,6 @@ public interface ProdutoRepository
 
         Produto findTopByTenantIdOrderByCodigoDesc(
                         UUID tenantId);
+                        
 
 }

@@ -44,9 +44,23 @@ public class ProdutoService {
         public Produto buscarPorId(
                         UUID id) {
 
-                return produtoRepository
+                Produto produto = produtoRepository
                                 .findById(id)
                                 .orElseThrow();
+
+                Usuario usuarioLogado = usuarioAutenticadoService
+                                .usuarioLogado();
+
+                if (!pertenceAoMesmoTenant(
+                                usuarioLogado,
+                                produto)) {
+
+                        throw new RuntimeException(
+                                        "Você não possui acesso a este produto.");
+
+                }
+
+                return produto;
 
         }
 
@@ -79,6 +93,18 @@ public class ProdutoService {
                                 .findById(id)
                                 .orElseThrow();
 
+                Usuario usuarioLogado = usuarioAutenticadoService
+                                .usuarioLogado();
+
+                if (!pertenceAoMesmoTenant(
+                                usuarioLogado,
+                                produto)) {
+
+                        throw new RuntimeException(
+                                        "Você não possui permissão para editar este produto.");
+
+                }
+
                 produto.setNome(
                                 produtoAtualizado.getNome());
 
@@ -108,8 +134,58 @@ public class ProdutoService {
         public void excluir(
                         UUID id) {
 
-                produtoRepository.deleteById(
-                                id);
+                Produto produto = produtoRepository
+                                .findById(id)
+                                .orElseThrow();
+
+                Usuario usuarioLogado = usuarioAutenticadoService
+                                .usuarioLogado();
+
+                if (!pertenceAoMesmoTenant(
+                                usuarioLogado,
+                                produto)) {
+
+                        throw new RuntimeException(
+                                        "Você não possui permissão para inativar este produto.");
+
+                }
+
+                produto.setAtivo(false);
+
+                produto.setDataAtualizacao(
+                                LocalDateTime.now());
+
+                produtoRepository.save(
+                                produto);
+
+        }
+
+        public void reativar(
+                        UUID id) {
+
+                Produto produto = produtoRepository
+                                .findById(id)
+                                .orElseThrow();
+
+                Usuario usuarioLogado = usuarioAutenticadoService
+                                .usuarioLogado();
+
+                if (!pertenceAoMesmoTenant(
+                                usuarioLogado,
+                                produto)) {
+
+                        throw new RuntimeException(
+                                        "Você não possui permissão para reativar este produto.");
+
+                }
+
+                produto.setAtivo(true);
+
+                produto.setDataAtualizacao(
+                                LocalDateTime.now());
+
+                produtoRepository.save(
+                                produto);
 
         }
 
@@ -119,6 +195,14 @@ public class ProdutoService {
                 String prefixo = usuarioLogado
                                 .getTenant()
                                 .getCodigoTenant();
+
+                if (prefixo == null
+                                || prefixo.isBlank()) {
+
+                        throw new RuntimeException(
+                                        "Tenant sem código configurado.");
+
+                }
 
                 Produto ultimoProduto = produtoRepository
                                 .findTopByTenantIdOrderByCodigoDesc(
@@ -134,7 +218,9 @@ public class ProdutoService {
 
                         String numero = ultimoProduto
                                         .getCodigo()
-                                        .replace(prefixo, "");
+                                        .replace(
+                                                        prefixo,
+                                                        "");
 
                         sequencia = Integer.parseInt(numero)
                                         + 1;
@@ -147,4 +233,32 @@ public class ProdutoService {
                                 sequencia);
 
         }
+
+        private boolean pertenceAoMesmoTenant(
+                        Usuario usuario,
+                        Produto produto) {
+
+                return usuario
+                                .getTenant()
+                                .getId()
+                                .equals(
+                                                produto
+                                                                .getTenant()
+                                                                .getId());
+
+        }
+
+        private void validarProdutoAtivo(
+                        Produto produto) {
+
+                if (Boolean.FALSE.equals(
+                                produto.getAtivo())) {
+
+                        throw new RuntimeException(
+                                        "Produto inativo.");
+
+                }
+
+        }
+
 }
