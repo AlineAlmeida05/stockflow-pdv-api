@@ -80,6 +80,14 @@ public class ProdutoService {
                 produto.setDataCadastro(
                                 LocalDateTime.now());
 
+                produto.setCustoMedio(
+                                java.math.BigDecimal.ZERO);
+                if (produto.getCustoMedio() == null) {
+
+                        produto.setCustoMedio(
+                                        java.math.BigDecimal.ZERO);
+                }
+
                 return produtoRepository
                                 .save(produto);
 
@@ -116,6 +124,9 @@ public class ProdutoService {
 
                 produto.setPrecoVenda(
                                 produtoAtualizado.getPrecoVenda());
+
+                produto.setEstoqueAtual(
+                                produtoAtualizado.getEstoqueAtual());
 
                 produto.setEstoqueMinimo(
                                 produtoAtualizado.getEstoqueMinimo());
