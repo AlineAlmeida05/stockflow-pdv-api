@@ -2,9 +2,10 @@ package br.com.stockflow.stockflow_api.dto;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
-public class VendaResponse {
+public class VendaDetalhesResponse {
 
     private UUID id;
 
@@ -20,9 +21,17 @@ public class VendaResponse {
 
     private String status;
 
+    private String motivoCancelamento;
+
+    private LocalDateTime dataCancelamento;
+
+    private String usuarioCancelamento;
+
     private String usuarioNome;
 
-    public VendaResponse(
+    private List<ItemVendaResponse> itens;
+
+    public VendaDetalhesResponse(
             UUID id,
             LocalDateTime dataVenda,
             String formaPagamento,
@@ -30,7 +39,11 @@ public class VendaResponse {
             Integer quantidadeItens,
             String clienteNome,
             String status,
-            String usuarioNome) {
+            String motivoCancelamento,
+            LocalDateTime dataCancelamento,
+            String usuarioCancelamento,
+            String usuarioNome,
+            List<ItemVendaResponse> itens) {
 
         this.id = id;
         this.dataVenda = dataVenda;
@@ -39,6 +52,10 @@ public class VendaResponse {
         this.quantidadeItens = quantidadeItens;
         this.clienteNome = clienteNome;
         this.status = status;
+        this.motivoCancelamento = motivoCancelamento;
+        this.dataCancelamento = dataCancelamento;
+        this.usuarioCancelamento = usuarioCancelamento;
+        this.itens = itens;
         this.usuarioNome = usuarioNome;
     }
 
@@ -68,6 +85,22 @@ public class VendaResponse {
 
     public String getStatus() {
         return status;
+    }
+
+    public String getMotivoCancelamento() {
+        return motivoCancelamento;
+    }
+
+    public LocalDateTime getDataCancelamento() {
+        return dataCancelamento;
+    }
+
+    public String getUsuarioCancelamento() {
+        return usuarioCancelamento;
+    }
+
+    public List<ItemVendaResponse> getItens() {
+        return itens;
     }
 
     public String getUsuarioNome() {

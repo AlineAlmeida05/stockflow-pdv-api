@@ -15,35 +15,37 @@ import br.com.stockflow.stockflow_api.dto.CancelarVendaRequest;
 
 import java.util.UUID;
 
+import br.com.stockflow.stockflow_api.dto.VendaDetalhesResponse;
+
 @RestController
 @RequestMapping("/api/vendas")
 public class VendaController {
 
     private final VendaService vendaService;
 
-    public VendaController(
-            VendaService vendaService) {
+    public VendaController(VendaService vendaService) {
 
         this.vendaService = vendaService;
     }
 
     @PostMapping
-    public Venda salvar(
-            @RequestBody VendaRequest request) {
+    public Venda salvar(@RequestBody VendaRequest request) {
 
-        return vendaService.salvar(
-                request);
+        return vendaService.salvar(request);
     }
 
     @PostMapping("/{id}/cancelar")
-    public void cancelarVenda(
-            @PathVariable UUID id,
+    public void cancelarVenda(@PathVariable UUID id,
 
-            @RequestBody CancelarVendaRequest request) {
+                              @RequestBody CancelarVendaRequest request) {
 
-        vendaService.cancelarVenda(
-                id,
-                request);
+        vendaService.cancelarVenda(id, request);
+    }
+
+    @GetMapping("/{id}")
+    public VendaDetalhesResponse buscarPorId(@PathVariable UUID id) {
+
+        return vendaService.buscarPorId(id);
     }
 
     @GetMapping
