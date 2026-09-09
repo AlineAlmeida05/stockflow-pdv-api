@@ -43,6 +43,10 @@ import java.util.UUID;
 
 import br.com.stockflow.stockflow_api.dto.VendaDetalhesResponse;
 import br.com.stockflow.stockflow_api.dto.ItemVendaResponse;
+import br.com.stockflow.stockflow_api.entity.Cliente;
+import br.com.stockflow.stockflow_api.entity.Fiado;
+import br.com.stockflow.stockflow_api.repository.ClienteRepository;
+import br.com.stockflow.stockflow_api.repository.FiadoRepository;
 
 @Service
 public class VendaService {
@@ -57,18 +61,26 @@ public class VendaService {
 
     private final MovimentacaoEstoqueRepository movimentacaoRepository;
 
+    private final FiadoRepository fiadoRepository;
+
+    private final ClienteRepository clienteRepository;
+
     public VendaService(
             VendaRepository vendaRepository,
             ItemVendaRepository itemVendaRepository,
             ProdutoRepository produtoRepository,
             MovimentacaoEstoqueRepository movimentacaoRepository,
-            UsuarioAutenticadoService usuarioAutenticadoService) {
+            UsuarioAutenticadoService usuarioAutenticadoService,
+            FiadoRepository fiadoRepository,
+            ClienteRepository clienteRepository) {
 
         this.vendaRepository = vendaRepository;
         this.itemVendaRepository = itemVendaRepository;
         this.produtoRepository = produtoRepository;
         this.usuarioAutenticadoService = usuarioAutenticadoService;
         this.movimentacaoRepository = movimentacaoRepository;
+        this.fiadoRepository = fiadoRepository;
+        this.clienteRepository = clienteRepository;
     }
 
     @Transactional
@@ -197,6 +209,42 @@ public class VendaService {
 
         Venda vendaSalva = vendaRepository.save(
                 venda);
+        if ("fiado".equalsIgnoreCase(
+                request.getFormaPagamento())) {
+
+            Cliente cliente =
+                    clienteRepository
+                            .findById(
+                                    request.getClienteId())
+                            .orElseThrow(
+                                    () ->
+                                            new ResponseStatusException(
+                                                    HttpStatus.NOT_FOUND,
+                                                    "Cliente não encontrado."));
+
+            Fiado fiado = new Fiado();
+
+            fiado.setCliente(
+                    cliente);
+
+            fiado.setVendaId(
+                    vendaSalva.getId());
+
+            fiado.setValorTotal(
+                    valorTotal);
+
+            fiado.setDataLancamento(
+                    LocalDateTime.now());
+
+            fiado.setStatus(
+                    "pendente");
+
+            fiado.setTenant(
+                    usuarioLogado.getTenant());
+
+            fiadoRepository.save(
+                    fiado);
+        }
 
         for (ItemVendaRequest item : request.getItens()) {
 
