@@ -20,4 +20,8 @@ public interface FiadoRepository
             UUID tenantId,
             String status);
 
+    List<Fiado> findByClienteIdAndTenantId(
+            UUID clienteId,
+            UUID tenantId);
+
 }

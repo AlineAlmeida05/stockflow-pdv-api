@@ -16,4 +16,8 @@ public interface PagamentoRepository
     List<Pagamento> findByClienteId(
             UUID clienteId);
 
+    List<Pagamento> findByClienteIdAndTenantId(
+            UUID clienteId,
+            UUID tenantId);
+
 }
