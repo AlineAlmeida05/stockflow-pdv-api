@@ -9,6 +9,10 @@ import java.util.UUID;
 
 import lombok.Data;
 
+import java.util.List;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+
 @Entity
 @Table(name = "produto")
 @Data
@@ -53,6 +57,12 @@ public class Produto {
 
     private LocalDate dataFimPromocao;
 
+    @JsonIgnore
+    @OneToMany(
+            mappedBy = "produto"
+    )
+    private List<Promocao> promocoes;
+
     @ManyToOne
     @JoinColumn(name = "tenant_id")
     private Tenant tenant;
@@ -65,4 +75,6 @@ public class Produto {
             BigDecimal custoMedio) {
         this.custoMedio = custoMedio;
     }
+
+
 }

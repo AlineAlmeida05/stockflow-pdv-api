@@ -3,11 +3,9 @@ package br.com.stockflow.stockflow_api.service;
 import br.com.stockflow.stockflow_api.dto.VendaRequest;
 import br.com.stockflow.stockflow_api.dto.VendaResponse;
 
-import br.com.stockflow.stockflow_api.entity.Venda;
+import br.com.stockflow.stockflow_api.entity.*;
 
-import br.com.stockflow.stockflow_api.repository.VendaRepository;
-import br.com.stockflow.stockflow_api.repository.ItemVendaRepository;
-import br.com.stockflow.stockflow_api.repository.ProdutoRepository;
+import br.com.stockflow.stockflow_api.repository.*;
 
 import br.com.stockflow.stockflow_api.security.UsuarioAutenticadoService;
 
@@ -15,38 +13,25 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-import br.com.stockflow.stockflow_api.entity.Usuario;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 import br.com.stockflow.stockflow_api.dto.ItemVendaRequest;
-import br.com.stockflow.stockflow_api.entity.Produto;
 
 import java.math.BigDecimal;
 
-import br.com.stockflow.stockflow_api.entity.Venda;
-
 import java.time.LocalDateTime;
 
-import br.com.stockflow.stockflow_api.entity.ItemVenda;
-import br.com.stockflow.stockflow_api.repository.MovimentacaoEstoqueRepository;
-import br.com.stockflow.stockflow_api.entity.MovimentacaoEstoque;
 import org.springframework.transaction.annotation.Transactional;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
 import br.com.stockflow.stockflow_api.dto.CancelarVendaRequest;
-import br.com.stockflow.stockflow_api.entity.ItemVenda;
 
 import java.util.UUID;
 
 import br.com.stockflow.stockflow_api.dto.VendaDetalhesResponse;
 import br.com.stockflow.stockflow_api.dto.ItemVendaResponse;
-import br.com.stockflow.stockflow_api.entity.Cliente;
-import br.com.stockflow.stockflow_api.entity.Fiado;
-import br.com.stockflow.stockflow_api.repository.ClienteRepository;
-import br.com.stockflow.stockflow_api.repository.FiadoRepository;
 
 @Service
 public class VendaService {
@@ -65,6 +50,10 @@ public class VendaService {
 
     private final ClienteRepository clienteRepository;
 
+    private final PromocaoRepository promocaoRepository;
+
+    private final PromocaoService promocaoService;
+
     public VendaService(
             VendaRepository vendaRepository,
             ItemVendaRepository itemVendaRepository,
@@ -72,7 +61,10 @@ public class VendaService {
             MovimentacaoEstoqueRepository movimentacaoRepository,
             UsuarioAutenticadoService usuarioAutenticadoService,
             FiadoRepository fiadoRepository,
-            ClienteRepository clienteRepository) {
+            ClienteRepository clienteRepository,
+            PromocaoRepository promocaoRepository,
+            PromocaoService promocaoService) {
+
 
         this.vendaRepository = vendaRepository;
         this.itemVendaRepository = itemVendaRepository;
@@ -81,6 +73,9 @@ public class VendaService {
         this.movimentacaoRepository = movimentacaoRepository;
         this.fiadoRepository = fiadoRepository;
         this.clienteRepository = clienteRepository;
+        this.promocaoRepository = promocaoRepository;
+        this.promocaoService = promocaoService;
+
     }
 
     @Transactional
@@ -255,6 +250,8 @@ public class VendaService {
 
             BigDecimal precoAplicado;
 
+
+
             if (Boolean.TRUE.equals(
                     produto.getPromocaoAtiva())
                     && produto.getPrecoPromocional() != null) {
@@ -294,6 +291,79 @@ public class VendaService {
 
             itemVendaRepository.save(
                     itemVenda);
+
+            if (Boolean.TRUE.equals(
+                    produto.getPromocaoAtiva())) {
+                System.out.println(
+                        "PROMOCAO ATIVA? "
+                                + produto.getPromocaoAtiva()
+                );
+                System.out.println(
+                        "PRODUTO EM PROMOCAO: "
+                                + produto.getNome()
+                );
+
+                promocaoRepository
+                        .findByProdutoAndAtivaTrue(
+                                produto
+                        );
+                var promocaoOpt =
+                        promocaoRepository
+                                .findByProdutoAndAtivaTrue(
+                                        produto
+                                );
+
+
+                promocaoOpt.ifPresent(promocao -> {
+
+                            Integer vendidas =
+                                    promocao.getUnidadesVendidas();
+
+                            if (vendidas == null) {
+                                vendidas = 0;
+                            }
+
+                            promocao.setUnidadesVendidas(
+                                    vendidas +
+                                            item.getQuantidade()
+                            );
+
+                            BigDecimal receitaAtual =
+                                    promocao.getReceitaGerada();
+
+                            if (receitaAtual == null) {
+                                receitaAtual =
+                                        BigDecimal.ZERO;
+                            }
+
+                            BigDecimal receitaVenda =
+                                    precoAplicado.multiply(
+                                            BigDecimal.valueOf(
+                                                    item.getQuantidade()
+                                            )
+                                    );
+
+                            promocao.setReceitaGerada(
+                                    receitaAtual.add(
+                                            receitaVenda
+                                    )
+                            );
+
+                    promocaoRepository.save(promocao);
+
+                    if (promocao.getMetaUnidades() != null
+                            && promocao.getUnidadesVendidas()
+                            >= promocao.getMetaUnidades()) {
+
+                        promocaoService.finalizarMetaAtingida(
+                                promocao,
+                                produto
+                        );
+                    }
+
+                        });
+
+            }
 
             produto.setEstoqueAtual(
                     produto.getEstoqueAtual()
@@ -535,4 +605,6 @@ public class VendaService {
 
                 itens);
     }
+
+
 }
