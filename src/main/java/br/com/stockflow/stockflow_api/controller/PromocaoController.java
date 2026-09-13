@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
 
+import br.com.stockflow.stockflow_api.dto.ProdutoPromocaoResponse;
+
 @RestController
 @RequestMapping("/api/promocoes")
 public class PromocaoController {
@@ -73,4 +75,14 @@ public class PromocaoController {
                         produtoId
                 );
     }
+
+    @GetMapping("/candidatos")
+    public List<ProdutoPromocaoResponse>
+    listarCandidatos() {
+
+        return promocaoService
+                .listarCandidatos();
+
+    }
+
 }

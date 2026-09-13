@@ -18,6 +18,12 @@ import java.util.List;
 import java.time.LocalDateTime;
 import java.util.UUID;
 import java.math.BigDecimal;
+import br.com.stockflow.stockflow_api.dto.ProdutoPromocaoResponse;
+import br.com.stockflow.stockflow_api.repository.MovimentacaoEstoqueRepository;
+import br.com.stockflow.stockflow_api.entity.MovimentacaoEstoque;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+
 
 @Service
 public class PromocaoService {
@@ -28,19 +34,21 @@ public class PromocaoService {
 
     private final ProdutoRepository produtoRepository;
 
+    private final MovimentacaoEstoqueRepository movimentacaoEstoqueRepository;
+
     public PromocaoService(
             PromocaoRepository promocaoRepository,
             ProdutoRepository produtoRepository,
-            UsuarioAutenticadoService usuarioAutenticadoService) {
+            UsuarioAutenticadoService usuarioAutenticadoService,
+            MovimentacaoEstoqueRepository movimentacaoEstoqueRepository) {
 
-        this.promocaoRepository =
-                promocaoRepository;
+        this.promocaoRepository = promocaoRepository;
 
-        this.produtoRepository =
-                produtoRepository;
+        this.produtoRepository = produtoRepository;
 
-        this.usuarioAutenticadoService =
-                usuarioAutenticadoService;
+        this.usuarioAutenticadoService = usuarioAutenticadoService;
+
+        this.movimentacaoEstoqueRepository = movimentacaoEstoqueRepository;
 
     }
 
@@ -315,5 +323,183 @@ public class PromocaoService {
 
         return promocaoRepository
                 .findByProduto(produto);
+    }
+
+    public List<ProdutoPromocaoResponse>
+    listarCandidatos() {
+
+        Usuario usuario =
+                usuarioAutenticadoService
+                        .usuarioLogado();
+
+        List<Produto> produtos =
+                produtoRepository
+                        .findByTenantId(
+                                usuario
+                                        .getTenant()
+                                        .getId()
+                        );
+
+        List<MovimentacaoEstoque> movimentacoes =
+                movimentacaoEstoqueRepository
+                        .findByTenantId(
+                                usuario
+                                        .getTenant()
+                                        .getId()
+                        );
+
+        List<ProdutoPromocaoResponse> candidatos =
+                new ArrayList<>();
+
+        for (Produto produto : produtos) {
+
+            int quantidadeComprada =
+                    movimentacoes
+                            .stream()
+                            .filter(
+                                    mov ->
+                                            mov.getProduto()
+                                                    .getId()
+                                                    .equals(
+                                                            produto.getId()
+                                                    )
+                            )
+                            .filter(
+                                    mov ->
+                                            "entrada".equalsIgnoreCase(
+                                                    mov.getTipo()
+                                            )
+                            )
+                            .mapToInt(
+                                    MovimentacaoEstoque::getQuantidade
+                            )
+                            .sum();
+
+            int quantidadeVendida =
+                    movimentacoes
+                            .stream()
+                            .filter(
+                                    mov ->
+                                            mov.getProduto()
+                                                    .getId()
+                                                    .equals(
+                                                            produto.getId()
+                                                    )
+                            )
+
+                            .filter(
+                                    mov ->
+                                            "saida".equalsIgnoreCase(
+                                                    mov.getTipo()
+                                            )
+                            )
+                            .mapToInt(
+                                    MovimentacaoEstoque::getQuantidade
+                            )
+                            .sum();
+            LocalDateTime ultimaEntrada =
+                    movimentacoes
+                            .stream()
+                            .filter(
+                                    mov ->
+                                            mov.getProduto()
+                                                    .getId()
+                                                    .equals(
+                                                            produto.getId()
+                                                    )
+                            )
+                            .filter(
+                                    mov ->
+                                            "entrada".equalsIgnoreCase(
+                                                    mov.getTipo()
+                                            )
+                            )
+                            .map(
+                                    MovimentacaoEstoque::getDataMovimentacao
+                            )
+                            .max(
+                                    LocalDateTime::compareTo
+                            )
+                            .orElse(null);
+            long diasEstoque = 0;
+
+            if (ultimaEntrada != null) {
+
+                diasEstoque =
+                        ChronoUnit.DAYS.between(
+                                ultimaEntrada.toLocalDate(),
+                                LocalDate.now()
+                        );
+
+            }
+
+            int percentualGiro = 0;
+
+            if (quantidadeComprada > 0) {
+
+                percentualGiro =
+                        (quantidadeVendida * 100)
+                                / quantidadeComprada;
+
+            }
+            boolean candidatoPromocao =
+                    Boolean.TRUE.equals(
+                            produto.getAtivo()
+                    )
+                            && produto.getEstoqueAtual() > 0
+                            && !Boolean.TRUE.equals(
+                            produto.getPromocaoAtiva()
+                    )
+                            && (
+                            diasEstoque >= 30
+                                    || percentualGiro < 40
+                    );
+
+            if (candidatoPromocao) {
+
+                candidatos.add(
+
+                        new ProdutoPromocaoResponse(
+
+                                produto.getId(),
+
+                                produto.getNome(),
+
+                                produto.getEstoqueAtual(),
+
+                                percentualGiro,
+
+                                (int) diasEstoque,
+
+                                produto.getPromocaoAtiva(),
+
+                                percentualGiro < 40
+                                        ? "ALTA"
+                                        : "MEDIA"
+
+                        )
+
+                );
+
+            }
+
+            System.out.println(
+                    produto.getNome()
+                            + " | Comprado: "
+                            + quantidadeComprada
+                            + " | Vendido: "
+                            + quantidadeVendida
+                            + " | Giro: "
+                            + percentualGiro
+                            + "%"
+                            + " | Dias: "
+                            + diasEstoque
+                            + " | Candidato: "
+                            + candidatoPromocao
+            );
+        }
+
+        return candidatos;
+
     }
 }
