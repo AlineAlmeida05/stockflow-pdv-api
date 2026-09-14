@@ -1,5 +1,6 @@
 package br.com.stockflow.stockflow_api.controller;
 
+import br.com.stockflow.stockflow_api.dto.PromocaoPainelResponse;
 import br.com.stockflow.stockflow_api.dto.PromocaoRequest;
 import br.com.stockflow.stockflow_api.entity.Promocao;
 import br.com.stockflow.stockflow_api.service.PromocaoService;
@@ -56,6 +57,15 @@ public class PromocaoController {
                 .encerrarPromocao(id);
     }
 
+    @GetMapping("/painel")
+    public PromocaoPainelResponse
+    listarPainel() {
+
+        return promocaoService
+                .listarPainel();
+
+    }
+
     @GetMapping("/{id}")
     public Promocao buscarPorId(
             @PathVariable
@@ -84,5 +94,7 @@ public class PromocaoController {
                 .listarCandidatos();
 
     }
+
+
 
 }
