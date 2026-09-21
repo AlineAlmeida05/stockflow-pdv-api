@@ -1,7 +1,7 @@
 package br.com.stockflow.stockflow_api.service;
 
-import br.com.stockflow.stockflow_api.dto.FiadoRequest;
-import br.com.stockflow.stockflow_api.dto.FiadoResponse;
+import br.com.stockflow.stockflow_api.dto.request.FiadoRequest;
+import br.com.stockflow.stockflow_api.dto.response.FiadoResponse;
 import br.com.stockflow.stockflow_api.entity.Cliente;
 import br.com.stockflow.stockflow_api.entity.Fiado;
 import br.com.stockflow.stockflow_api.entity.Usuario;
@@ -15,7 +15,6 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
 
 @Service
 public class FiadoService {

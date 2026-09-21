@@ -1,7 +1,7 @@
 package br.com.stockflow.stockflow_api.service;
 
-import br.com.stockflow.stockflow_api.dto.ClienteRequest;
-import br.com.stockflow.stockflow_api.dto.ClienteResponse;
+import br.com.stockflow.stockflow_api.dto.request.ClienteRequest;
+import br.com.stockflow.stockflow_api.dto.response.ClienteResponse;
 import br.com.stockflow.stockflow_api.entity.Cliente;
 import br.com.stockflow.stockflow_api.entity.Usuario;
 import br.com.stockflow.stockflow_api.repository.ClienteRepository;
@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
-import br.com.stockflow.stockflow_api.dto.ClienteResumoResponse;
+import br.com.stockflow.stockflow_api.dto.response.ClienteResumoResponse;
 import br.com.stockflow.stockflow_api.entity.Fiado;
 import br.com.stockflow.stockflow_api.entity.Pagamento;
 import br.com.stockflow.stockflow_api.repository.FiadoRepository;
@@ -45,7 +45,7 @@ public class ClienteService {
         this.usuarioAutenticadoService = usuarioAutenticadoService;
     }
 
-    public Cliente salvar(
+    public ClienteResponse salvar(
             ClienteRequest request) {
 
         Usuario usuarioLogado =
@@ -59,37 +59,13 @@ public class ClienteService {
                     "Usuário não autenticado");
         }
 
-        if (request.getNome() == null
-                || request.getNome().isBlank()) {
-
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "Nome do cliente é obrigatório.");
-        }
-        if (request.getLimiteCredito() != null
-                && request.getLimiteCredito()
-                .compareTo(BigDecimal.ZERO) < 0) {
-
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "Limite de crédito não pode ser negativo.");
-        }
-        if (request.getTelefone() == null
-                || request.getTelefone().isBlank()) {
-
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "Telefone é obrigatório.");
-        }
-
-
         Cliente cliente = new Cliente();
 
         cliente.setNome(
-                request.getNome());
+                request.nome());
 
         cliente.setTelefone(
-                request.getTelefone());
+                request.telefone());
 
         cliente.setAtivo(true);
 
@@ -97,18 +73,19 @@ public class ClienteService {
                 LocalDateTime.now());
 
         cliente.setLimiteCredito(
-                request.getLimiteCredito() != null
-                        ? request.getLimiteCredito()
+                request.limiteCredito() != null
+                        ? request.limiteCredito()
                         : BigDecimal.valueOf(300));
 
         cliente.setObservacao(
-                request.getObservacao());
+                request.observacao());
 
         cliente.setTenant(
                 usuarioLogado.getTenant());
 
-        return clienteRepository.save(
-                cliente);
+        return montarResponse(
+                clienteRepository.save(cliente)
+        );
     }
 
     public List<ClienteResponse> listar() {
@@ -130,19 +107,11 @@ public class ClienteService {
                                 .getTenant()
                                 .getId())
                 .stream()
-                .map(cliente ->
-                        new ClienteResponse(
-                                cliente.getId(),
-                                cliente.getNome(),
-                                cliente.getTelefone(),
-                                cliente.getAtivo(),
-                                cliente.getDataCadastro(),
-                                cliente.getLimiteCredito(),
-                                cliente.getObservacao()))
+                .map(this::montarResponse)
                 .toList();
     }
 
-    public Cliente atualizar(
+    public ClienteResponse atualizar(
             UUID id,
             ClienteRequest request) {
 
@@ -156,16 +125,16 @@ public class ClienteService {
                     HttpStatus.UNAUTHORIZED,
                     "Usuário não autenticado");
         }
-        if (request.getLimiteCredito() != null
-                && request.getLimiteCredito()
+        if (request.limiteCredito() != null
+                && request.limiteCredito()
                 .compareTo(BigDecimal.ZERO) < 0) {
 
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
                     "Limite de crédito não pode ser negativo.");
         }
-        if (request.getTelefone() == null
-                || request.getTelefone().isBlank()) {
+        if (request.telefone() == null
+                || request.telefone().isBlank()) {
 
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
@@ -187,19 +156,20 @@ public class ClienteService {
                                                 "Cliente não encontrado."));
 
         cliente.setNome(
-                request.getNome());
+                request.nome());
 
         cliente.setTelefone(
-                request.getTelefone());
+                request.telefone());
 
         cliente.setLimiteCredito(
-                request.getLimiteCredito());
+                request.limiteCredito());
 
         cliente.setObservacao(
-                request.getObservacao());
+                request.observacao());
 
-        return clienteRepository.save(
-                cliente);
+        return montarResponse(
+                clienteRepository.save(cliente)
+        );
     }
 
     public void inativar(
@@ -346,6 +316,30 @@ public class ClienteService {
                 creditoDisponivel,
                 status,
                 diasSemPagamento);
+    }
+
+    private ClienteResponse montarResponse(
+            Cliente cliente
+    ) {
+
+        return new ClienteResponse(
+
+                cliente.getId(),
+
+                cliente.getNome(),
+
+                cliente.getTelefone(),
+
+                cliente.getAtivo(),
+
+                cliente.getDataCadastro(),
+
+                cliente.getLimiteCredito(),
+
+                cliente.getObservacao()
+
+        );
+
     }
 }
 

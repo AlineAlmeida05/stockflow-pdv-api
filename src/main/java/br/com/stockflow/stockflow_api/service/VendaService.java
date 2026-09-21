@@ -1,7 +1,7 @@
 package br.com.stockflow.stockflow_api.service;
 
-import br.com.stockflow.stockflow_api.dto.VendaRequest;
-import br.com.stockflow.stockflow_api.dto.VendaResponse;
+import br.com.stockflow.stockflow_api.dto.request.VendaRequest;
+import br.com.stockflow.stockflow_api.dto.response.VendaResponse;
 
 import br.com.stockflow.stockflow_api.entity.*;
 
@@ -16,7 +16,7 @@ import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
-import br.com.stockflow.stockflow_api.dto.ItemVendaRequest;
+import br.com.stockflow.stockflow_api.dto.request.ItemVendaRequest;
 
 import java.math.BigDecimal;
 
@@ -24,15 +24,12 @@ import java.time.LocalDateTime;
 
 import org.springframework.transaction.annotation.Transactional;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.web.server.ResponseStatusException;
-
-import br.com.stockflow.stockflow_api.dto.CancelarVendaRequest;
+import br.com.stockflow.stockflow_api.dto.request.CancelarVendaRequest;
 
 import java.util.UUID;
 
-import br.com.stockflow.stockflow_api.dto.VendaDetalhesResponse;
-import br.com.stockflow.stockflow_api.dto.ItemVendaResponse;
+import br.com.stockflow.stockflow_api.dto.response.VendaDetalhesResponse;
+import br.com.stockflow.stockflow_api.dto.response.ItemVendaResponse;
 
 @Service
 public class VendaService {

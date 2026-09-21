@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 import br.com.stockflow.stockflow_api.dto.response.EmpresaResponse;
-import br.com.stockflow.stockflow_api.dto.EmpresaUpdateRequest;
+import br.com.stockflow.stockflow_api.dto.request.EmpresaUpdateRequest;
 import br.com.stockflow.stockflow_api.security.UsuarioAutenticadoService;
 import br.com.stockflow.stockflow_api.entity.Usuario;
 import org.springframework.web.server.ResponseStatusException;

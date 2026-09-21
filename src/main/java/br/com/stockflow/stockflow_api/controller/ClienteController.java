@@ -1,15 +1,17 @@
 package br.com.stockflow.stockflow_api.controller;
 
-import br.com.stockflow.stockflow_api.dto.ClienteRequest;
-import br.com.stockflow.stockflow_api.dto.ClienteResponse;
+import br.com.stockflow.stockflow_api.dto.request.ClienteRequest;
+import br.com.stockflow.stockflow_api.dto.response.ClienteResponse;
 import br.com.stockflow.stockflow_api.entity.Cliente;
 import br.com.stockflow.stockflow_api.service.ClienteService;
 
 import org.springframework.web.bind.annotation.*;
-import br.com.stockflow.stockflow_api.dto.ClienteResumoResponse;
+import br.com.stockflow.stockflow_api.dto.response.ClienteResumoResponse;
 
 import java.util.List;
 import java.util.UUID;
+import jakarta.validation.Valid;
+
 
 @RestController
 @RequestMapping("/api/clientes")
@@ -24,7 +26,8 @@ public class ClienteController {
     }
 
     @PostMapping
-    public Cliente salvar(
+    public ClienteResponse salvar(
+            @Valid
             @RequestBody ClienteRequest request) {
 
         return clienteService.salvar(
@@ -32,8 +35,9 @@ public class ClienteController {
     }
 
     @PutMapping("/{id}")
-    public Cliente atualizar(
+    public ClienteResponse atualizar(
             @PathVariable UUID id,
+            @Valid
             @RequestBody ClienteRequest request) {
 
         return clienteService.atualizar(

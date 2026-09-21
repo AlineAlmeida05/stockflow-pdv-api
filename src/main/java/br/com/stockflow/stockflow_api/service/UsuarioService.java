@@ -15,12 +15,13 @@ import java.util.UUID;
 import br.com.stockflow.stockflow_api.security.UsuarioAutenticadoService;
 
 import br.com.stockflow.stockflow_api.entity.Perfil;
-import br.com.stockflow.stockflow_api.dto.AlterarSenhaRequest;
+import br.com.stockflow.stockflow_api.dto.request.AlterarSenhaRequest;
 import br.com.stockflow.stockflow_api.exception.RegraNegocioException;
-import br.com.stockflow.stockflow_api.dto.UsuarioCreateRequest;
-import br.com.stockflow.stockflow_api.dto.UsuarioUpdateRequest;
+import br.com.stockflow.stockflow_api.dto.request.UsuarioCreateRequest;
+import br.com.stockflow.stockflow_api.dto.request.UsuarioUpdateRequest;
 import br.com.stockflow.stockflow_api.entity.Tenant;
 import br.com.stockflow.stockflow_api.repository.TenantRepository;
+import br.com.stockflow.stockflow_api.dto.response.UsuarioResponse;
 
 
 @Service
@@ -45,7 +46,7 @@ public class UsuarioService {
     }
 
 
-    public List<Usuario> listarTodos() {
+    public List<UsuarioResponse> listarTodos() {
 
         Usuario usuarioLogado =
                 usuarioAutenticadoService
@@ -58,21 +59,27 @@ public class UsuarioService {
         ) {
 
             return usuarioRepository
-                    .findAll();
+                    .findByTenantId(
+                            usuarioLogado
+                                    .getTenant()
+                                    .getId()
+                    )
+                    .stream()
+                    .map(this::montarResponse)
+                    .toList();
 
         }
 
         return usuarioRepository
-                .findByTenantId(
-                        usuarioLogado
-                                .getTenant()
-                                .getId()
-                );
+                .findAll()
+                .stream()
+                .map(this::montarResponse)
+                .toList();
 
     }
 
 
-    public Usuario salvar(
+    public UsuarioResponse salvar(
             UsuarioCreateRequest request) {
 
         Tenant tenant = tenantRepository
@@ -142,8 +149,9 @@ public class UsuarioService {
                 passwordEncoder.encode(
                         usuario.getSenha()));
 
-        return usuarioRepository
-                .save(usuario);
+        return montarResponse(
+                usuarioRepository.save(usuario)
+        );
 
     }
 
@@ -199,7 +207,7 @@ public class UsuarioService {
     }
 
 
-    public Usuario atualizar(
+    public UsuarioResponse atualizar(
             UUID id,
             UsuarioUpdateRequest request) {
 
@@ -314,13 +322,14 @@ public class UsuarioService {
 
         }
 
-        return usuarioRepository
-                .save(usuario);
+        return montarResponse(
+                usuarioRepository.save(usuario)
+        );
 
     }
 
 
-    public List<Usuario> listarPorTenant(
+    public List<UsuarioResponse> listarPorTenant(
             UUID tenantId) {
 
         Usuario usuarioLogado = usuarioAutenticadoService
@@ -341,7 +350,11 @@ public class UsuarioService {
 
         return usuarioRepository
                 .findByTenantId(
-                        tenantId);
+                        tenantId
+                )
+                .stream()
+                .map(this::montarResponse)
+                .toList();
 
     }
 
@@ -406,6 +419,30 @@ public class UsuarioService {
 
         usuarioRepository.save(
                 usuarioLogado);
+
+    }
+
+    private UsuarioResponse montarResponse(
+            Usuario usuario
+    ) {
+
+        return new UsuarioResponse(
+
+                usuario.getId(),
+
+                usuario.getNome(),
+
+                usuario.getEmail(),
+
+                usuario.getPerfil(),
+
+                usuario.getAtivo(),
+
+                usuario.getTenant() != null
+                        ? usuario.getTenant().getId()
+                        : null
+
+        );
 
     }
 

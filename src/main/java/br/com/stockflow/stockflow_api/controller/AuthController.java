@@ -6,8 +6,8 @@ import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import br.com.stockflow.stockflow_api.dto.LoginRequest;
-import br.com.stockflow.stockflow_api.dto.LoginResponse;
+import br.com.stockflow.stockflow_api.dto.request.LoginRequest;
+import br.com.stockflow.stockflow_api.dto.response.LoginResponse;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 

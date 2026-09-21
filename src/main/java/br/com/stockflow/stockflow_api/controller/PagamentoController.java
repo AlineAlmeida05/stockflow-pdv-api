@@ -1,7 +1,7 @@
 package br.com.stockflow.stockflow_api.controller;
 
-import br.com.stockflow.stockflow_api.dto.PagamentoRequest;
-import br.com.stockflow.stockflow_api.dto.PagamentoResponse;
+import br.com.stockflow.stockflow_api.dto.request.PagamentoRequest;
+import br.com.stockflow.stockflow_api.dto.response.PagamentoResponse;
 import br.com.stockflow.stockflow_api.entity.Pagamento;
 import br.com.stockflow.stockflow_api.service.PagamentoService;
 

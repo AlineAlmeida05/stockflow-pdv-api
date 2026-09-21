@@ -1,7 +1,7 @@
 package br.com.stockflow.stockflow_api.service;
 
 import br.com.stockflow.stockflow_api.dto.PromocaoMetrics;
-import br.com.stockflow.stockflow_api.dto.PromocaoRequest;
+import br.com.stockflow.stockflow_api.dto.request.PromocaoRequest;
 
 import br.com.stockflow.stockflow_api.entity.Produto;
 import br.com.stockflow.stockflow_api.entity.Promocao;
@@ -21,14 +21,14 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 import java.math.BigDecimal;
 
-import br.com.stockflow.stockflow_api.dto.ProdutoPromocaoResponse;
+import br.com.stockflow.stockflow_api.dto.response.ProdutoPromocaoResponse;
 import br.com.stockflow.stockflow_api.repository.MovimentacaoEstoqueRepository;
 import br.com.stockflow.stockflow_api.entity.MovimentacaoEstoque;
 
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 
-import br.com.stockflow.stockflow_api.dto.PromocaoPainelResponse;
+import br.com.stockflow.stockflow_api.dto.response.PromocaoPainelResponse;
 
 
 @Service

@@ -1,4 +1,4 @@
-package br.com.stockflow.stockflow_api.dto;
+package br.com.stockflow.stockflow_api.dto.request;
 
 import br.com.stockflow.stockflow_api.entity.Perfil;
 import jakarta.validation.constraints.Email;

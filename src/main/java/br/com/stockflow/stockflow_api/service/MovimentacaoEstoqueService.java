@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-import br.com.stockflow.stockflow_api.dto.MovimentacaoEstoqueRequest;
+import br.com.stockflow.stockflow_api.dto.request.MovimentacaoEstoqueRequest;
 
 import br.com.stockflow.stockflow_api.entity.Produto;
 import br.com.stockflow.stockflow_api.entity.Usuario;
@@ -21,7 +21,7 @@ import java.time.LocalDateTime;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
-import br.com.stockflow.stockflow_api.dto.MovimentacaoEstoqueResponse;
+import br.com.stockflow.stockflow_api.dto.response.MovimentacaoEstoqueResponse;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;

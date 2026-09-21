@@ -7,8 +7,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-import br.com.stockflow.stockflow_api.dto.MovimentacaoEstoqueRequest;
-import br.com.stockflow.stockflow_api.dto.MovimentacaoEstoqueResponse;
+import br.com.stockflow.stockflow_api.dto.request.MovimentacaoEstoqueRequest;
+import br.com.stockflow.stockflow_api.dto.response.MovimentacaoEstoqueResponse;
 
 @RestController
 @RequestMapping("/api/movimentacoes-estoque")

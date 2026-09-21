@@ -1,7 +1,7 @@
 package br.com.stockflow.stockflow_api.controller;
 
-import br.com.stockflow.stockflow_api.dto.PromocaoPainelResponse;
-import br.com.stockflow.stockflow_api.dto.PromocaoRequest;
+import br.com.stockflow.stockflow_api.dto.response.PromocaoPainelResponse;
+import br.com.stockflow.stockflow_api.dto.request.PromocaoRequest;
 import br.com.stockflow.stockflow_api.entity.Promocao;
 import br.com.stockflow.stockflow_api.service.PromocaoService;
 
@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
 
-import br.com.stockflow.stockflow_api.dto.ProdutoPromocaoResponse;
+import br.com.stockflow.stockflow_api.dto.response.ProdutoPromocaoResponse;
 
 @RestController
 @RequestMapping("/api/promocoes")
