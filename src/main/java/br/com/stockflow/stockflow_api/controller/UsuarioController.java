@@ -1,6 +1,6 @@
 package br.com.stockflow.stockflow_api.controller;
 
-import br.com.stockflow.stockflow_api.entity.Usuario;
+import br.com.stockflow.stockflow_api.dto.response.UsuarioResponse;
 import br.com.stockflow.stockflow_api.security.UsuarioAutenticadoService;
 import br.com.stockflow.stockflow_api.service.UsuarioService;
 
@@ -10,10 +10,10 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
 
-import br.com.stockflow.stockflow_api.dto.AlterarSenhaRequest;
+import br.com.stockflow.stockflow_api.dto.request.AlterarSenhaRequest;
 import jakarta.validation.Valid;
-import br.com.stockflow.stockflow_api.dto.UsuarioCreateRequest;
-import br.com.stockflow.stockflow_api.dto.UsuarioUpdateRequest;
+import br.com.stockflow.stockflow_api.dto.request.UsuarioCreateRequest;
+import br.com.stockflow.stockflow_api.dto.request.UsuarioUpdateRequest;
 
 @RestController
 @RequestMapping("/api/usuarios")
@@ -34,7 +34,7 @@ public class UsuarioController {
         }
 
         @GetMapping
-        public List<Usuario> listarTodos() {
+        public ResponseEntity<List<UsuarioResponse>> listarTodos() {
                 var usuario = usuarioAutenticadoService
                                 .usuarioLogado();
 
@@ -45,18 +45,19 @@ public class UsuarioController {
                 System.out.println(
                                 "PERFIL: "
                                                 + usuario.getPerfil());
-                return usuarioService
-                                .listarTodos();
+                return ResponseEntity.ok(
+                        usuarioService.listarTodos());
 
         }
 
         @PostMapping
-        public Usuario salvar(
+        public ResponseEntity<UsuarioResponse> salvar(
                 @Valid
                 @RequestBody UsuarioCreateRequest request) {
 
-                return usuarioService
-                        .salvar(request);
+                return ResponseEntity.ok(
+                        usuarioService.salvar(request)
+                );
 
         }
 
@@ -73,26 +74,30 @@ public class UsuarioController {
         }
 
         @PutMapping("/{id}")
-        public Usuario atualizar(
+        public ResponseEntity<UsuarioResponse> atualizar(
                 @PathVariable UUID id,
                 @Valid
                 @RequestBody UsuarioUpdateRequest request) {
 
-                return usuarioService
-                        .atualizar(
+                return ResponseEntity.ok(
+                        usuarioService.atualizar(
                                 id,
-                                request);
+                                request
+                        )
+                );
 
         }
 
 
         @GetMapping("/tenant/{tenantId}")
-        public List<Usuario> listarPorTenant(
+        public ResponseEntity<List<UsuarioResponse>> listarPorTenant(
                         @PathVariable UUID tenantId) {
 
-                return usuarioService
-                                .listarPorTenant(
-                                                tenantId);
+                return ResponseEntity.ok(
+                        usuarioService.listarPorTenant(
+                                tenantId
+                        )
+                );
 
         }
 

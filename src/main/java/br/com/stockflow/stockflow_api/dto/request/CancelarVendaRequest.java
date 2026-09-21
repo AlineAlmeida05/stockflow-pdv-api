@@ -1,4 +1,4 @@
-package br.com.stockflow.stockflow_api.dto;
+package br.com.stockflow.stockflow_api.dto.request;
 
 public class CancelarVendaRequest {
 

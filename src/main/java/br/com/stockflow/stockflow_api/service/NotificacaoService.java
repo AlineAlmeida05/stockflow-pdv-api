@@ -1,6 +1,6 @@
 package br.com.stockflow.stockflow_api.service;
 
-import br.com.stockflow.stockflow_api.dto.MenuBadgeResponse;
+import br.com.stockflow.stockflow_api.dto.response.MenuBadgeResponse;
 import br.com.stockflow.stockflow_api.entity.Usuario;
 import br.com.stockflow.stockflow_api.repository.ProdutoRepository;
 import br.com.stockflow.stockflow_api.security.UsuarioAutenticadoService;

@@ -4,7 +4,7 @@ import br.com.stockflow.stockflow_api.service.EmpresaService;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 import br.com.stockflow.stockflow_api.dto.response.EmpresaResponse;
-import br.com.stockflow.stockflow_api.dto.EmpresaUpdateRequest;
+import br.com.stockflow.stockflow_api.dto.request.EmpresaUpdateRequest;
 
 @RestController
 @RequestMapping("/api/empresa")

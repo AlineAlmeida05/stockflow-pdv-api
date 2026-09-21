@@ -1,4 +1,4 @@
-package br.com.stockflow.stockflow_api.dto;
+package br.com.stockflow.stockflow_api.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -6,7 +6,7 @@ import jakarta.validation.constraints.PositiveOrZero;
 
 import java.math.BigDecimal;
 
-public record ProdutoUpdateRequest(
+public record ProdutoCreateRequest(
 
         @NotBlank(
                 message = "Nome é obrigatório."
@@ -39,12 +39,7 @@ public record ProdutoUpdateRequest(
         @PositiveOrZero(
                 message = "Estoque mínimo deve ser maior ou igual a zero."
         )
-        Integer estoqueMinimo,
-
-        @NotNull(
-                message = "Status é obrigatório."
-        )
-        Boolean ativo
+        Integer estoqueMinimo
 
 ) {
 }

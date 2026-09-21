@@ -1,5 +1,6 @@
 package br.com.stockflow.stockflow_api.controller;
 
+import br.com.stockflow.stockflow_api.dto.response.ProdutoResponse;
 import br.com.stockflow.stockflow_api.entity.Produto;
 import br.com.stockflow.stockflow_api.service.ProdutoService;
 
@@ -10,8 +11,8 @@ import java.util.List;
 import java.util.UUID;
 import jakarta.validation.Valid;
 
-import br.com.stockflow.stockflow_api.dto.ProdutoCreateRequest;
-import br.com.stockflow.stockflow_api.dto.ProdutoUpdateRequest;
+import br.com.stockflow.stockflow_api.dto.request.ProdutoCreateRequest;
+import br.com.stockflow.stockflow_api.dto.request.ProdutoUpdateRequest;
 
 @RestController
 @RequestMapping("/api/produtos")
@@ -26,7 +27,7 @@ public class ProdutoController {
         }
 
         @GetMapping
-        public ResponseEntity<List<Produto>> listar() {
+        public ResponseEntity<List<ProdutoResponse>> listar() {
 
                 return ResponseEntity.ok(
                                 produtoService.listar());
@@ -34,7 +35,7 @@ public class ProdutoController {
         }
 
         @GetMapping("/{id}")
-        public ResponseEntity<Produto> buscarPorId(
+        public ResponseEntity<ProdutoResponse> buscarPorId(
                         @PathVariable UUID id) {
 
                 return ResponseEntity.ok(
@@ -43,7 +44,7 @@ public class ProdutoController {
         }
 
         @PostMapping
-        public ResponseEntity<Produto> salvar(
+        ResponseEntity<ProdutoResponse> salvar(
                 @Valid
                 @RequestBody ProdutoCreateRequest request) {
 
@@ -53,7 +54,7 @@ public class ProdutoController {
         }
 
         @PutMapping("/{id}")
-        public ResponseEntity<Produto> atualizar(
+        ResponseEntity<ProdutoResponse> atualizar(
                 @PathVariable UUID id,
                 @Valid
                 @RequestBody ProdutoUpdateRequest request) {

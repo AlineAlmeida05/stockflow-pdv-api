@@ -1,7 +1,7 @@
 package br.com.stockflow.stockflow_api.service;
 
-import br.com.stockflow.stockflow_api.dto.LoginRequest;
-import br.com.stockflow.stockflow_api.dto.LoginResponse;
+import br.com.stockflow.stockflow_api.dto.request.LoginRequest;
+import br.com.stockflow.stockflow_api.dto.response.LoginResponse;
 import br.com.stockflow.stockflow_api.entity.Perfil;
 import br.com.stockflow.stockflow_api.entity.Tenant;
 import br.com.stockflow.stockflow_api.entity.Usuario;

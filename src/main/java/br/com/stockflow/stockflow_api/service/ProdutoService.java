@@ -13,8 +13,9 @@ import java.util.List;
 import java.util.UUID;
 import br.com.stockflow.stockflow_api.exception.RecursoNaoEncontradoException;
 import br.com.stockflow.stockflow_api.exception.RegraNegocioException;
-import br.com.stockflow.stockflow_api.dto.ProdutoCreateRequest;
-import br.com.stockflow.stockflow_api.dto.ProdutoUpdateRequest;
+import br.com.stockflow.stockflow_api.dto.request.ProdutoCreateRequest;
+import br.com.stockflow.stockflow_api.dto.request.ProdutoUpdateRequest;
+import br.com.stockflow.stockflow_api.dto.response.ProdutoResponse;
 
 @Service
 public class ProdutoService {
@@ -33,21 +34,25 @@ public class ProdutoService {
 
         }
 
-        public List<Produto> listar() {
+        public List<ProdutoResponse> listar(){
 
                 Usuario usuarioLogado = usuarioAutenticadoService
                                 .usuarioLogado();
 
                 return produtoRepository
-                                .findByTenantId(
-                                                usuarioLogado
-                                                                .getTenant()
-                                                                .getId());
+                        .findByTenantId(
+                                usuarioLogado
+                                        .getTenant()
+                                        .getId())
+                        .stream()
+                        .map(this::montarResponse)
+                        .toList();
+
 
         }
 
-        public Produto buscarPorId(
-                        UUID id) {
+        public ProdutoResponse buscarPorId(
+                UUID id) {
 
                 Produto produto = produtoRepository
                         .findById(id)
@@ -68,11 +73,13 @@ public class ProdutoService {
 
                 }
 
-                return produto;
+                return montarResponse(
+                        produto
+                );
 
         }
 
-        public Produto salvar(
+        public ProdutoResponse salvar(
                 ProdutoCreateRequest request)
         {
                 Produto produto = new Produto();
@@ -114,12 +121,13 @@ public class ProdutoService {
                                 java.math.BigDecimal.ZERO);
 
 
-                return produtoRepository
-                                .save(produto);
+                return montarResponse(
+                        produtoRepository.save(produto)
+                );
 
         }
 
-        public Produto atualizar(
+        public ProdutoResponse atualizar(
                 UUID id,
                 ProdutoUpdateRequest request) {
 
@@ -167,8 +175,9 @@ public class ProdutoService {
                 produto.setDataAtualizacao(
                                 LocalDateTime.now());
 
-                return produtoRepository
-                                .save(produto);
+                return montarResponse(
+                        produtoRepository.save(produto)
+                );
 
         }
 
@@ -306,6 +315,34 @@ public class ProdutoService {
                                         "Produto inativo.");
 
                 }
+
+        }
+
+        private ProdutoResponse montarResponse(
+                Produto produto
+        ) {
+
+                return new ProdutoResponse(
+
+                        produto.getId(),
+
+                        produto.getCodigo(),
+
+                        produto.getNome(),
+
+                        produto.getCategoria(),
+
+                        produto.getCodigoBarras(),
+
+                        produto.getPrecoVenda(),
+
+                        produto.getEstoqueAtual(),
+
+                        produto.getEstoqueMinimo(),
+
+                        produto.getAtivo()
+
+                );
 
         }
 

@@ -1,6 +1,6 @@
 package br.com.stockflow.stockflow_api.controller;
 
-import br.com.stockflow.stockflow_api.dto.MenuBadgeResponse;
+import br.com.stockflow.stockflow_api.dto.response.MenuBadgeResponse;
 import br.com.stockflow.stockflow_api.service.NotificacaoService;
 
 import org.springframework.web.bind.annotation.GetMapping;
