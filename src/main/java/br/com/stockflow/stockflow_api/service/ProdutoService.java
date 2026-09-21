@@ -2,6 +2,7 @@ package br.com.stockflow.stockflow_api.service;
 
 import br.com.stockflow.stockflow_api.entity.Produto;
 import br.com.stockflow.stockflow_api.entity.Usuario;
+import br.com.stockflow.stockflow_api.exception.AcessoNegadoException;
 import br.com.stockflow.stockflow_api.repository.ProdutoRepository;
 import br.com.stockflow.stockflow_api.security.UsuarioAutenticadoService;
 
@@ -60,7 +61,7 @@ public class ProdutoService {
                                 usuarioLogado,
                                 produto)) {
 
-                        throw new RegraNegocioException(
+                        throw new AcessoNegadoException(
                                         "Você não possui acesso a este produto.");
 
                 }
@@ -117,7 +118,7 @@ public class ProdutoService {
                                 usuarioLogado,
                                 produto)) {
 
-                        throw new RegraNegocioException(
+                        throw new AcessoNegadoException(
                                         "Você não possui permissão para editar este produto.");
 
                 }
@@ -169,7 +170,7 @@ public class ProdutoService {
                                 usuarioLogado,
                                 produto)) {
 
-                        throw new RegraNegocioException(
+                        throw new AcessoNegadoException(
                                         "Você não possui permissão para inativar este produto.");
 
                 }
@@ -201,7 +202,7 @@ public class ProdutoService {
                                 usuarioLogado,
                                 produto)) {
 
-                        throw new RegraNegocioException(
+                        throw new AcessoNegadoException(
                                         "Você não possui permissão para reativar este produto.");
 
                 }

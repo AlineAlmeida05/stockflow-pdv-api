@@ -7,6 +7,7 @@ import br.com.stockflow.stockflow_api.entity.Produto;
 import br.com.stockflow.stockflow_api.entity.Promocao;
 import br.com.stockflow.stockflow_api.entity.Usuario;
 
+import br.com.stockflow.stockflow_api.exception.RegraNegocioException;
 import br.com.stockflow.stockflow_api.repository.ProdutoRepository;
 import br.com.stockflow.stockflow_api.repository.PromocaoRepository;
 
@@ -92,7 +93,7 @@ public class PromocaoService {
                 promocaoRepository
                         .findById(id)
                         .orElseThrow(
-                                () -> new RuntimeException(
+                                () -> new RegraNegocioException(
                                         "Promoção não encontrada."
                                 )
                         );
@@ -105,7 +106,7 @@ public class PromocaoService {
                                 .getTenant()
                                 .getId())) {
 
-            throw new RuntimeException(
+            throw new RegraNegocioException(
                     "Você não possui acesso a esta promoção."
             );
         }
@@ -126,7 +127,7 @@ public class PromocaoService {
                                 request.getProdutoId()
                         )
                         .orElseThrow(
-                                () -> new RuntimeException(
+                                () -> new RegraNegocioException(
                                         "Produto não encontrado."
                                 )
                         );
@@ -140,7 +141,7 @@ public class PromocaoService {
                                 .getId()
                 )) {
 
-            throw new RuntimeException(
+            throw new RegraNegocioException(
                     "Você não possui acesso a este produto."
             );
         }
@@ -148,7 +149,7 @@ public class PromocaoService {
         if (Boolean.FALSE.equals(
                 produto.getAtivo())) {
 
-            throw new RuntimeException(
+            throw new RegraNegocioException(
                     "Não é possível criar promoção para produto inativo."
             );
         }
@@ -304,7 +305,7 @@ public class PromocaoService {
                 produtoRepository
                         .findById(produtoId)
                         .orElseThrow(
-                                () -> new RuntimeException(
+                                () -> new RegraNegocioException(
                                         "Produto não encontrado."
                                 )
                         );
@@ -321,7 +322,7 @@ public class PromocaoService {
                                 .getId()
                 )) {
 
-            throw new RuntimeException(
+            throw new RegraNegocioException(
                     "Você não possui acesso a este produto."
             );
         }

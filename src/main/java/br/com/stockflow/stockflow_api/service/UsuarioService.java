@@ -1,6 +1,7 @@
 package br.com.stockflow.stockflow_api.service;
 
 import br.com.stockflow.stockflow_api.entity.Usuario;
+import br.com.stockflow.stockflow_api.exception.AcessoNegadoException;
 import br.com.stockflow.stockflow_api.exception.RecursoNaoEncontradoException;
 import br.com.stockflow.stockflow_api.repository.UsuarioRepository;
 
@@ -110,7 +111,7 @@ public class UsuarioService {
                                 usuario.getTenant()
                                         .getId())) {
 
-            throw new RegraNegocioException(
+            throw new AcessoNegadoException(
                     "Você não pode criar usuários em outro tenant.");
 
         }
@@ -120,7 +121,7 @@ public class UsuarioService {
                     usuarioLogado.getPerfil(),
                     usuario.getPerfil())) {
 
-                throw new RegraNegocioException(
+                throw new AcessoNegadoException(
                         "Você não possui permissão para criar este perfil.");
 
             }
@@ -167,7 +168,7 @@ public class UsuarioService {
                         usuarioLogado,
                         usuarioAlvo)) {
 
-            throw new RegraNegocioException(
+            throw new AcessoNegadoException(
                     "Você não possui permissão para excluir usuários de outro tenant.");
 
         }
@@ -186,7 +187,7 @@ public class UsuarioService {
                     usuarioLogado.getPerfil(),
                     usuarioAlvo.getPerfil())) {
 
-                throw new RegraNegocioException(
+                throw new AcessoNegadoException(
                         "Você não possui permissão para excluir este usuário.");
 
             }
@@ -223,7 +224,7 @@ public class UsuarioService {
                         )
         ) {
 
-            throw new RegraNegocioException(
+            throw new AcessoNegadoException(
                     "Você não possui permissão para editar usuários de outro tenant."
             );
 
@@ -235,7 +236,7 @@ public class UsuarioService {
                     usuarioLogado.getPerfil(),
                     usuario.getPerfil())) {
 
-                throw new RegraNegocioException(
+                throw new AcessoNegadoException(
                         "Você não possui permissão para editar este usuário.");
 
             }
@@ -284,7 +285,7 @@ public class UsuarioService {
                     usuarioLogado.getPerfil(),
                     request.perfil())) {
 
-                throw new RegraNegocioException(
+                throw new AcessoNegadoException(
                         "Você não possui permissão para atribuir este perfil.");
 
             }
@@ -333,7 +334,7 @@ public class UsuarioService {
                         .getId()
                         .equals(tenantId)) {
 
-            throw new RegraNegocioException(
+            throw new AcessoNegadoException(
                     "Você não possui acesso a este tenant.");
 
         }
