@@ -13,6 +13,8 @@ import java.util.List;
 import java.util.UUID;
 import br.com.stockflow.stockflow_api.exception.RecursoNaoEncontradoException;
 import br.com.stockflow.stockflow_api.exception.RegraNegocioException;
+import br.com.stockflow.stockflow_api.dto.ProdutoCreateRequest;
+import br.com.stockflow.stockflow_api.dto.ProdutoUpdateRequest;
 
 @Service
 public class ProdutoService {
@@ -71,7 +73,29 @@ public class ProdutoService {
         }
 
         public Produto salvar(
-                        Produto produto) {
+                ProdutoCreateRequest request)
+        {
+                Produto produto = new Produto();
+
+                produto.setNome(
+                        request.nome());
+
+                produto.setCategoria(
+                        request.categoria());
+
+                produto.setCodigoBarras(
+                        request.codigoBarras());
+
+                produto.setPrecoVenda(
+                        request.precoVenda());
+
+                produto.setEstoqueAtual(
+                        request.estoqueAtual());
+
+                produto.setEstoqueMinimo(
+                        request.estoqueMinimo());
+
+                produto.setAtivo(true);
 
                 Usuario usuarioLogado = usuarioAutenticadoService
                                 .usuarioLogado();
@@ -88,11 +112,7 @@ public class ProdutoService {
 
                 produto.setCustoMedio(
                                 java.math.BigDecimal.ZERO);
-                if (produto.getCustoMedio() == null) {
 
-                        produto.setCustoMedio(
-                                        java.math.BigDecimal.ZERO);
-                }
 
                 return produtoRepository
                                 .save(produto);
@@ -100,8 +120,8 @@ public class ProdutoService {
         }
 
         public Produto atualizar(
-                        UUID id,
-                        Produto produtoAtualizado) {
+                UUID id,
+                ProdutoUpdateRequest request) {
 
                 Produto produto = produtoRepository
                         .findById(id)
@@ -124,25 +144,25 @@ public class ProdutoService {
                 }
 
                 produto.setNome(
-                                produtoAtualizado.getNome());
+                                request.nome());
 
                 produto.setCategoria(
-                                produtoAtualizado.getCategoria());
+                        request.categoria());
 
                 produto.setCodigoBarras(
-                                produtoAtualizado.getCodigoBarras());
+                        request.codigoBarras());
 
                 produto.setPrecoVenda(
-                                produtoAtualizado.getPrecoVenda());
+                        request.precoVenda());
 
                 produto.setEstoqueAtual(
-                                produtoAtualizado.getEstoqueAtual());
+                        request.estoqueAtual());
 
                 produto.setEstoqueMinimo(
-                                produtoAtualizado.getEstoqueMinimo());
+                        request.estoqueMinimo());
 
                 produto.setAtivo(
-                                produtoAtualizado.getAtivo());
+                        request.ativo());
 
                 produto.setDataAtualizacao(
                                 LocalDateTime.now());

@@ -8,6 +8,10 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.UUID;
+import jakarta.validation.Valid;
+
+import br.com.stockflow.stockflow_api.dto.ProdutoCreateRequest;
+import br.com.stockflow.stockflow_api.dto.ProdutoUpdateRequest;
 
 @RestController
 @RequestMapping("/api/produtos")
@@ -40,22 +44,24 @@ public class ProdutoController {
 
         @PostMapping
         public ResponseEntity<Produto> salvar(
-                        @RequestBody Produto produto) {
+                @Valid
+                @RequestBody ProdutoCreateRequest request) {
 
                 return ResponseEntity.ok(
-                                produtoService.salvar(produto));
+                        produtoService.salvar(request));
 
         }
 
         @PutMapping("/{id}")
         public ResponseEntity<Produto> atualizar(
-                        @PathVariable UUID id,
-                        @RequestBody Produto produto) {
+                @PathVariable UUID id,
+                @Valid
+                @RequestBody ProdutoUpdateRequest request) {
 
                 return ResponseEntity.ok(
-                                produtoService.atualizar(
-                                                id,
-                                                produto));
+                        produtoService.atualizar(
+                                id,
+                                request));
 
         }
 
