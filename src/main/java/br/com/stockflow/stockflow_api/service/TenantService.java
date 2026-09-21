@@ -6,7 +6,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.UUID;
-import br.com.stockflow.stockflow_api.exception.RegraNegocioException;
 
 @Service
 public class TenantService {
@@ -19,9 +18,7 @@ public class TenantService {
         }
 
         public List<Tenant> listarTodos() {
-
                 return tenantRepository.findAll();
-
         }
 
         public Tenant salvar(Tenant tenant) {
@@ -72,9 +69,7 @@ public class TenantService {
         }
 
         public void excluir(UUID id) {
-
                 tenantRepository.deleteById(id);
-
         }
 
         public Tenant buscarPorSlug(

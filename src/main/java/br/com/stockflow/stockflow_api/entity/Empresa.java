@@ -50,4 +50,8 @@ public class Empresa {
 
     @Column(name = "data_implantacao")
     private LocalDate dataImplantacao;
+
+    @OneToOne
+    @JoinColumn(name = "tenant_id")
+    private Tenant tenant;
 }
