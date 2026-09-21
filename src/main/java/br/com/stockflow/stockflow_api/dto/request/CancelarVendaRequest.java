@@ -1,16 +1,8 @@
 package br.com.stockflow.stockflow_api.dto.request;
 
-public class CancelarVendaRequest {
+public record CancelarVendaRequest(
 
-    private String motivo;
+        String motivo
 
-    public String getMotivo() {
-        return motivo;
-    }
-
-    public void setMotivo(
-            String motivo) {
-
-        this.motivo = motivo;
-    }
+) {
 }

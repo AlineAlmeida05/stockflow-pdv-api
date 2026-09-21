@@ -53,7 +53,7 @@ public class FiadoService {
         Cliente cliente =
                 clienteRepository
                         .findById(
-                                request.getClienteId())
+                                request.clienteId())
                         .orElseThrow(
                                 () ->
                                         new ResponseStatusException(
@@ -66,10 +66,10 @@ public class FiadoService {
                 cliente);
 
         fiado.setVendaId(
-                request.getVendaId());
+                request.vendaId());
 
         fiado.setValorTotal(
-                request.getValorTotal());
+                request.valorTotal());
 
         fiado.setDataLancamento(
                 LocalDateTime.now());
@@ -78,7 +78,7 @@ public class FiadoService {
                 "pendente");
 
         fiado.setObservacao(
-                request.getObservacao());
+                request.observacao());
 
         fiado.setTenant(
                 usuarioLogado.getTenant());

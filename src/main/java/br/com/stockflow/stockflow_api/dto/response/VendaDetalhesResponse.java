@@ -5,105 +5,31 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
-public class VendaDetalhesResponse {
+public record VendaDetalhesResponse(
 
-    private UUID id;
+        UUID id,
 
-    private LocalDateTime dataVenda;
+        LocalDateTime dataVenda,
 
-    private String formaPagamento;
+        String formaPagamento,
 
-    private BigDecimal valorTotal;
+        BigDecimal valorTotal,
 
-    private Integer quantidadeItens;
+        Integer quantidadeItens,
 
-    private String clienteNome;
+        String clienteNome,
 
-    private String status;
+        String status,
 
-    private String motivoCancelamento;
+        String motivoCancelamento,
 
-    private LocalDateTime dataCancelamento;
+        LocalDateTime dataCancelamento,
 
-    private String usuarioCancelamento;
+        String usuarioCancelamento,
 
-    private String usuarioNome;
+        String usuarioNome,
 
-    private List<ItemVendaResponse> itens;
+        List<ItemVendaResponse> itens
 
-    public VendaDetalhesResponse(
-            UUID id,
-            LocalDateTime dataVenda,
-            String formaPagamento,
-            BigDecimal valorTotal,
-            Integer quantidadeItens,
-            String clienteNome,
-            String status,
-            String motivoCancelamento,
-            LocalDateTime dataCancelamento,
-            String usuarioCancelamento,
-            String usuarioNome,
-            List<ItemVendaResponse> itens) {
-
-        this.id = id;
-        this.dataVenda = dataVenda;
-        this.formaPagamento = formaPagamento;
-        this.valorTotal = valorTotal;
-        this.quantidadeItens = quantidadeItens;
-        this.clienteNome = clienteNome;
-        this.status = status;
-        this.motivoCancelamento = motivoCancelamento;
-        this.dataCancelamento = dataCancelamento;
-        this.usuarioCancelamento = usuarioCancelamento;
-        this.itens = itens;
-        this.usuarioNome = usuarioNome;
-    }
-
-    public UUID getId() {
-        return id;
-    }
-
-    public LocalDateTime getDataVenda() {
-        return dataVenda;
-    }
-
-    public String getFormaPagamento() {
-        return formaPagamento;
-    }
-
-    public BigDecimal getValorTotal() {
-        return valorTotal;
-    }
-
-    public Integer getQuantidadeItens() {
-        return quantidadeItens;
-    }
-
-    public String getClienteNome() {
-        return clienteNome;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public String getMotivoCancelamento() {
-        return motivoCancelamento;
-    }
-
-    public LocalDateTime getDataCancelamento() {
-        return dataCancelamento;
-    }
-
-    public String getUsuarioCancelamento() {
-        return usuarioCancelamento;
-    }
-
-    public List<ItemVendaResponse> getItens() {
-        return itens;
-    }
-
-    public String getUsuarioNome() {
-        return usuarioNome;
-    }
+) {
 }

@@ -6,6 +6,7 @@ import br.com.stockflow.stockflow_api.dto.response.VendaResponse;
 import br.com.stockflow.stockflow_api.entity.*;
 
 import br.com.stockflow.stockflow_api.exception.RecursoNaoEncontradoException;
+import br.com.stockflow.stockflow_api.exception.RegraNegocioException;
 import br.com.stockflow.stockflow_api.repository.*;
 
 import br.com.stockflow.stockflow_api.security.UsuarioAutenticadoService;
@@ -90,67 +91,68 @@ public class VendaService {
                     "Usuário não autenticado");
         }
 
-        if (request.getItens() == null
-                || request.getItens().isEmpty()) {
+        if (request.itens() == null
+                || request.itens().isEmpty()) {
 
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "Carrinho vazio.");
+            throw new RegraNegocioException(
+                    "Carrinho vazio."
+            );
         }
 
-        if (request.getFormaPagamento() == null
-                || request.getFormaPagamento().isBlank()) {
+        if (request.formaPagamento() == null
+                || request.formaPagamento().isBlank()) {
 
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "Forma de pagamento obrigatória.");
+            throw new RegraNegocioException(
+                    "Forma de pagamento obrigatória."
+            );
         }
 
         if ("fiado".equals(
-                request.getFormaPagamento())
-                && request.getClienteId() == null) {
+                request.formaPagamento())
+                && request.clienteId() == null) {
 
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "Selecione um cliente para venda fiada.");
+            throw new RegraNegocioException(
+                    "Selecione um cliente para venda fiada."
+            );
         }
 
         BigDecimal valorTotal = BigDecimal.ZERO;
 
         Integer quantidadeItens = 0;
 
-        for (ItemVendaRequest item : request.getItens()) {
+        for (ItemVendaRequest item : request.itens()) {
 
             Produto produto = produtoRepository
                     .findById(
-                            item.getProdutoId())
-                    .orElseThrow(() -> new ResponseStatusException(
-                            HttpStatus.NOT_FOUND,
-                            "Produto não encontrado."));
+                            item.produtoId())
+                    .orElseThrow(() ->
+                            new RecursoNaoEncontradoException(
+                                    "Produto não encontrado."
+                            ));
 
             if (Boolean.FALSE.equals(
                     produto.getAtivo())) {
 
-                throw new ResponseStatusException(
-                        HttpStatus.BAD_REQUEST,
+                throw new RegraNegocioException(
                         "Produto inativo: "
-                                + produto.getNome());
+                                + produto.getNome()
+                );
             }
 
-            if (item.getQuantidade() == null
-                    || item.getQuantidade() <= 0) {
+            if (item.quantidade() == null
+                    || item.quantidade() <= 0) {
 
-                throw new ResponseStatusException(
-                        HttpStatus.BAD_REQUEST,
-                        "Quantidade inválida.");
+                throw new RegraNegocioException(
+                        "Quantidade inválida."
+                );
             }
 
-            if (produto.getEstoqueAtual() < item.getQuantidade()) {
+            if (produto.getEstoqueAtual() < item.quantidade()) {
 
-                throw new ResponseStatusException(
-                        HttpStatus.BAD_REQUEST,
+                throw new RegraNegocioException(
                         "Estoque insuficiente para o produto: "
-                                + produto.getNome());
+                                + produto.getNome()
+                );
             }
 
             BigDecimal precoAplicado;
@@ -168,11 +170,11 @@ public class VendaService {
 
             BigDecimal subtotal = precoAplicado.multiply(
                     BigDecimal.valueOf(
-                            item.getQuantidade()));
+                            item.quantidade()));
 
             valorTotal = valorTotal.add(subtotal);
 
-            quantidadeItens += item.getQuantidade();
+            quantidadeItens += item.quantidade();
         }
         Venda venda = new Venda();
 
@@ -180,7 +182,7 @@ public class VendaService {
                 LocalDateTime.now());
 
         venda.setFormaPagamento(
-                request.getFormaPagamento());
+                request.formaPagamento());
 
         venda.setValorTotal(
                 valorTotal);
@@ -198,22 +200,22 @@ public class VendaService {
                 usuarioLogado.getTenant());
 
         venda.setClienteId(
-                request.getClienteId());
+                request.clienteId());
 
         Venda vendaSalva = vendaRepository.save(
                 venda);
         if ("fiado".equalsIgnoreCase(
-                request.getFormaPagamento())) {
+                request.formaPagamento())) {
 
             Cliente cliente =
                     clienteRepository
                             .findById(
-                                    request.getClienteId())
+                                    request.clienteId())
                             .orElseThrow(
                                     () ->
-                                            new ResponseStatusException(
-                                                    HttpStatus.NOT_FOUND,
-                                                    "Cliente não encontrado."));
+                                            new RecursoNaoEncontradoException(
+                                                    "Cliente não encontrado."
+                                            ));
 
             Fiado fiado = new Fiado();
 
@@ -239,11 +241,11 @@ public class VendaService {
                     fiado);
         }
 
-        for (ItemVendaRequest item : request.getItens()) {
+        for (ItemVendaRequest item : request.itens()) {
 
             Produto produto = produtoRepository
                     .findById(
-                            item.getProdutoId())
+                            item.produtoId())
                     .orElseThrow(() ->
                             new RecursoNaoEncontradoException(
                                     "Produto não encontrado."
@@ -276,7 +278,7 @@ public class VendaService {
                     produto.getNome());
 
             itemVenda.setQuantidade(
-                    item.getQuantidade());
+                    item.quantidade());
 
             itemVenda.setValorUnitario(
                     precoAplicado);
@@ -284,7 +286,7 @@ public class VendaService {
             itemVenda.setSubtotal(
                     precoAplicado.multiply(
                             BigDecimal.valueOf(
-                                    item.getQuantidade())));
+                                    item.quantidade())));
 
             itemVenda.setPromocaoAplicada(
                     Boolean.TRUE.equals(
@@ -326,7 +328,7 @@ public class VendaService {
 
                             promocao.setUnidadesVendidas(
                                     vendidas +
-                                            item.getQuantidade()
+                                            item.quantidade()
                             );
 
                             BigDecimal receitaAtual =
@@ -340,7 +342,7 @@ public class VendaService {
                             BigDecimal receitaVenda =
                                     precoAplicado.multiply(
                                             BigDecimal.valueOf(
-                                                    item.getQuantidade()
+                                                    item.quantidade()
                                             )
                                     );
 
@@ -368,7 +370,7 @@ public class VendaService {
 
             produto.setEstoqueAtual(
                     produto.getEstoqueAtual()
-                            - item.getQuantidade());
+                            - item.quantidade());
 
             produto.setDataAtualizacao(
                     LocalDateTime.now());
@@ -387,7 +389,7 @@ public class VendaService {
                     "saida");
 
             movimentacao.setQuantidade(
-                    item.getQuantidade());
+                    item.quantidade());
 
             movimentacao.setPrecoCompra(
                     BigDecimal.ZERO);
@@ -424,26 +426,28 @@ public class VendaService {
                     "Usuário não autenticado");
         }
 
-        if (request.getMotivo() == null
-                || request.getMotivo().isBlank()) {
+        if (request.motivo() == null
+                || request.motivo().isBlank()) {
 
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "Motivo do cancelamento é obrigatório.");
+            throw new RegraNegocioException(
+                    "Motivo do cancelamento é obrigatório."
+            );
         }
 
         Venda venda = vendaRepository
                 .findById(vendaId)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "Venda não encontrada."));
+                .orElseThrow(() ->
+                        new RecursoNaoEncontradoException(
+                                "Venda não encontrada."
+                        ));
 
         if ("cancelada".equals(
                 venda.getStatus())) {
 
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "Venda já cancelada.");
+            throw new RegraNegocioException(
+                    "Venda já cancelada."
+            );
+
         }
 
         if (venda.getDataVenda()
@@ -451,16 +455,16 @@ public class VendaService {
                         LocalDateTime.now()
                                 .minusHours(24))) {
 
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "Esta venda não pode mais ser cancelada. Prazo máximo excedido.");
+            throw new RegraNegocioException(
+                    "Esta venda não pode mais ser cancelada. Prazo máximo excedido."
+            );
         }
 
         venda.setStatus(
                 "cancelada");
 
         venda.setMotivoCancelamento(
-                request.getMotivo());
+                request.motivo());
 
         venda.setDataCancelamento(
                 LocalDateTime.now());
@@ -569,9 +573,9 @@ public class VendaService {
                 vendaRepository
                         .findById(vendaId)
                         .orElseThrow(() ->
-                                new ResponseStatusException(
-                                        HttpStatus.NOT_FOUND,
-                                        "Venda não encontrada."));
+                                new RecursoNaoEncontradoException(
+                                        "Venda não encontrada."
+                                ));
 
         List<ItemVendaResponse> itens =
                 itemVendaRepository

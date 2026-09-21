@@ -124,7 +124,7 @@ public class PromocaoService {
         Produto produto =
                 produtoRepository
                         .findById(
-                                request.getProdutoId()
+                                request.produtoId()
                         )
                         .orElseThrow(
                                 () -> new RegraNegocioException(
@@ -189,13 +189,13 @@ public class PromocaoService {
                 produto.getPrecoVenda());
 
         promocao.setPrecoPromocional(
-                request.getPrecoPromocional());
+                request.precoPromocional());
 
         promocao.setPercentualDesconto(
-                request.getPercentualDesconto());
+                request.percentualDesconto());
 
         promocao.setMotivo(
-                request.getMotivo());
+                request.motivo());
 
         promocao.setDataInicio(
                 LocalDateTime.now());
@@ -212,10 +212,10 @@ public class PromocaoService {
                 true);
 
         produto.setPrecoPromocional(
-                request.getPrecoPromocional());
+                request.precoPromocional());
 
         produto.setPromocaoMotivo(
-                request.getMotivo());
+                request.motivo());
 
         produto.setDataInicioPromocao(
                 LocalDate.now());
