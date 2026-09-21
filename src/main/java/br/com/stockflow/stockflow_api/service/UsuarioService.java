@@ -64,20 +64,8 @@ public class UsuarioService {
                                         "Você não pode criar usuários em outro tenant.");
 
                 }
-                if (usuarioLogado != null
-                                &&
-                                usuarioLogado.getPerfil() != Perfil.SUPER_ADMIN
-                                &&
-                                !usuarioLogado.getTenant()
-                                                .getId()
-                                                .equals(
-                                                                usuario.getTenant()
-                                                                                .getId())) {
 
-                        throw new RuntimeException(
-                                        "Você não pode criar usuários em outro tenant.");
 
-                }
                 if (usuarioLogado != null) {
 
                         if (!podeGerenciarPerfil(
