@@ -139,14 +139,6 @@ public class VendaService {
                 );
             }
 
-            if (item.quantidade() == null
-                    || item.quantidade() <= 0) {
-
-                throw new RegraNegocioException(
-                        "Quantidade inválida."
-                );
-            }
-
             if (produto.getEstoqueAtual() < item.quantidade()) {
 
                 throw new RegraNegocioException(
@@ -424,14 +416,6 @@ public class VendaService {
             throw new ResponseStatusException(
                     HttpStatus.UNAUTHORIZED,
                     "Usuário não autenticado");
-        }
-
-        if (request.motivo() == null
-                || request.motivo().isBlank()) {
-
-            throw new RegraNegocioException(
-                    "Motivo do cancelamento é obrigatório."
-            );
         }
 
         Venda venda = vendaRepository

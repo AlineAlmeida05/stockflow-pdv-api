@@ -126,22 +126,6 @@ public class ClienteService {
                     HttpStatus.UNAUTHORIZED,
                     "Usuário não autenticado");
         }
-        if (request.limiteCredito() != null
-                && request.limiteCredito()
-                .compareTo(BigDecimal.ZERO) < 0) {
-
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "Limite de crédito não pode ser negativo.");
-        }
-        if (request.telefone() == null
-                || request.telefone().isBlank()) {
-
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "Telefone é obrigatório.");
-        }
-
 
         Cliente cliente =
                 clienteRepository

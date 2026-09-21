@@ -3,26 +3,19 @@ package br.com.stockflow.stockflow_api.service;
 import br.com.stockflow.stockflow_api.entity.MovimentacaoEstoque;
 import br.com.stockflow.stockflow_api.exception.RecursoNaoEncontradoException;
 import br.com.stockflow.stockflow_api.repository.MovimentacaoEstoqueRepository;
-
 import org.springframework.stereotype.Service;
-
 import java.util.List;
-
 import br.com.stockflow.stockflow_api.dto.request.MovimentacaoEstoqueRequest;
-
 import br.com.stockflow.stockflow_api.entity.Produto;
 import br.com.stockflow.stockflow_api.entity.Usuario;
-
 import br.com.stockflow.stockflow_api.repository.ProdutoRepository;
-
 import br.com.stockflow.stockflow_api.security.UsuarioAutenticadoService;
-
 import java.time.LocalDateTime;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 import br.com.stockflow.stockflow_api.dto.response.MovimentacaoEstoqueResponse;
 import org.springframework.transaction.annotation.Transactional;
+import br.com.stockflow.stockflow_api.exception.RegraNegocioException;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -64,26 +57,26 @@ public class MovimentacaoEstoqueService {
                 if (request.quantidade() == null
                                 || request.quantidade() <= 0) {
 
-                        throw new ResponseStatusException(
-                                        HttpStatus.BAD_REQUEST,
-                                        "Quantidade inválida.");
+                        throw new RegraNegocioException(
+                                "Quantidade inválida."
+                        );
                 }
 
                 if (request.precoCompra() == null
                                 || request.precoCompra()
                                                 .compareTo(BigDecimal.ZERO) <= 0) {
 
-                        throw new ResponseStatusException(
-                                        HttpStatus.BAD_REQUEST,
-                                        "Preço de compra inválido.");
+                        throw new RegraNegocioException(
+                                "Preço de compra inválido."
+                        );
                 }
 
                 if (Boolean.FALSE.equals(
                                 produto.getAtivo())) {
 
-                        throw new ResponseStatusException(
-                                        HttpStatus.BAD_REQUEST,
-                                        "Produto inativo.");
+                        throw new RegraNegocioException(
+                                "Produto inativo."
+                        );
                 }
 
                 if ("entrada".equals(request.tipo())) {
@@ -140,9 +133,9 @@ public class MovimentacaoEstoqueService {
 
                         if (produto.getEstoqueAtual() < request.quantidade()) {
 
-                                throw new ResponseStatusException(
-                                                HttpStatus.BAD_REQUEST,
-                                                "Estoque insuficiente.");
+                                throw new RegraNegocioException(
+                                        "Estoque insuficiente."
+                                );
                         }
 
                 }
