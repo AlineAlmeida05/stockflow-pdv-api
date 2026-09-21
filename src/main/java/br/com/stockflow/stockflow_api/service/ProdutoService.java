@@ -10,6 +10,8 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
+import br.com.stockflow.stockflow_api.exception.RecursoNaoEncontradoException;
+import br.com.stockflow.stockflow_api.exception.RegraNegocioException;
 
 @Service
 public class ProdutoService {
@@ -45,8 +47,11 @@ public class ProdutoService {
                         UUID id) {
 
                 Produto produto = produtoRepository
-                                .findById(id)
-                                .orElseThrow();
+                        .findById(id)
+                        .orElseThrow(() ->
+                                new RecursoNaoEncontradoException(
+                                        "Produto não encontrado."
+                                ));
 
                 Usuario usuarioLogado = usuarioAutenticadoService
                                 .usuarioLogado();
@@ -55,7 +60,7 @@ public class ProdutoService {
                                 usuarioLogado,
                                 produto)) {
 
-                        throw new RuntimeException(
+                        throw new RegraNegocioException(
                                         "Você não possui acesso a este produto.");
 
                 }
@@ -98,8 +103,12 @@ public class ProdutoService {
                         Produto produtoAtualizado) {
 
                 Produto produto = produtoRepository
-                                .findById(id)
-                                .orElseThrow();
+                        .findById(id)
+                        .orElseThrow(() ->
+                                new RecursoNaoEncontradoException(
+                                        "Produto não encontrado."
+                                ));
+
 
                 Usuario usuarioLogado = usuarioAutenticadoService
                                 .usuarioLogado();
@@ -108,7 +117,7 @@ public class ProdutoService {
                                 usuarioLogado,
                                 produto)) {
 
-                        throw new RuntimeException(
+                        throw new RegraNegocioException(
                                         "Você não possui permissão para editar este produto.");
 
                 }
@@ -146,8 +155,12 @@ public class ProdutoService {
                         UUID id) {
 
                 Produto produto = produtoRepository
-                                .findById(id)
-                                .orElseThrow();
+                        .findById(id)
+                        .orElseThrow(() ->
+                                new RecursoNaoEncontradoException(
+                                        "Produto não encontrado."
+                                ));
+
 
                 Usuario usuarioLogado = usuarioAutenticadoService
                                 .usuarioLogado();
@@ -156,7 +169,7 @@ public class ProdutoService {
                                 usuarioLogado,
                                 produto)) {
 
-                        throw new RuntimeException(
+                        throw new RegraNegocioException(
                                         "Você não possui permissão para inativar este produto.");
 
                 }
@@ -175,8 +188,11 @@ public class ProdutoService {
                         UUID id) {
 
                 Produto produto = produtoRepository
-                                .findById(id)
-                                .orElseThrow();
+                        .findById(id)
+                        .orElseThrow(() ->
+                                new RecursoNaoEncontradoException(
+                                        "Produto não encontrado."
+                                ));
 
                 Usuario usuarioLogado = usuarioAutenticadoService
                                 .usuarioLogado();
@@ -185,7 +201,7 @@ public class ProdutoService {
                                 usuarioLogado,
                                 produto)) {
 
-                        throw new RuntimeException(
+                        throw new RegraNegocioException(
                                         "Você não possui permissão para reativar este produto.");
 
                 }
@@ -210,7 +226,7 @@ public class ProdutoService {
                 if (prefixo == null
                                 || prefixo.isBlank()) {
 
-                        throw new RuntimeException(
+                        throw new RegraNegocioException(
                                         "Tenant sem código configurado.");
 
                 }
@@ -265,7 +281,7 @@ public class ProdutoService {
                 if (Boolean.FALSE.equals(
                                 produto.getAtivo())) {
 
-                        throw new RuntimeException(
+                        throw new RegraNegocioException(
                                         "Produto inativo.");
 
                 }

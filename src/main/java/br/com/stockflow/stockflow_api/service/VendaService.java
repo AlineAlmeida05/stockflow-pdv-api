@@ -5,6 +5,7 @@ import br.com.stockflow.stockflow_api.dto.VendaResponse;
 
 import br.com.stockflow.stockflow_api.entity.*;
 
+import br.com.stockflow.stockflow_api.exception.RecursoNaoEncontradoException;
 import br.com.stockflow.stockflow_api.repository.*;
 
 import br.com.stockflow.stockflow_api.security.UsuarioAutenticadoService;
@@ -246,7 +247,10 @@ public class VendaService {
             Produto produto = produtoRepository
                     .findById(
                             item.getProdutoId())
-                    .orElseThrow();
+                    .orElseThrow(() ->
+                            new RecursoNaoEncontradoException(
+                                    "Produto não encontrado."
+                            ));
 
             BigDecimal precoAplicado;
 

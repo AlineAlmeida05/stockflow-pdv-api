@@ -1,6 +1,7 @@
 package br.com.stockflow.stockflow_api.service;
 
 import br.com.stockflow.stockflow_api.entity.Empresa;
+import br.com.stockflow.stockflow_api.exception.RecursoNaoEncontradoException;
 import br.com.stockflow.stockflow_api.repository.EmpresaRepository;
 import org.springframework.stereotype.Service;
 
@@ -134,7 +135,11 @@ public class EmpresaService {
                 .findByTenantId(
                         usuario.getTenant().getId()
                 )
-                .orElseThrow();
+                .orElseThrow(() ->
+                        new RecursoNaoEncontradoException(
+                                "Empresa não encontrada."
+                        )
+                );
 
     }
 

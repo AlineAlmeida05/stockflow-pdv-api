@@ -1,6 +1,7 @@
 package br.com.stockflow.stockflow_api.service;
 
 import br.com.stockflow.stockflow_api.entity.Usuario;
+import br.com.stockflow.stockflow_api.exception.RecursoNaoEncontradoException;
 import br.com.stockflow.stockflow_api.repository.UsuarioRepository;
 
 import org.springframework.stereotype.Service;
@@ -75,7 +76,10 @@ public class UsuarioService {
 
         Tenant tenant = tenantRepository
                 .findById(request.tenantId())
-                .orElseThrow();
+                .orElseThrow(() ->
+                        new RecursoNaoEncontradoException(
+                                "Tenant não encontrado."
+                        ));
 
         Usuario usuario = new Usuario();
 
@@ -147,7 +151,10 @@ public class UsuarioService {
 
         Usuario usuarioAlvo = usuarioRepository
                 .findById(id)
-                .orElseThrow();
+                .orElseThrow(() ->
+                        new RecursoNaoEncontradoException(
+                                "Usuário não encontrado."
+                        ));
 
         Usuario usuarioLogado = usuarioAutenticadoService
                 .usuarioLogado();
@@ -197,7 +204,10 @@ public class UsuarioService {
 
         Usuario usuario = usuarioRepository
                 .findById(id)
-                .orElseThrow();
+                .orElseThrow(() ->
+                        new RecursoNaoEncontradoException(
+                                "Usuário não encontrado."
+                        ));
 
         Usuario usuarioLogado = usuarioAutenticadoService
                 .usuarioLogado();
@@ -290,7 +300,10 @@ public class UsuarioService {
 
                     Tenant tenant = tenantRepository
                             .findById(request.tenantId())
-                            .orElseThrow();
+                            .orElseThrow(() ->
+                                    new RecursoNaoEncontradoException(
+                                            "Tenant não encontrado."
+                                    ));
 
                     usuario.setTenant(tenant);
 
