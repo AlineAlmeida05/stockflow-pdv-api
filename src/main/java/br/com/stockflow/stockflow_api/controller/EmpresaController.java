@@ -1,6 +1,7 @@
 package br.com.stockflow.stockflow_api.controller;
 
 import br.com.stockflow.stockflow_api.service.EmpresaService;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 import br.com.stockflow.stockflow_api.dto.response.EmpresaResponse;
 import br.com.stockflow.stockflow_api.dto.EmpresaUpdateRequest;
@@ -25,7 +26,9 @@ public class EmpresaController {
 
     @PutMapping
     public EmpresaResponse atualizar(
+            @Valid
             @RequestBody EmpresaUpdateRequest request
+
     ) {
 
         return empresaService
