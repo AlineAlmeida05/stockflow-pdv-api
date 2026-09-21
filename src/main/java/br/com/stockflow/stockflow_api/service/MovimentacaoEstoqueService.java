@@ -55,22 +55,22 @@ public class MovimentacaoEstoqueService {
 
                 Produto produto = produtoRepository
                         .findById(
-                                request.getProdutoId())
+                                request.produtoId())
                         .orElseThrow(() ->
                                 new RecursoNaoEncontradoException(
                                         "Produto não encontrado."
                                 ));
 
-                if (request.getQuantidade() == null
-                                || request.getQuantidade() <= 0) {
+                if (request.quantidade() == null
+                                || request.quantidade() <= 0) {
 
                         throw new ResponseStatusException(
                                         HttpStatus.BAD_REQUEST,
                                         "Quantidade inválida.");
                 }
 
-                if (request.getPrecoCompra() == null
-                                || request.getPrecoCompra()
+                if (request.precoCompra() == null
+                                || request.precoCompra()
                                                 .compareTo(BigDecimal.ZERO) <= 0) {
 
                         throw new ResponseStatusException(
@@ -86,7 +86,7 @@ public class MovimentacaoEstoqueService {
                                         "Produto inativo.");
                 }
 
-                if ("entrada".equals(request.getTipo())) {
+                if ("entrada".equals(request.tipo())) {
 
                         Integer estoqueAtual = produto.getEstoqueAtual();
 
@@ -94,9 +94,9 @@ public class MovimentacaoEstoqueService {
                                         ? produto.getCustoMedio()
                                         : BigDecimal.ZERO;
 
-                        Integer quantidadeEntrada = request.getQuantidade();
+                        Integer quantidadeEntrada = request.quantidade();
 
-                        BigDecimal precoCompra = request.getPrecoCompra();
+                        BigDecimal precoCompra = request.precoCompra();
 
                         if (estoqueAtual == 0) {
 
@@ -136,9 +136,9 @@ public class MovimentacaoEstoqueService {
                         produtoRepository.save(
                                         produto);
                                         
-                } else if ("saida".equals(request.getTipo())) {
+                } else if ("saida".equals(request.tipo())) {
 
-                        if (produto.getEstoqueAtual() < request.getQuantidade()) {
+                        if (produto.getEstoqueAtual() < request.quantidade()) {
 
                                 throw new ResponseStatusException(
                                                 HttpStatus.BAD_REQUEST,
@@ -167,16 +167,16 @@ public class MovimentacaoEstoqueService {
                                 produto.getNome());
 
                 movimentacao.setTipo(
-                                request.getTipo());
+                                request.tipo());
 
                 movimentacao.setQuantidade(
-                                request.getQuantidade());
+                                request.quantidade());
 
                 movimentacao.setPrecoCompra(
-                                request.getPrecoCompra());
+                                request.precoCompra());
 
                 movimentacao.setObservacao(
-                                request.getObservacao());
+                                request.observacao());
 
                 movimentacao.setUsuario(
                                 usuarioLogado);

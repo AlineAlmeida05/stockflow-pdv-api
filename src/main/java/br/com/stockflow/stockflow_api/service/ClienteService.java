@@ -4,6 +4,7 @@ import br.com.stockflow.stockflow_api.dto.request.ClienteRequest;
 import br.com.stockflow.stockflow_api.dto.response.ClienteResponse;
 import br.com.stockflow.stockflow_api.entity.Cliente;
 import br.com.stockflow.stockflow_api.entity.Usuario;
+import br.com.stockflow.stockflow_api.exception.RecursoNaoEncontradoException;
 import br.com.stockflow.stockflow_api.repository.ClienteRepository;
 import br.com.stockflow.stockflow_api.security.UsuarioAutenticadoService;
 
@@ -151,8 +152,7 @@ public class ClienteService {
                                         .getId())
                         .orElseThrow(
                                 () ->
-                                        new ResponseStatusException(
-                                                HttpStatus.NOT_FOUND,
+                                        new RecursoNaoEncontradoException(
                                                 "Cliente não encontrado."));
 
         cliente.setNome(
@@ -195,8 +195,7 @@ public class ClienteService {
                                         .getId())
                         .orElseThrow(
                                 () ->
-                                        new ResponseStatusException(
-                                                HttpStatus.NOT_FOUND,
+                                        new RecursoNaoEncontradoException(
                                                 "Cliente não encontrado."));
 
         cliente.setAtivo(false);
@@ -227,8 +226,7 @@ public class ClienteService {
                                         .getId())
                         .orElseThrow(
                                 () ->
-                                        new ResponseStatusException(
-                                                HttpStatus.NOT_FOUND,
+                                        new RecursoNaoEncontradoException(
                                                 "Cliente não encontrado."));
         List<Fiado> fiados =
                 fiadoRepository

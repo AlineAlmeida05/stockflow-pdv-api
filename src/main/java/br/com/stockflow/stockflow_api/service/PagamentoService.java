@@ -53,7 +53,7 @@ public class PagamentoService {
         Cliente cliente =
                 clienteRepository
                         .findById(
-                                request.getClienteId())
+                                request.clienteId())
                         .orElseThrow(
                                 () ->
                                         new ResponseStatusException(
@@ -67,16 +67,16 @@ public class PagamentoService {
                 cliente);
 
         pagamento.setValorPago(
-                request.getValorPago());
+                request.valorPago());
 
         pagamento.setDataPagamento(
                 LocalDateTime.now());
 
         pagamento.setObservacao(
-                request.getObservacao());
+                request.observacao());
 
         pagamento.setFormaPagamento(
-                request.getFormaPagamento());
+                request.formaPagamento());
 
         pagamento.setTenant(
                 usuarioLogado.getTenant());

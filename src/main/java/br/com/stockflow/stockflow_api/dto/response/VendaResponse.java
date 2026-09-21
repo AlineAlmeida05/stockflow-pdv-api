@@ -4,73 +4,23 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-public class VendaResponse {
+public record VendaResponse(
 
-    private UUID id;
+        UUID id,
 
-    private LocalDateTime dataVenda;
+        LocalDateTime dataVenda,
 
-    private String formaPagamento;
+        String formaPagamento,
 
-    private BigDecimal valorTotal;
+        BigDecimal valorTotal,
 
-    private Integer quantidadeItens;
+        Integer quantidadeItens,
 
-    private String clienteNome;
+        String clienteNome,
 
-    private String status;
+        String status,
 
-    private String usuarioNome;
+        String usuarioNome
 
-    public VendaResponse(
-            UUID id,
-            LocalDateTime dataVenda,
-            String formaPagamento,
-            BigDecimal valorTotal,
-            Integer quantidadeItens,
-            String clienteNome,
-            String status,
-            String usuarioNome) {
-
-        this.id = id;
-        this.dataVenda = dataVenda;
-        this.formaPagamento = formaPagamento;
-        this.valorTotal = valorTotal;
-        this.quantidadeItens = quantidadeItens;
-        this.clienteNome = clienteNome;
-        this.status = status;
-        this.usuarioNome = usuarioNome;
-    }
-
-    public UUID getId() {
-        return id;
-    }
-
-    public LocalDateTime getDataVenda() {
-        return dataVenda;
-    }
-
-    public String getFormaPagamento() {
-        return formaPagamento;
-    }
-
-    public BigDecimal getValorTotal() {
-        return valorTotal;
-    }
-
-    public Integer getQuantidadeItens() {
-        return quantidadeItens;
-    }
-
-    public String getClienteNome() {
-        return clienteNome;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public String getUsuarioNome() {
-        return usuarioNome;
-    }
+) {
 }
