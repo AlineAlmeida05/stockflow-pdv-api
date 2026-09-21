@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.UUID;
 
 import br.com.stockflow.stockflow_api.dto.AlterarSenhaRequest;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/usuarios")
@@ -92,14 +93,15 @@ public class UsuarioController {
 
         @PutMapping("/alterar-senha")
         public ResponseEntity<Void> alterarSenha(
-                        @RequestBody AlterarSenhaRequest request) {
+                @Valid
+                @RequestBody AlterarSenhaRequest request) {
 
                 usuarioService.alterarSenha(
-                                request);
+                        request);
 
                 return ResponseEntity
-                                .ok()
-                                .build();
+                        .ok()
+                        .build();
 
         }
 

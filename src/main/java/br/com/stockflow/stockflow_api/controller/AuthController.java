@@ -2,6 +2,7 @@ package br.com.stockflow.stockflow_api.controller;
 
 import br.com.stockflow.stockflow_api.service.AuthService;
 
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -25,7 +26,9 @@ public class AuthController {
 
     @PostMapping("/login")
     public LoginResponse login(
-            @RequestBody LoginRequest request) {
+            @Valid
+            @RequestBody LoginRequest request
+    ) {
 
         return authService
                 .login(request);

@@ -340,20 +340,6 @@ public class UsuarioService {
 
         }
 
-        if (request.novaSenha().isBlank()) {
-
-            throw new RegraNegocioException(
-                    "A nova senha é obrigatória.");
-
-        }
-
-        if (request.novaSenha().length() < 6) {
-
-            throw new RegraNegocioException(
-                    "A senha deve possuir pelo menos 6 caracteres.");
-
-        }
-
         boolean senhaCorreta = passwordEncoder.matches(
                 request.senhaAtual(),
                 usuarioLogado.getSenha());
