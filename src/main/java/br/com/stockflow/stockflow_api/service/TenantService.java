@@ -1,129 +1,258 @@
 package br.com.stockflow.stockflow_api.service;
 
+import br.com.stockflow.stockflow_api.entity.Perfil;
 import br.com.stockflow.stockflow_api.entity.Tenant;
+import br.com.stockflow.stockflow_api.entity.Usuario;
 import br.com.stockflow.stockflow_api.repository.TenantRepository;
+import br.com.stockflow.stockflow_api.security.UsuarioAutenticadoService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.UUID;
+import br.com.stockflow.stockflow_api.exception.RegraNegocioException;
 
 @Service
 public class TenantService {
 
-        private final TenantRepository tenantRepository;
+    private final TenantRepository tenantRepository;
 
-        public TenantService(
-                        TenantRepository tenantRepository) {
-                this.tenantRepository = tenantRepository;
-        }
+    private final UsuarioAutenticadoService usuarioAutenticadoService;
 
-        public List<Tenant> listarTodos() {
-                return tenantRepository.findAll();
-        }
+    public TenantService(
+            TenantRepository tenantRepository,
+            UsuarioAutenticadoService usuarioAutenticadoService) {
 
-        public Tenant salvar(Tenant tenant) {
+        this.tenantRepository = tenantRepository;
+        this.usuarioAutenticadoService = usuarioAutenticadoService;
 
-                if (tenant.getCodigoTenant() == null
-                                ||
-                                tenant.getCodigoTenant().isBlank()) {
+    }
 
-                        tenant.setCodigoTenant(
-                                        gerarCodigoTenant(
-                                                        tenant.getNome()));
+    public List<Tenant> listarTodos() {
 
-                }
+        validarSuperAdmin();
 
-                return tenantRepository.save(
-                                tenant);
+        return tenantRepository.findAll();
 
-        }
+    }
 
-        private String gerarCodigoTenant(
-                        String nome) {
+    public Tenant salvar(Tenant tenant) {
 
-                String[] palavras = nome.trim()
-                                .split("\\s+");
+        validarSuperAdmin();
 
-                if (palavras.length >= 2) {
+        if (tenant.getCodigoTenant() == null
+                ||
+                tenant.getCodigoTenant().isBlank()) {
 
-                        String codigo = palavras[0].substring(0, 1)
-                                        +
-                                        palavras[1].substring(
-                                                        0,
-                                                        Math.min(
-                                                                        2,
-                                                                        palavras[1].length()));
-
-                        return codigo.toUpperCase();
-
-                }
-
-                return nome
-                                .substring(
-                                                0,
-                                                Math.min(
-                                                                3,
-                                                                nome.length()))
-                                .toUpperCase();
+            tenant.setCodigoTenant(
+                    gerarCodigoTenant(
+                            tenant.getNome()));
 
         }
 
-        public void excluir(UUID id) {
-                tenantRepository.deleteById(id);
+        tenantRepository
+                .findByCodigoTenant(
+                        tenant.getCodigoTenant()
+                )
+                .ifPresent(t -> {
+
+                    throw new RegraNegocioException(
+                            "Já existe um tenant com este código."
+                    );
+
+                });
+
+        tenantRepository
+                .findBySlug(
+                        tenant.getSlug()
+                )
+                .ifPresent(t -> {
+
+                    throw new RegraNegocioException(
+                            "Já existe um tenant com este slug."
+                    );
+
+                });
+
+        return tenantRepository.save(
+                tenant);
+
+    }
+
+    private String gerarCodigoTenant(
+            String nome) {
+
+        String[] palavras = nome.trim()
+                .split("\\s+");
+
+        if (palavras.length >= 2) {
+
+            String codigo = palavras[0].substring(0, 1)
+                    +
+                    palavras[1].substring(
+                            0,
+                            Math.min(
+                                    2,
+                                    palavras[1].length()));
+
+            return codigo.toUpperCase();
+
         }
 
-        public Tenant buscarPorSlug(
-                        String slug) {
+        return nome
+                .substring(
+                        0,
+                        Math.min(
+                                3,
+                                nome.length()))
+                .toUpperCase();
 
-                return tenantRepository
-                                .findBySlug(slug)
-                                .orElse(null);
+    }
+
+    public void excluir(UUID id) {
+
+        validarSuperAdmin();
+
+        Tenant tenant = tenantRepository
+                .findById(id)
+                .orElseThrow();
+
+        if (
+
+                tenant.getSlug() != null
+
+                        &&
+
+                        tenant.getSlug()
+
+                                .equalsIgnoreCase("stockflowpdv")
+
+        ) {
+
+            throw new RegraNegocioException(
+                    "O tenant principal não pode ser desativado."
+            );
 
         }
 
-        public Tenant atualizar(
-                        UUID id,
-                        Tenant tenantAtualizado) {
+        tenant.setAtivo(false);
 
-                Tenant tenant = tenantRepository
-                                .findById(id)
-                                .orElseThrow();
+        tenantRepository.save(tenant);
 
-                tenant.setNome(
-                                tenantAtualizado.getNome());
+    }
 
-                tenant.setResponsavel(
-                                tenantAtualizado.getResponsavel());
+    public Tenant buscarPorSlug(
+            String slug) {
 
-                tenant.setEmail(
-                                tenantAtualizado.getEmail());
+        return tenantRepository
+                .findBySlug(slug)
+                .orElse(null);
 
-                tenant.setCidade(
-                                tenantAtualizado.getCidade());
+    }
 
-                tenant.setAtivo(
-                                tenantAtualizado.getAtivo());
+    public Tenant atualizar(
+            UUID id,
+            Tenant tenantAtualizado) {
 
-                tenant.setSlug(
-                                tenantAtualizado.getSlug());
+        validarSuperAdmin();
 
-                tenant.setCodigoTenant(
-                                tenantAtualizado.getCodigoTenant());
+        Tenant tenant = tenantRepository
+                .findById(id)
+                .orElseThrow();
 
-                tenant.setLogoUrl(
-                                tenantAtualizado.getLogoUrl());
+        tenantRepository
+                .findBySlug(
+                        tenantAtualizado.getSlug()
+                )
+                .ifPresent(existente -> {
 
-                tenant.setFaviconUrl(
-                                tenantAtualizado.getFaviconUrl());
+                    if (
+                            !existente.getId()
+                                    .equals(tenant.getId())
+                    ) {
 
-                tenant.setCorPrimaria(
-                                tenantAtualizado.getCorPrimaria());
+                        throw new RegraNegocioException(
+                                "Já existe um tenant com este slug."
+                        );
 
-                tenant.setCorSecundaria(
-                                tenantAtualizado.getCorSecundaria());
+                    }
 
-                return tenantRepository.save(
-                                tenant);
+                });
+
+        tenantRepository
+                .findByCodigoTenant(
+                        tenantAtualizado.getCodigoTenant()
+                )
+                .ifPresent(existente -> {
+
+                    if (
+                            !existente.getId()
+                                    .equals(tenant.getId())
+                    ) {
+
+                        throw new RegraNegocioException(
+                                "Já existe um tenant com este código."
+                        );
+
+                    }
+
+                });
+
+        tenant.setNome(
+                tenantAtualizado.getNome());
+
+        tenant.setResponsavel(
+                tenantAtualizado.getResponsavel());
+
+        tenant.setEmail(
+                tenantAtualizado.getEmail());
+
+        tenant.setCidade(
+                tenantAtualizado.getCidade());
+
+        tenant.setAtivo(
+                tenantAtualizado.getAtivo());
+
+        tenant.setSlug(
+                tenantAtualizado.getSlug());
+
+        tenant.setCodigoTenant(
+                tenantAtualizado.getCodigoTenant());
+
+        tenant.setLogoUrl(
+                tenantAtualizado.getLogoUrl());
+
+        tenant.setFaviconUrl(
+                tenantAtualizado.getFaviconUrl());
+
+        tenant.setCorPrimaria(
+                tenantAtualizado.getCorPrimaria());
+
+        tenant.setCorSecundaria(
+                tenantAtualizado.getCorSecundaria());
+
+        return tenantRepository.save(
+                tenant);
+    }
+
+    private void validarSuperAdmin() {
+
+        Usuario usuario =
+                usuarioAutenticadoService
+                        .usuarioLogado();
+
+        if (
+                usuario == null
+                        ||
+                        usuario.getPerfil()
+                                != Perfil.SUPER_ADMIN
+        ) {
+
+            throw new RegraNegocioException(
+                    "Acesso permitido apenas para SUPER_ADMIN."
+            );
+
         }
+
+    }
 
 }

@@ -11,4 +11,9 @@ public interface TenantRepository
 
         Optional<Tenant> findBySlug(
                         String slug);
+
+        Optional<Tenant> findByCodigoTenant(
+                String codigoTenant
+        );
+
 }

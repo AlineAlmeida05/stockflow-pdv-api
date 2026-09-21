@@ -1,28 +1,35 @@
 package br.com.stockflow.stockflow_api.controller;
 
-import br.com.stockflow.stockflow_api.entity.Empresa;
 import br.com.stockflow.stockflow_api.service.EmpresaService;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
+import br.com.stockflow.stockflow_api.dto.response.EmpresaResponse;
+import br.com.stockflow.stockflow_api.dto.EmpresaUpdateRequest;
 
 @RestController
-@RequestMapping("/api/empresas")
+@RequestMapping("/api/empresa")
 public class EmpresaController {
 
     private final EmpresaService empresaService;
 
     public EmpresaController(EmpresaService empresaService) {
+
         this.empresaService = empresaService;
     }
 
     @GetMapping
-    public List<Empresa> listar() {
-        return empresaService.listarTodas();
+    public EmpresaResponse obter() {
+
+        return empresaService
+                .obterEmpresa();
     }
 
-    @PostMapping
-    public Empresa salvar(@RequestBody Empresa empresa) {
-        return empresaService.salvar(empresa);
+    @PutMapping
+    public EmpresaResponse atualizar(
+            @RequestBody EmpresaUpdateRequest request
+    ) {
+
+        return empresaService
+                .atualizarEmpresa(request);
     }
+
 }
