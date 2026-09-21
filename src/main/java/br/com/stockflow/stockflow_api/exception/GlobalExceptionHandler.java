@@ -74,6 +74,26 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(
+            AcessoNegadoException.class
+    )
+    public ResponseEntity<ApiError>
+    tratarAcessoNegado(
+            AcessoNegadoException ex
+    ) {
+
+        return ResponseEntity
+                .status(
+                        HttpStatus.FORBIDDEN
+                )
+                .body(
+                        new ApiError(
+                                ex.getMessage()
+                        )
+                );
+
+    }
+
+    @ExceptionHandler(
             Exception.class
     )
     public ResponseEntity<ApiError>
