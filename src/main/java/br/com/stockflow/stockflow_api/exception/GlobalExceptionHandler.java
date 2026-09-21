@@ -6,6 +6,8 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import br.com.stockflow.stockflow_api.exception.RecursoNaoEncontradoException;
+
 import java.util.stream.Collectors;
 
 @RestControllerAdvice
@@ -46,6 +48,26 @@ public class GlobalExceptionHandler {
                 .body(
                         new ApiError(
                                 ex.getReason()
+                        )
+                );
+
+    }
+
+    @ExceptionHandler(
+            RecursoNaoEncontradoException.class
+    )
+    public ResponseEntity<ApiError>
+    tratarRecursoNaoEncontrado(
+            RecursoNaoEncontradoException ex
+    ) {
+
+        return ResponseEntity
+                .status(
+                        HttpStatus.NOT_FOUND
+                )
+                .body(
+                        new ApiError(
+                                ex.getMessage()
                         )
                 );
 

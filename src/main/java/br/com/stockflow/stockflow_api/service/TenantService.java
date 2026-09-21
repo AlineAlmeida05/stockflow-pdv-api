@@ -3,6 +3,7 @@ package br.com.stockflow.stockflow_api.service;
 import br.com.stockflow.stockflow_api.entity.Perfil;
 import br.com.stockflow.stockflow_api.entity.Tenant;
 import br.com.stockflow.stockflow_api.entity.Usuario;
+import br.com.stockflow.stockflow_api.exception.RecursoNaoEncontradoException;
 import br.com.stockflow.stockflow_api.repository.TenantRepository;
 import br.com.stockflow.stockflow_api.security.UsuarioAutenticadoService;
 import org.springframework.stereotype.Service;
@@ -114,7 +115,10 @@ public class TenantService {
 
         Tenant tenant = tenantRepository
                 .findById(id)
-                .orElseThrow();
+                .orElseThrow(() ->
+                        new RecursoNaoEncontradoException(
+                                "Tenant não encontrado."
+                        ));
 
         if (
 
@@ -157,7 +161,11 @@ public class TenantService {
 
         Tenant tenant = tenantRepository
                 .findById(id)
-                .orElseThrow();
+                .orElseThrow(() ->
+                        new RecursoNaoEncontradoException(
+                                "Tenant não encontrado."
+                        ));
+
 
         tenantRepository
                 .findBySlug(

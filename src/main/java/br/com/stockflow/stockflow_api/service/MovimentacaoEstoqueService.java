@@ -1,6 +1,7 @@
 package br.com.stockflow.stockflow_api.service;
 
 import br.com.stockflow.stockflow_api.entity.MovimentacaoEstoque;
+import br.com.stockflow.stockflow_api.exception.RecursoNaoEncontradoException;
 import br.com.stockflow.stockflow_api.repository.MovimentacaoEstoqueRepository;
 
 import org.springframework.stereotype.Service;
@@ -51,10 +52,14 @@ public class MovimentacaoEstoqueService {
         @Transactional
         public MovimentacaoEstoque salvar(
                         MovimentacaoEstoqueRequest request) {
+
                 Produto produto = produtoRepository
-                                .findById(
-                                                request.getProdutoId())
-                                .orElseThrow();
+                        .findById(
+                                request.getProdutoId())
+                        .orElseThrow(() ->
+                                new RecursoNaoEncontradoException(
+                                        "Produto não encontrado."
+                                ));
 
                 if (request.getQuantidade() == null
                                 || request.getQuantidade() <= 0) {
