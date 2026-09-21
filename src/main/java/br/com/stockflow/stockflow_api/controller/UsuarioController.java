@@ -12,6 +12,8 @@ import java.util.UUID;
 
 import br.com.stockflow.stockflow_api.dto.AlterarSenhaRequest;
 import jakarta.validation.Valid;
+import br.com.stockflow.stockflow_api.dto.UsuarioCreateRequest;
+import br.com.stockflow.stockflow_api.dto.UsuarioUpdateRequest;
 
 @RestController
 @RequestMapping("/api/usuarios")
@@ -50,10 +52,11 @@ public class UsuarioController {
 
         @PostMapping
         public Usuario salvar(
-                        @RequestBody Usuario usuario) {
+                @Valid
+                @RequestBody UsuarioCreateRequest request) {
 
                 return usuarioService
-                                .salvar(usuario);
+                        .salvar(request);
 
         }
 
@@ -71,15 +74,17 @@ public class UsuarioController {
 
         @PutMapping("/{id}")
         public Usuario atualizar(
-                        @PathVariable UUID id,
-                        @RequestBody Usuario usuario) {
+                @PathVariable UUID id,
+                @Valid
+                @RequestBody UsuarioUpdateRequest request) {
 
                 return usuarioService
-                                .atualizar(
-                                                id,
-                                                usuario);
+                        .atualizar(
+                                id,
+                                request);
 
         }
+
 
         @GetMapping("/tenant/{tenantId}")
         public List<Usuario> listarPorTenant(

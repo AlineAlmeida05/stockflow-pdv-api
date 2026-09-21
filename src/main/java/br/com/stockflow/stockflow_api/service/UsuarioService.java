@@ -15,6 +15,11 @@ import br.com.stockflow.stockflow_api.security.UsuarioAutenticadoService;
 import br.com.stockflow.stockflow_api.entity.Perfil;
 import br.com.stockflow.stockflow_api.dto.AlterarSenhaRequest;
 import br.com.stockflow.stockflow_api.exception.RegraNegocioException;
+import br.com.stockflow.stockflow_api.dto.UsuarioCreateRequest;
+import br.com.stockflow.stockflow_api.dto.UsuarioUpdateRequest;
+import br.com.stockflow.stockflow_api.entity.Tenant;
+import br.com.stockflow.stockflow_api.repository.TenantRepository;
+
 
 @Service
 public class UsuarioService {
@@ -22,17 +27,18 @@ public class UsuarioService {
     private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
     private final UsuarioAutenticadoService usuarioAutenticadoService;
+    private final TenantRepository tenantRepository;
 
     public UsuarioService(
             UsuarioRepository usuarioRepository,
             PasswordEncoder passwordEncoder,
-            UsuarioAutenticadoService usuarioAutenticadoService) {
+            UsuarioAutenticadoService usuarioAutenticadoService,
+            TenantRepository tenantRepository) {
 
         this.usuarioRepository = usuarioRepository;
-
         this.passwordEncoder = passwordEncoder;
-
         this.usuarioAutenticadoService = usuarioAutenticadoService;
+        this.tenantRepository = tenantRepository;
 
     }
 
@@ -65,7 +71,19 @@ public class UsuarioService {
 
 
     public Usuario salvar(
-            Usuario usuario) {
+            UsuarioCreateRequest request) {
+
+        Tenant tenant = tenantRepository
+                .findById(request.tenantId())
+                .orElseThrow();
+
+        Usuario usuario = new Usuario();
+
+        usuario.setNome(request.nome());
+        usuario.setEmail(request.email());
+        usuario.setSenha(request.senha());
+        usuario.setPerfil(request.perfil());
+        usuario.setTenant(tenant);
 
         Usuario usuarioLogado = usuarioAutenticadoService
                 .usuarioLogado();
@@ -173,7 +191,9 @@ public class UsuarioService {
     }
 
 
-    public Usuario atualizar(UUID id, Usuario usuarioAtualizado) {
+    public Usuario atualizar(
+            UUID id,
+            UsuarioUpdateRequest request) {
 
         Usuario usuario = usuarioRepository
                 .findById(id)
@@ -212,11 +232,11 @@ public class UsuarioService {
 
         }
         usuario.setNome(
-                usuarioAtualizado.getNome());
+                request.nome());
 
         usuarioRepository
                 .findByEmail(
-                        usuarioAtualizado.getEmail()
+                        request.email()
                 )
                 .ifPresent(existente -> {
 
@@ -234,25 +254,25 @@ public class UsuarioService {
                 });
 
         usuario.setEmail(
-                usuarioAtualizado.getEmail());
+                request.email());
 
-        if (usuarioAtualizado.getSenha() != null &&
-                !usuarioAtualizado.getSenha().isBlank()) {
+        if (request.senha() != null &&
+                !request.senha().isBlank()) {
 
             usuario.setSenha(
                     passwordEncoder.encode(
-                            usuarioAtualizado.getSenha()));
+                            request.senha()));
 
         }
 
         usuario.setAtivo(
-                usuarioAtualizado.getAtivo());
+                request.ativo());
 
         if (usuarioLogado != null) {
 
             if (!podeGerenciarPerfil(
                     usuarioLogado.getPerfil(),
-                    usuarioAtualizado.getPerfil())) {
+                    request.perfil())) {
 
                 throw new RegraNegocioException(
                         "Você não possui permissão para atribuir este perfil.");
@@ -261,13 +281,20 @@ public class UsuarioService {
 
 
             usuario.setPerfil(
-                    usuarioAtualizado.getPerfil()
+                    request.perfil()
             );
 
             if (usuarioLogado.getPerfil() == Perfil.SUPER_ADMIN) {
 
-                usuario.setTenant(
-                        usuarioAtualizado.getTenant());
+                if (request.tenantId() != null) {
+
+                    Tenant tenant = tenantRepository
+                            .findById(request.tenantId())
+                            .orElseThrow();
+
+                    usuario.setTenant(tenant);
+
+                }
 
             }
 
