@@ -16,25 +16,30 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import br.com.stockflow.stockflow_api.entity.Fiado;
+import br.com.stockflow.stockflow_api.exception.RegraNegocioException;
+import br.com.stockflow.stockflow_api.repository.FiadoRepository;
+
+import java.math.BigDecimal;
 
 @Service
 public class PagamentoService {
 
     private final PagamentoRepository pagamentoRepository;
-
     private final ClienteRepository clienteRepository;
-
     private final UsuarioAutenticadoService usuarioAutenticadoService;
+    private final FiadoRepository fiadoRepository;
 
     public PagamentoService(
             PagamentoRepository pagamentoRepository,
             ClienteRepository clienteRepository,
+            FiadoRepository fiadoRepository,
             UsuarioAutenticadoService usuarioAutenticadoService) {
 
         this.pagamentoRepository = pagamentoRepository;
         this.clienteRepository = clienteRepository;
-        this.usuarioAutenticadoService =
-                usuarioAutenticadoService;
+        this.usuarioAutenticadoService = usuarioAutenticadoService;
+        this.fiadoRepository = fiadoRepository;
     }
 
     public Pagamento salvar(
@@ -63,6 +68,50 @@ public class PagamentoService {
                                 new RecursoNaoEncontradoException(
                                         "Cliente não encontrado."
                                 ));
+
+        BigDecimal totalFiado =
+                fiadoRepository
+                        .findByClienteIdAndTenantId(
+                                cliente.getId(),
+                                usuarioLogado
+                                        .getTenant()
+                                        .getId()
+                        )
+                        .stream()
+                        .map(Fiado::getValorTotal)
+                        .reduce(
+                                BigDecimal.ZERO,
+                                BigDecimal::add
+                        );
+
+        BigDecimal totalPago =
+                pagamentoRepository
+                        .findByClienteIdAndTenantId(
+                                cliente.getId(),
+                                usuarioLogado
+                                        .getTenant()
+                                        .getId()
+                        )
+                        .stream()
+                        .map(Pagamento::getValorPago)
+                        .reduce(
+                                BigDecimal.ZERO,
+                                BigDecimal::add
+                        );
+
+        BigDecimal saldoDevedor =
+                totalFiado.subtract(totalPago);
+
+        if (
+                request.valorPago()
+                        .compareTo(saldoDevedor)
+                        > 0
+        ) {
+
+            throw new RegraNegocioException(
+                    "Valor do pagamento superior ao saldo devedor."
+            );
+        }
 
         Pagamento pagamento =
                 new Pagamento();
