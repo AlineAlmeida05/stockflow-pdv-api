@@ -5,6 +5,7 @@ import br.com.stockflow.stockflow_api.dto.response.FiadoResponse;
 import br.com.stockflow.stockflow_api.entity.Fiado;
 import br.com.stockflow.stockflow_api.service.FiadoService;
 
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -23,6 +24,7 @@ public class FiadoController {
 
     @PostMapping
     public Fiado salvar(
+            @Valid
             @RequestBody FiadoRequest request) {
 
         return fiadoService.salvar(

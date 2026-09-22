@@ -236,14 +236,6 @@ public class PromocaoService {
             Promocao promocao,
             Produto produto) {
 
-        System.out.println(
-
-                "META ATINGIDA: "
-
-                        + produto.getNome()
-
-        );
-
         promocao.setAtiva(false);
 
         promocao.setDataFim(

@@ -54,23 +54,6 @@ public class MovimentacaoEstoqueService {
                                         "Produto não encontrado."
                                 ));
 
-                if (request.quantidade() == null
-                                || request.quantidade() <= 0) {
-
-                        throw new RegraNegocioException(
-                                "Quantidade inválida."
-                        );
-                }
-
-                if (request.precoCompra() == null
-                                || request.precoCompra()
-                                                .compareTo(BigDecimal.ZERO) <= 0) {
-
-                        throw new RegraNegocioException(
-                                "Preço de compra inválido."
-                        );
-                }
-
                 if (Boolean.FALSE.equals(
                                 produto.getAtivo())) {
 

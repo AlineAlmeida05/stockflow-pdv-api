@@ -1,5 +1,6 @@
 package br.com.stockflow.stockflow_api.service;
 
+import br.com.stockflow.stockflow_api.dto.response.TenantResponse;
 import br.com.stockflow.stockflow_api.entity.Perfil;
 import br.com.stockflow.stockflow_api.entity.Tenant;
 import br.com.stockflow.stockflow_api.entity.Usuario;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.UUID;
 import br.com.stockflow.stockflow_api.exception.RegraNegocioException;
+import br.com.stockflow.stockflow_api.dto.request.TenantRequest;
 
 @Service
 public class TenantService {
@@ -36,7 +38,22 @@ public class TenantService {
 
     }
 
-    public Tenant salvar(Tenant tenant) {
+    public TenantResponse salvar(
+            TenantRequest request) {
+
+        Tenant tenant = new Tenant();
+
+        tenant.setNome(request.nome());
+        tenant.setResponsavel(request.responsavel());
+        tenant.setEmail(request.email());
+        tenant.setCidade(request.cidade());
+        tenant.setAtivo(request.ativo());
+        tenant.setSlug(request.slug());
+        tenant.setCodigoTenant(request.codigoTenant());
+        tenant.setLogoUrl(request.logoUrl());
+        tenant.setFaviconUrl(request.faviconUrl());
+        tenant.setCorPrimaria(request.corPrimaria());
+        tenant.setCorSecundaria(request.corSecundaria());
 
         validarSuperAdmin();
 
@@ -74,8 +91,9 @@ public class TenantService {
 
                 });
 
-        return tenantRepository.save(
-                tenant);
+        return montarResponse(
+                tenantRepository.save(tenant)
+        );
 
     }
 
@@ -153,9 +171,9 @@ public class TenantService {
 
     }
 
-    public Tenant atualizar(
+    public TenantResponse atualizar(
             UUID id,
-            Tenant tenantAtualizado) {
+            TenantRequest request) {
 
         validarSuperAdmin();
 
@@ -169,7 +187,7 @@ public class TenantService {
 
         tenantRepository
                 .findBySlug(
-                        tenantAtualizado.getSlug()
+                        request.slug()
                 )
                 .ifPresent(existente -> {
 
@@ -188,7 +206,7 @@ public class TenantService {
 
         tenantRepository
                 .findByCodigoTenant(
-                        tenantAtualizado.getCodigoTenant()
+                        request.codigoTenant()
                 )
                 .ifPresent(existente -> {
 
@@ -205,41 +223,21 @@ public class TenantService {
 
                 });
 
-        tenant.setNome(
-                tenantAtualizado.getNome());
+        tenant.setNome(request.nome());
+        tenant.setResponsavel(request.responsavel());
+        tenant.setEmail(request.email());
+        tenant.setCidade(request.cidade());
+        tenant.setAtivo(request.ativo());
+        tenant.setSlug(request.slug());
+        tenant.setCodigoTenant(request.codigoTenant());
+        tenant.setLogoUrl(request.logoUrl());
+        tenant.setFaviconUrl(request.faviconUrl());
+        tenant.setCorPrimaria(request.corPrimaria());
+        tenant.setCorSecundaria(request.corSecundaria());
 
-        tenant.setResponsavel(
-                tenantAtualizado.getResponsavel());
-
-        tenant.setEmail(
-                tenantAtualizado.getEmail());
-
-        tenant.setCidade(
-                tenantAtualizado.getCidade());
-
-        tenant.setAtivo(
-                tenantAtualizado.getAtivo());
-
-        tenant.setSlug(
-                tenantAtualizado.getSlug());
-
-        tenant.setCodigoTenant(
-                tenantAtualizado.getCodigoTenant());
-
-        tenant.setLogoUrl(
-                tenantAtualizado.getLogoUrl());
-
-        tenant.setFaviconUrl(
-                tenantAtualizado.getFaviconUrl());
-
-        tenant.setCorPrimaria(
-                tenantAtualizado.getCorPrimaria());
-
-        tenant.setCorSecundaria(
-                tenantAtualizado.getCorSecundaria());
-
-        return tenantRepository.save(
-                tenant);
+        return montarResponse(
+                tenantRepository.save(tenant)
+        );
     }
 
     private void validarSuperAdmin() {
@@ -261,6 +259,17 @@ public class TenantService {
 
         }
 
+    }
+
+    private TenantResponse montarResponse(
+            Tenant tenant
+    ) {
+        return new TenantResponse(
+                tenant.getId(),
+                tenant.getNome(),
+                tenant.getCodigoTenant(),
+                tenant.getAtivo()
+        );
     }
 
 }

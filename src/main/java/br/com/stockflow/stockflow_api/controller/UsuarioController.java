@@ -38,13 +38,6 @@ public class UsuarioController {
                 var usuario = usuarioAutenticadoService
                                 .usuarioLogado();
 
-                System.out.println(
-                                "USUARIO AUTENTICADO: "
-                                                + usuario.getEmail());
-
-                System.out.println(
-                                "PERFIL: "
-                                                + usuario.getPerfil());
                 return ResponseEntity.ok(
                         usuarioService.listarTodos());
 

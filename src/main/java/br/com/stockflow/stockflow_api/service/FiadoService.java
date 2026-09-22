@@ -5,6 +5,7 @@ import br.com.stockflow.stockflow_api.dto.response.FiadoResponse;
 import br.com.stockflow.stockflow_api.entity.Cliente;
 import br.com.stockflow.stockflow_api.entity.Fiado;
 import br.com.stockflow.stockflow_api.entity.Usuario;
+import br.com.stockflow.stockflow_api.exception.RecursoNaoEncontradoException;
 import br.com.stockflow.stockflow_api.repository.ClienteRepository;
 import br.com.stockflow.stockflow_api.repository.FiadoRepository;
 import br.com.stockflow.stockflow_api.security.UsuarioAutenticadoService;
@@ -54,11 +55,10 @@ public class FiadoService {
                 clienteRepository
                         .findById(
                                 request.clienteId())
-                        .orElseThrow(
-                                () ->
-                                        new ResponseStatusException(
-                                                HttpStatus.NOT_FOUND,
-                                                "Cliente não encontrado."));
+                        .orElseThrow(() ->
+                                new RecursoNaoEncontradoException(
+                                        "Cliente não encontrado."
+                                ));
 
         Fiado fiado = new Fiado();
 

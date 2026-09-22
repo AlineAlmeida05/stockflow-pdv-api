@@ -5,6 +5,7 @@ import br.com.stockflow.stockflow_api.dto.response.LoginResponse;
 import br.com.stockflow.stockflow_api.entity.Perfil;
 import br.com.stockflow.stockflow_api.entity.Tenant;
 import br.com.stockflow.stockflow_api.entity.Usuario;
+import br.com.stockflow.stockflow_api.exception.RecursoNaoEncontradoException;
 import br.com.stockflow.stockflow_api.repository.TenantRepository;
 import br.com.stockflow.stockflow_api.repository.UsuarioRepository;
 
@@ -57,10 +58,10 @@ public class AuthService {
 
         Tenant tenantLogin = tenantRepository
                 .findBySlug(request.slug())
-                .orElseThrow(
-                        () -> new ResponseStatusException(
-                                HttpStatus.NOT_FOUND,
-                                "Tenant não encontrado"));
+                .orElseThrow(() ->
+                        new RecursoNaoEncontradoException(
+                                "Tenant não encontrado."
+                        ));
 
         if (
                 usuario.getPerfil() != Perfil.SUPER_ADMIN

@@ -1,5 +1,6 @@
 package br.com.stockflow.stockflow_api.service;
 
+import br.com.stockflow.stockflow_api.dto.request.EmpresaCreateRequest;
 import br.com.stockflow.stockflow_api.entity.Empresa;
 import br.com.stockflow.stockflow_api.exception.RecursoNaoEncontradoException;
 import br.com.stockflow.stockflow_api.repository.EmpresaRepository;
@@ -31,14 +32,38 @@ public class EmpresaService {
 
     }
 
-    public List<Empresa> listarTodas() {
-        return empresaRepository.findAll();
+    public List<EmpresaResponse> listarTodas() {
+
+        return empresaRepository.findAll()
+                .stream()
+                .map(this::montarResponse)
+                .toList();
     }
 
-    public Empresa salvar(
-            Empresa empresa
-    ) {
-        return empresaRepository.save(empresa);
+    public EmpresaResponse salvar(
+            EmpresaCreateRequest request) {
+
+        Empresa empresa = new Empresa();
+
+        empresa.setNomeFantasia(request.nomeFantasia());
+        empresa.setRazaoSocial(request.razaoSocial());
+        empresa.setCnpj(request.cnpj());
+        empresa.setTelefone(request.telefone());
+        empresa.setEmail(request.email());
+        empresa.setEndereco(request.endereco());
+        empresa.setCidade(request.cidade());
+        empresa.setUf(request.uf());
+        empresa.setProprietario(request.proprietario());
+        empresa.setLogoUrl(request.logoUrl());
+        empresa.setSlogan(request.slogan());
+        empresa.setCorPrimaria(request.corPrimaria());
+        empresa.setCorSecundaria(request.corSecundaria());
+
+        return montarResponse(
+                empresaRepository.save(
+                        empresa
+                )
+        );
     }
 
     public EmpresaResponse obterEmpresa() {

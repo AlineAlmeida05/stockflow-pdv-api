@@ -5,6 +5,7 @@ import br.com.stockflow.stockflow_api.dto.request.PromocaoRequest;
 import br.com.stockflow.stockflow_api.entity.Promocao;
 import br.com.stockflow.stockflow_api.service.PromocaoService;
 
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -41,6 +42,7 @@ public class PromocaoController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public Promocao criar(
+            @Valid
             @RequestBody
             PromocaoRequest request) {
 

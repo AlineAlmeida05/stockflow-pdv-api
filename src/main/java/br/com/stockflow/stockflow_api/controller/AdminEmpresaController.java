@@ -1,8 +1,11 @@
 package br.com.stockflow.stockflow_api.controller;
 
+import br.com.stockflow.stockflow_api.dto.request.EmpresaCreateRequest;
+import br.com.stockflow.stockflow_api.dto.response.EmpresaResponse;
 import br.com.stockflow.stockflow_api.entity.Empresa;
 import br.com.stockflow.stockflow_api.service.EmpresaService;
 
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -24,20 +27,20 @@ public class AdminEmpresaController {
     }
 
     @GetMapping
-    public List<Empresa> listar() {
+    public List<EmpresaResponse> listar() {
 
         return empresaService.listarTodas();
 
     }
 
     @PostMapping
-    public Empresa salvar(
-            @RequestBody Empresa empresa
+    public EmpresaResponse salvar(
+
+            @Valid
+            @RequestBody
+            EmpresaCreateRequest request
+
     ) {
-
-        return empresaService.salvar(
-                empresa
-        );
-
+        return empresaService.salvar(request);
     }
 }

@@ -5,6 +5,7 @@ import br.com.stockflow.stockflow_api.dto.response.PagamentoResponse;
 import br.com.stockflow.stockflow_api.entity.Pagamento;
 import br.com.stockflow.stockflow_api.service.PagamentoService;
 
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -23,6 +24,7 @@ public class PagamentoController {
 
     @PostMapping
     public Pagamento salvar(
+            @Valid
             @RequestBody PagamentoRequest request) {
 
         return pagamentoService.salvar(

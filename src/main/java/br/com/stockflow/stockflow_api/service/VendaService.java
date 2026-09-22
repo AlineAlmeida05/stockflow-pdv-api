@@ -91,22 +91,6 @@ public class VendaService {
                     "Usuário não autenticado");
         }
 
-        if (request.itens() == null
-                || request.itens().isEmpty()) {
-
-            throw new RegraNegocioException(
-                    "Carrinho vazio."
-            );
-        }
-
-        if (request.formaPagamento() == null
-                || request.formaPagamento().isBlank()) {
-
-            throw new RegraNegocioException(
-                    "Forma de pagamento obrigatória."
-            );
-        }
-
         if ("fiado".equals(
                 request.formaPagamento())
                 && request.clienteId() == null) {
@@ -289,14 +273,6 @@ public class VendaService {
 
             if (Boolean.TRUE.equals(
                     produto.getPromocaoAtiva())) {
-                System.out.println(
-                        "PROMOCAO ATIVA? "
-                                + produto.getPromocaoAtiva()
-                );
-                System.out.println(
-                        "PRODUTO EM PROMOCAO: "
-                                + produto.getNome()
-                );
 
                 promocaoRepository
                         .findByProdutoAndAtivaTrue(

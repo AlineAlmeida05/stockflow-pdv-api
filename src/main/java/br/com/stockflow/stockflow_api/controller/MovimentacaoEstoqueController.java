@@ -3,6 +3,7 @@ package br.com.stockflow.stockflow_api.controller;
 import br.com.stockflow.stockflow_api.entity.MovimentacaoEstoque;
 import br.com.stockflow.stockflow_api.service.MovimentacaoEstoqueService;
 
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -32,6 +33,7 @@ public class MovimentacaoEstoqueController {
 
     @PostMapping
     public MovimentacaoEstoque salvar(
+            @Valid
             @RequestBody MovimentacaoEstoqueRequest request) {
 
         return service.salvar(

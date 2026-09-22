@@ -7,6 +7,7 @@ import br.com.stockflow.stockflow_api.entity.Venda;
 
 import br.com.stockflow.stockflow_api.service.VendaService;
 
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -29,14 +30,16 @@ public class VendaController {
     }
 
     @PostMapping
-    public Venda salvar(@RequestBody VendaRequest request) {
+    public Venda salvar(
+            @Valid
+            @RequestBody VendaRequest request) {
 
         return vendaService.salvar(request);
     }
 
     @PostMapping("/{id}/cancelar")
     public void cancelarVenda(@PathVariable UUID id,
-
+                              @Valid
                               @RequestBody CancelarVendaRequest request) {
 
         vendaService.cancelarVenda(id, request);
