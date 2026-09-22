@@ -52,18 +52,13 @@ public class UsuarioService {
                 usuarioAutenticadoService
                         .usuarioLogado();
 
-
         if (
                 usuarioLogado.getPerfil()
                         == Perfil.SUPER_ADMIN
         ) {
 
             return usuarioRepository
-                    .findByTenantId(
-                            usuarioLogado
-                                    .getTenant()
-                                    .getId()
-                    )
+                    .findAll()
                     .stream()
                     .map(this::montarResponse)
                     .toList();
@@ -71,7 +66,11 @@ public class UsuarioService {
         }
 
         return usuarioRepository
-                .findAll()
+                .findByTenantId(
+                        usuarioLogado
+                                .getTenant()
+                                .getId()
+                )
                 .stream()
                 .map(this::montarResponse)
                 .toList();
