@@ -36,22 +36,15 @@ import br.com.stockflow.stockflow_api.dto.response.ItemVendaResponse;
 public class VendaService {
 
     private final VendaRepository vendaRepository;
-
     private final ItemVendaRepository itemVendaRepository;
-
     private final ProdutoRepository produtoRepository;
-
     private final UsuarioAutenticadoService usuarioAutenticadoService;
-
     private final MovimentacaoEstoqueRepository movimentacaoRepository;
-
     private final FiadoRepository fiadoRepository;
-
     private final ClienteRepository clienteRepository;
-
     private final PromocaoRepository promocaoRepository;
-
     private final PromocaoService promocaoService;
+    private final PagamentoRepository pagamentoRepository;
 
     public VendaService(
             VendaRepository vendaRepository,
@@ -62,7 +55,8 @@ public class VendaService {
             FiadoRepository fiadoRepository,
             ClienteRepository clienteRepository,
             PromocaoRepository promocaoRepository,
-            PromocaoService promocaoService) {
+            PromocaoService promocaoService,
+            PagamentoRepository pagamentoRepository) {
 
 
         this.vendaRepository = vendaRepository;
@@ -74,6 +68,7 @@ public class VendaService {
         this.clienteRepository = clienteRepository;
         this.promocaoRepository = promocaoRepository;
         this.promocaoService = promocaoService;
+        this.pagamentoRepository = pagamentoRepository;
 
     }
 
@@ -118,6 +113,8 @@ public class VendaService {
                                     "Produto não encontrado."
                             ));
 
+
+
             if (Boolean.FALSE.equals(
                     produto.getAtivo())) {
 
@@ -156,6 +153,26 @@ public class VendaService {
 
             quantidadeItens += item.quantidade();
         }
+
+        if ("dinheiro".equalsIgnoreCase(
+                request.formaPagamento())) {
+
+            if (request.valorRecebido() == null) {
+
+                throw new RegraNegocioException(
+                        "Valor recebido é obrigatório para pagamento em dinheiro."
+                );
+            }
+
+            if (request.valorRecebido()
+                    .compareTo(valorTotal) < 0) {
+
+                throw new RegraNegocioException(
+                        "Valor recebido insuficiente."
+                );
+            }
+        }
+
         Venda venda = new Venda();
 
         venda.setDataVenda(
@@ -182,6 +199,26 @@ public class VendaService {
         venda.setClienteId(
                 request.clienteId());
 
+        if (request.clienteId() != null) {
+
+            Cliente cliente =
+                    clienteRepository
+                            .findByIdAndTenantId(
+                                    request.clienteId(),
+                                    usuarioLogado
+                                            .getTenant()
+                                            .getId()
+                            )
+                            .orElseThrow(() ->
+                                    new RecursoNaoEncontradoException(
+                                            "Cliente não encontrado."
+                                    ));
+
+            venda.setClienteNome(
+                    cliente.getNome()
+            );
+        }
+
         Venda vendaSalva = vendaRepository.save(
                 venda);
         if ("fiado".equalsIgnoreCase(
@@ -198,6 +235,57 @@ public class VendaService {
                                             new RecursoNaoEncontradoException(
                                                     "Cliente não encontrado."
                                             ));
+
+            List<Fiado> fiadosCliente =
+                    fiadoRepository
+                            .findByClienteIdAndTenantId(
+                                    cliente.getId(),
+                                    usuarioLogado
+                                            .getTenant()
+                                            .getId()
+                            );
+
+            BigDecimal totalFiado =
+                    fiadosCliente.stream()
+                            .map(Fiado::getValorTotal)
+                            .reduce(
+                                    BigDecimal.ZERO,
+                                    BigDecimal::add
+                            );
+
+            BigDecimal totalPago =
+                    pagamentoRepository
+                            .findByClienteIdAndTenantId(
+                                    cliente.getId(),
+                                    usuarioLogado
+                                            .getTenant()
+                                            .getId()
+                            )
+                            .stream()
+                            .map(Pagamento::getValorPago)
+                            .reduce(
+                                    BigDecimal.ZERO,
+                                    BigDecimal::add
+                            );
+
+            BigDecimal saldoDevedor =
+                    totalFiado.subtract(
+                            totalPago
+                    );
+
+            BigDecimal novaDivida =
+                    saldoDevedor.add(
+                            valorTotal
+                    );
+
+            if (novaDivida.compareTo(
+                    cliente.getLimiteCredito()
+            ) > 0) {
+
+                throw new RegraNegocioException(
+                        "Limite de crédito do cliente excedido."
+                );
+            }
 
             Fiado fiado = new Fiado();
 
@@ -236,7 +324,6 @@ public class VendaService {
                             ));
 
             BigDecimal precoAplicado;
-
 
 
             if (Boolean.TRUE.equals(

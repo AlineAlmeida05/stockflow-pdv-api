@@ -20,6 +20,4 @@ public interface ProdutoRepository
                 UUID id,
                 UUID tenantId
         );
-                        
-
 }
