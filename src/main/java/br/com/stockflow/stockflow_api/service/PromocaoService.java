@@ -126,6 +126,33 @@ public class PromocaoService {
                                         "Produto não encontrado."
                                 ));
 
+        List<MovimentacaoEstoque> movimentacoes =
+                movimentacaoEstoqueRepository
+                        .findByTenantId(
+                                usuarioLogado
+                                        .getTenant()
+                                        .getId()
+                        );
+
+        long diasEstoque =
+                calcularDiasEstoque(
+                        produto,
+                        movimentacoes
+                );
+
+        PromocaoMetrics metrics =
+                calcularMetrics(
+                        produto,
+                        movimentacoes,
+                        diasEstoque
+                );
+
+        BigDecimal precoPromocional =
+                calcularPrecoPromocional(
+                        produto.getPrecoVenda(),
+                        metrics.percentualDesconto()
+                );
+
 
         if (Boolean.FALSE.equals(
                 produto.getAtivo())) {
@@ -170,13 +197,15 @@ public class PromocaoService {
                 produto.getPrecoVenda());
 
         promocao.setPrecoPromocional(
-                request.precoPromocional());
+                precoPromocional);
 
         promocao.setPercentualDesconto(
-                request.percentualDesconto());
+                BigDecimal.valueOf(
+                        metrics.percentualDesconto()
+                ));
 
         promocao.setMotivo(
-                request.motivo());
+                metrics.motivo());
 
         promocao.setDataInicio(
                 LocalDateTime.now());
@@ -193,10 +222,10 @@ public class PromocaoService {
                 true);
 
         produto.setPrecoPromocional(
-                request.precoPromocional());
+                precoPromocional);
 
         produto.setPromocaoMotivo(
-                request.motivo());
+                metrics.motivo());
 
         produto.setDataInicioPromocao(
                 LocalDate.now());
