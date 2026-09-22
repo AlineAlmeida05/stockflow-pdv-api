@@ -4,6 +4,7 @@ import br.com.stockflow.stockflow_api.entity.Produto;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface ProdutoRepository
@@ -14,6 +15,11 @@ public interface ProdutoRepository
 
         Produto findTopByTenantIdOrderByCodigoDesc(
                         UUID tenantId);
+
+        Optional<Produto> findByIdAndTenantId(
+                UUID id,
+                UUID tenantId
+        );
                         
 
 }

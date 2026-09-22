@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
+
 import br.com.stockflow.stockflow_api.exception.RecursoNaoEncontradoException;
 import br.com.stockflow.stockflow_api.exception.RegraNegocioException;
 import br.com.stockflow.stockflow_api.dto.request.ProdutoCreateRequest;
@@ -20,330 +21,301 @@ import br.com.stockflow.stockflow_api.dto.response.ProdutoResponse;
 @Service
 public class ProdutoService {
 
-        private final ProdutoRepository produtoRepository;
+    private final ProdutoRepository produtoRepository;
 
-        private final UsuarioAutenticadoService usuarioAutenticadoService;
+    private final UsuarioAutenticadoService usuarioAutenticadoService;
 
-        public ProdutoService(
-                        ProdutoRepository produtoRepository,
-                        UsuarioAutenticadoService usuarioAutenticadoService) {
+    public ProdutoService(
+            ProdutoRepository produtoRepository,
+            UsuarioAutenticadoService usuarioAutenticadoService) {
 
-                this.produtoRepository = produtoRepository;
+        this.produtoRepository = produtoRepository;
 
-                this.usuarioAutenticadoService = usuarioAutenticadoService;
+        this.usuarioAutenticadoService = usuarioAutenticadoService;
 
-        }
+    }
 
-        public List<ProdutoResponse> listar(){
+    public List<ProdutoResponse> listar() {
 
-                Usuario usuarioLogado = usuarioAutenticadoService
-                                .usuarioLogado();
+        Usuario usuarioLogado = usuarioAutenticadoService
+                .usuarioLogado();
 
-                return produtoRepository
-                        .findByTenantId(
-                                usuarioLogado
-                                        .getTenant()
-                                        .getId())
-                        .stream()
-                        .map(this::montarResponse)
-                        .toList();
-
-
-        }
-
-        public ProdutoResponse buscarPorId(
-                UUID id) {
-
-                Produto produto = produtoRepository
-                        .findById(id)
-                        .orElseThrow(() ->
-                                new RecursoNaoEncontradoException(
-                                        "Produto não encontrado."
-                                ));
-
-                Usuario usuarioLogado = usuarioAutenticadoService
-                                .usuarioLogado();
-
-                if (!pertenceAoMesmoTenant(
-                                usuarioLogado,
-                                produto)) {
-
-                        throw new AcessoNegadoException(
-                                        "Você não possui acesso a este produto.");
-
-                }
-
-                return montarResponse(
-                        produto
-                );
-
-        }
-
-        public ProdutoResponse salvar(
-                ProdutoCreateRequest request)
-        {
-                Produto produto = new Produto();
-
-                produto.setNome(
-                        request.nome());
-
-                produto.setCategoria(
-                        request.categoria());
-
-                produto.setCodigoBarras(
-                        request.codigoBarras());
-
-                produto.setPrecoVenda(
-                        request.precoVenda());
-
-                produto.setEstoqueAtual(
-                        request.estoqueAtual());
-
-                produto.setEstoqueMinimo(
-                        request.estoqueMinimo());
-
-                produto.setAtivo(true);
-
-                Usuario usuarioLogado = usuarioAutenticadoService
-                                .usuarioLogado();
-
-                produto.setTenant(
-                                usuarioLogado.getTenant());
-
-                produto.setCodigo(
-                                gerarCodigoProduto(
-                                                usuarioLogado));
-
-                produto.setDataCadastro(
-                                LocalDateTime.now());
-
-                produto.setCustoMedio(
-                                java.math.BigDecimal.ZERO);
-
-
-                return montarResponse(
-                        produtoRepository.save(produto)
-                );
-
-        }
-
-        public ProdutoResponse atualizar(
-                UUID id,
-                ProdutoUpdateRequest request) {
-
-                Produto produto = produtoRepository
-                        .findById(id)
-                        .orElseThrow(() ->
-                                new RecursoNaoEncontradoException(
-                                        "Produto não encontrado."
-                                ));
-
-
-                Usuario usuarioLogado = usuarioAutenticadoService
-                                .usuarioLogado();
-
-                if (!pertenceAoMesmoTenant(
-                                usuarioLogado,
-                                produto)) {
-
-                        throw new AcessoNegadoException(
-                                        "Você não possui permissão para editar este produto.");
-
-                }
-
-                produto.setNome(
-                                request.nome());
-
-                produto.setCategoria(
-                        request.categoria());
-
-                produto.setCodigoBarras(
-                        request.codigoBarras());
-
-                produto.setPrecoVenda(
-                        request.precoVenda());
-
-                produto.setEstoqueAtual(
-                        request.estoqueAtual());
-
-                produto.setEstoqueMinimo(
-                        request.estoqueMinimo());
-
-                produto.setAtivo(
-                        request.ativo());
-
-                produto.setDataAtualizacao(
-                                LocalDateTime.now());
-
-                return montarResponse(
-                        produtoRepository.save(produto)
-                );
-
-        }
-
-        public void excluir(
-                        UUID id) {
-
-                Produto produto = produtoRepository
-                        .findById(id)
-                        .orElseThrow(() ->
-                                new RecursoNaoEncontradoException(
-                                        "Produto não encontrado."
-                                ));
-
-
-                Usuario usuarioLogado = usuarioAutenticadoService
-                                .usuarioLogado();
-
-                if (!pertenceAoMesmoTenant(
-                                usuarioLogado,
-                                produto)) {
-
-                        throw new AcessoNegadoException(
-                                        "Você não possui permissão para inativar este produto.");
-
-                }
-
-                produto.setAtivo(false);
-
-                produto.setDataAtualizacao(
-                                LocalDateTime.now());
-
-                produtoRepository.save(
-                                produto);
-
-        }
-
-        public void reativar(
-                        UUID id) {
-
-                Produto produto = produtoRepository
-                        .findById(id)
-                        .orElseThrow(() ->
-                                new RecursoNaoEncontradoException(
-                                        "Produto não encontrado."
-                                ));
-
-                Usuario usuarioLogado = usuarioAutenticadoService
-                                .usuarioLogado();
-
-                if (!pertenceAoMesmoTenant(
-                                usuarioLogado,
-                                produto)) {
-
-                        throw new AcessoNegadoException(
-                                        "Você não possui permissão para reativar este produto.");
-
-                }
-
-                produto.setAtivo(true);
-
-                produto.setDataAtualizacao(
-                                LocalDateTime.now());
-
-                produtoRepository.save(
-                                produto);
-
-        }
-
-        private String gerarCodigoProduto(
-                        Usuario usuarioLogado) {
-
-                String prefixo = usuarioLogado
+        return produtoRepository
+                .findByTenantId(
+                        usuarioLogado
                                 .getTenant()
-                                .getCodigoTenant();
+                                .getId())
+                .stream()
+                .map(this::montarResponse)
+                .toList();
 
-                if (prefixo == null
-                                || prefixo.isBlank()) {
 
-                        throw new RegraNegocioException(
-                                        "Tenant sem código configurado.");
+    }
 
-                }
+    public ProdutoResponse buscarPorId(
+            UUID id) {
 
-                Produto ultimoProduto = produtoRepository
-                                .findTopByTenantIdOrderByCodigoDesc(
-                                                usuarioLogado
-                                                                .getTenant()
-                                                                .getId());
+        Usuario usuarioLogado =
+                usuarioAutenticadoService
+                        .usuarioLogado();
 
-                int sequencia = 1;
-
-                if (ultimoProduto != null
-                                &&
-                                ultimoProduto.getCodigo() != null) {
-
-                        String numero = ultimoProduto
-                                        .getCodigo()
-                                        .replace(
-                                                        prefixo,
-                                                        "");
-
-                        sequencia = Integer.parseInt(numero)
-                                        + 1;
-
-                }
-
-                return String.format(
-                                "%s%06d",
-                                prefixo,
-                                sequencia);
-
-        }
-
-        private boolean pertenceAoMesmoTenant(
-                        Usuario usuario,
-                        Produto produto) {
-
-                return usuario
+        Produto produto = produtoRepository
+                .findByIdAndTenantId(
+                        id,
+                        usuarioLogado
                                 .getTenant()
                                 .getId()
-                                .equals(
-                                                produto
-                                                                .getTenant()
-                                                                .getId());
+                )
+                .orElseThrow(() ->
+                        new RecursoNaoEncontradoException(
+                                "Produto não encontrado."
+                        ));
+
+        return montarResponse(
+                produto
+        );
+
+    }
+
+    public ProdutoResponse salvar(
+            ProdutoCreateRequest request) {
+        Produto produto = new Produto();
+
+        produto.setNome(
+                request.nome());
+
+        produto.setCategoria(
+                request.categoria());
+
+        produto.setCodigoBarras(
+                request.codigoBarras());
+
+        produto.setPrecoVenda(
+                request.precoVenda());
+
+        produto.setEstoqueAtual(
+                request.estoqueAtual());
+
+        produto.setEstoqueMinimo(
+                request.estoqueMinimo());
+
+        produto.setAtivo(true);
+
+        Usuario usuarioLogado = usuarioAutenticadoService
+                .usuarioLogado();
+
+        produto.setTenant(
+                usuarioLogado.getTenant());
+
+        produto.setCodigo(
+                gerarCodigoProduto(
+                        usuarioLogado));
+
+        produto.setDataCadastro(
+                LocalDateTime.now());
+
+        produto.setCustoMedio(
+                java.math.BigDecimal.ZERO);
+
+
+        return montarResponse(
+                produtoRepository.save(produto)
+        );
+
+    }
+
+    public ProdutoResponse atualizar(
+            UUID id,
+            ProdutoUpdateRequest request) {
+
+        Usuario usuarioLogado = usuarioAutenticadoService
+                .usuarioLogado();
+
+        Produto produto = produtoRepository
+                .findByIdAndTenantId(
+                        id,
+                        usuarioLogado
+                                .getTenant()
+                                .getId()
+                )
+                .orElseThrow(() ->
+                        new RecursoNaoEncontradoException(
+                                "Produto não encontrado."
+                        ));
+
+        produto.setNome(
+                request.nome());
+
+        produto.setCategoria(
+                request.categoria());
+
+        produto.setCodigoBarras(
+                request.codigoBarras());
+
+        produto.setPrecoVenda(
+                request.precoVenda());
+
+        produto.setEstoqueAtual(
+                request.estoqueAtual());
+
+        produto.setEstoqueMinimo(
+                request.estoqueMinimo());
+
+        produto.setAtivo(
+                request.ativo());
+
+        produto.setDataAtualizacao(
+                LocalDateTime.now());
+
+        return montarResponse(
+                produtoRepository.save(produto)
+        );
+
+    }
+
+    public void excluir(
+            UUID id) {
+
+        Usuario usuarioLogado =
+                usuarioAutenticadoService
+
+                        .usuarioLogado();
+
+        Produto produto = produtoRepository
+                .findByIdAndTenantId(
+                        id,
+                        usuarioLogado
+                                .getTenant()
+                                .getId()
+                )
+                .orElseThrow(() ->
+                        new RecursoNaoEncontradoException(
+                                "Produto não encontrado."
+                        ));
+
+        produto.setAtivo(false);
+
+        produto.setDataAtualizacao(
+                LocalDateTime.now());
+
+        produtoRepository.save(
+                produto);
+
+    }
+
+    public void reativar(
+            UUID id) {
+
+        Usuario usuarioLogado =
+                usuarioAutenticadoService
+                        .usuarioLogado();
+
+        Produto produto = produtoRepository
+                .findByIdAndTenantId(
+                        id,
+                        usuarioLogado
+                                .getTenant()
+                                .getId()
+                )
+                .orElseThrow(() ->
+                        new RecursoNaoEncontradoException(
+                                "Produto não encontrado."
+                        ));
+
+        produto.setAtivo(true);
+
+        produto.setDataAtualizacao(
+                LocalDateTime.now());
+
+        produtoRepository.save(
+                produto);
+
+    }
+
+    private String gerarCodigoProduto(
+            Usuario usuarioLogado) {
+
+        String prefixo = usuarioLogado
+                .getTenant()
+                .getCodigoTenant();
+
+        if (prefixo == null
+                || prefixo.isBlank()) {
+
+            throw new RegraNegocioException(
+                    "Tenant sem código configurado.");
 
         }
 
-        private void validarProdutoAtivo(
-                        Produto produto) {
+        Produto ultimoProduto = produtoRepository
+                .findTopByTenantIdOrderByCodigoDesc(
+                        usuarioLogado
+                                .getTenant()
+                                .getId());
 
-                if (Boolean.FALSE.equals(
-                                produto.getAtivo())) {
+        int sequencia = 1;
 
-                        throw new RegraNegocioException(
-                                        "Produto inativo.");
+        if (ultimoProduto != null
+                &&
+                ultimoProduto.getCodigo() != null) {
 
-                }
+            String numero = ultimoProduto
+                    .getCodigo()
+                    .replace(
+                            prefixo,
+                            "");
+
+            sequencia = Integer.parseInt(numero)
+                    + 1;
+
+        }
+
+        return String.format(
+                "%s%06d",
+                prefixo,
+                sequencia);
+
+    }
+
+    private void validarProdutoAtivo(
+            Produto produto) {
+
+        if (Boolean.FALSE.equals(
+                produto.getAtivo())) {
+
+            throw new RegraNegocioException(
+                    "Produto inativo.");
 
         }
 
-        private ProdutoResponse montarResponse(
-                Produto produto
-        ) {
+    }
 
-                return new ProdutoResponse(
+    private ProdutoResponse montarResponse(
+            Produto produto
+    ) {
 
-                        produto.getId(),
+        return new ProdutoResponse(
 
-                        produto.getCodigo(),
+                produto.getId(),
 
-                        produto.getNome(),
+                produto.getCodigo(),
 
-                        produto.getCategoria(),
+                produto.getNome(),
 
-                        produto.getCodigoBarras(),
+                produto.getCategoria(),
 
-                        produto.getPrecoVenda(),
+                produto.getCodigoBarras(),
 
-                        produto.getEstoqueAtual(),
+                produto.getPrecoVenda(),
 
-                        produto.getEstoqueMinimo(),
+                produto.getEstoqueAtual(),
 
-                        produto.getAtivo()
+                produto.getEstoqueMinimo(),
 
-                );
+                produto.getAtivo()
 
-        }
+        );
+
+    }
 
 }
