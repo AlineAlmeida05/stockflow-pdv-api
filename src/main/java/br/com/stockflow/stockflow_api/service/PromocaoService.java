@@ -91,25 +91,17 @@ public class PromocaoService {
 
         Promocao promocao =
                 promocaoRepository
-                        .findById(id)
+                        .findByIdAndTenantId(
+                                id,
+                                usuarioLogado
+                                        .getTenant()
+                                        .getId()
+                        )
                         .orElseThrow(
                                 () -> new RegraNegocioException(
                                         "Promoção não encontrada."
                                 )
                         );
-
-        if (!promocao
-                .getTenant()
-                .getId()
-                .equals(
-                        usuarioLogado
-                                .getTenant()
-                                .getId())) {
-
-            throw new RegraNegocioException(
-                    "Você não possui acesso a esta promoção."
-            );
-        }
 
         return promocao;
     }
@@ -123,28 +115,17 @@ public class PromocaoService {
 
         Produto produto =
                 produtoRepository
-                        .findById(
-                                request.produtoId()
+                        .findByIdAndTenantId(
+                                request.produtoId(),
+                                usuarioLogado
+                                        .getTenant()
+                                        .getId()
                         )
-                        .orElseThrow(
-                                () -> new RegraNegocioException(
+                        .orElseThrow(() ->
+                                new RegraNegocioException(
                                         "Produto não encontrado."
-                                )
-                        );
+                                ));
 
-        if (!produto
-                .getTenant()
-                .getId()
-                .equals(
-                        usuarioLogado
-                                .getTenant()
-                                .getId()
-                )) {
-
-            throw new RegraNegocioException(
-                    "Você não possui acesso a este produto."
-            );
-        }
 
         if (Boolean.FALSE.equals(
                 produto.getAtivo())) {
@@ -293,18 +274,22 @@ public class PromocaoService {
     public List<Promocao> listarPorProduto(
             UUID produtoId) {
 
-        Produto produto =
-                produtoRepository
-                        .findById(produtoId)
-                        .orElseThrow(
-                                () -> new RegraNegocioException(
-                                        "Produto não encontrado."
-                                )
-                        );
-
         Usuario usuarioLogado =
                 usuarioAutenticadoService
                         .usuarioLogado();
+
+        Produto produto =
+                produtoRepository
+                        .findByIdAndTenantId(
+                                produtoId,
+                                usuarioLogado
+                                        .getTenant()
+                                        .getId()
+                        )
+                        .orElseThrow(() ->
+                                new RegraNegocioException(
+                                        "Produto não encontrado."
+                                ));
 
         if (!produto.getTenant()
                 .getId()

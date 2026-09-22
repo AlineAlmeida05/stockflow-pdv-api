@@ -107,8 +107,12 @@ public class VendaService {
         for (ItemVendaRequest item : request.itens()) {
 
             Produto produto = produtoRepository
-                    .findById(
-                            item.produtoId())
+                    .findByIdAndTenantId(
+                            item.produtoId(),
+                            usuarioLogado
+                                    .getTenant()
+                                    .getId()
+                    )
                     .orElseThrow(() ->
                             new RecursoNaoEncontradoException(
                                     "Produto não encontrado."
@@ -185,8 +189,10 @@ public class VendaService {
 
             Cliente cliente =
                     clienteRepository
-                            .findById(
-                                    request.clienteId())
+                            .findByIdAndTenantId(
+                                    request.clienteId(),
+                                    usuarioLogado.getTenant().getId()
+                            )
                             .orElseThrow(
                                     () ->
                                             new RecursoNaoEncontradoException(
@@ -220,8 +226,10 @@ public class VendaService {
         for (ItemVendaRequest item : request.itens()) {
 
             Produto produto = produtoRepository
-                    .findById(
-                            item.produtoId())
+                    .findByIdAndTenantId(
+                            item.produtoId(),
+                            usuarioLogado.getTenant().getId()
+                    )
                     .orElseThrow(() ->
                             new RecursoNaoEncontradoException(
                                     "Produto não encontrado."
@@ -395,7 +403,12 @@ public class VendaService {
         }
 
         Venda venda = vendaRepository
-                .findById(vendaId)
+                .findByIdAndTenantId(
+                        vendaId,
+                        usuarioLogado
+                                .getTenant()
+                                .getId()
+                )
                 .orElseThrow(() ->
                         new RecursoNaoEncontradoException(
                                 "Venda não encontrada."
@@ -531,7 +544,12 @@ public class VendaService {
 
         Venda venda =
                 vendaRepository
-                        .findById(vendaId)
+                        .findByIdAndTenantId(
+                                vendaId,
+                                usuarioLogado
+                                        .getTenant()
+                                        .getId()
+                        )
                         .orElseThrow(() ->
                                 new RecursoNaoEncontradoException(
                                         "Venda não encontrada."

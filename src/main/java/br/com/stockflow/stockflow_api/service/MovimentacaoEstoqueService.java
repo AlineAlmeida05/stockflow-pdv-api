@@ -46,9 +46,16 @@ public class MovimentacaoEstoqueService {
         public MovimentacaoEstoque salvar(
                         MovimentacaoEstoqueRequest request) {
 
+                Usuario usuarioLogado =
+                        usuarioAutenticadoService
+                                .usuarioLogado();
                 Produto produto = produtoRepository
-                        .findById(
-                                request.produtoId())
+                        .findByIdAndTenantId(
+                                request.produtoId(),
+                                usuarioLogado
+                                        .getTenant()
+                                        .getId()
+                        )
                         .orElseThrow(() ->
                                 new RecursoNaoEncontradoException(
                                         "Produto não encontrado."
@@ -122,9 +129,6 @@ public class MovimentacaoEstoqueService {
                         }
 
                 }
-
-                Usuario usuarioLogado = usuarioAutenticadoService
-                                .usuarioLogado();
 
                 if (usuarioLogado == null) {
 

@@ -27,4 +27,9 @@ public interface PromocaoRepository
     Optional<Promocao>
     findByProdutoAndAtivaTrue(
             Produto produto);
+
+    Optional<Promocao> findByIdAndTenantId(
+            UUID id,
+            UUID tenantId
+    );
 }
