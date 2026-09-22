@@ -9,5 +9,7 @@ public record CancelarVendaRequest(
         )
         String motivo
 
+
+
 ) {
 }

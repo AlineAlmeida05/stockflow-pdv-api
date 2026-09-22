@@ -21,4 +21,6 @@ public interface ClienteRepository
     Optional<Cliente> findByIdAndTenantIdAndAtivoTrue(
             UUID id,
             UUID tenantId);
+
+
 }

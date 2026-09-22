@@ -53,8 +53,12 @@ public class FiadoService {
 
         Cliente cliente =
                 clienteRepository
-                        .findById(
-                                request.clienteId())
+                        .findByIdAndTenantId(
+                                request.clienteId(),
+                                usuarioLogado
+                                        .getTenant()
+                                        .getId()
+                        )
                         .orElseThrow(() ->
                                 new RecursoNaoEncontradoException(
                                         "Cliente não encontrado."

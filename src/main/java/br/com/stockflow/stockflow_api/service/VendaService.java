@@ -228,9 +228,7 @@ public class VendaService {
                     clienteRepository
                             .findByIdAndTenantId(
                                     request.clienteId(),
-                                    usuarioLogado
-                                            .getTenant()
-                                            .getId()
+                                    usuarioLogado.getTenant().getId()
                             )
                             .orElseThrow(
                                     () ->
@@ -318,9 +316,7 @@ public class VendaService {
             Produto produto = produtoRepository
                     .findByIdAndTenantId(
                             item.produtoId(),
-                            usuarioLogado
-                                    .getTenant()
-                                    .getId()
+                            usuarioLogado.getTenant().getId()
                     )
                     .orElseThrow(() ->
                             new RecursoNaoEncontradoException(
@@ -494,7 +490,12 @@ public class VendaService {
         }
 
         Venda venda = vendaRepository
-                .findById(vendaId)
+                .findByIdAndTenantId(
+                        vendaId,
+                        usuarioLogado
+                                .getTenant()
+                                .getId()
+                )
                 .orElseThrow(() ->
                         new RecursoNaoEncontradoException(
                                 "Venda não encontrada."
@@ -630,7 +631,12 @@ public class VendaService {
 
         Venda venda =
                 vendaRepository
-                        .findById(vendaId)
+                        .findByIdAndTenantId(
+                                vendaId,
+                                usuarioLogado
+                                        .getTenant()
+                                        .getId()
+                        )
                         .orElseThrow(() ->
                                 new RecursoNaoEncontradoException(
                                         "Venda não encontrada."
