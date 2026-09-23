@@ -15,6 +15,7 @@ import br.com.stockflow.stockflow_api.security.UsuarioAutenticadoService;
 
 import org.springframework.stereotype.Service;
 
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.List;
 import java.time.LocalDateTime;
@@ -680,20 +681,57 @@ public class PromocaoService {
 
     }
 
+    private BigDecimal aplicarArredondamentoComercial(
+            BigDecimal valor
+    ) {
+
+        BigDecimal inteiro =
+                BigDecimal.valueOf(
+                        valor.intValue()
+                );
+
+        BigDecimal decimal =
+                valor.subtract(inteiro);
+
+        if (
+                decimal.compareTo(
+                        new BigDecimal("0.50")
+                ) <= 0
+        ) {
+
+            return inteiro.add(
+                    new BigDecimal("0.50")
+            );
+
+        }
+
+        return inteiro.add(
+                BigDecimal.ONE
+        );
+
+    }
+
     private BigDecimal calcularPrecoPromocional(
             BigDecimal precoVenda,
             Integer percentualDesconto
     ) {
 
-        return precoVenda
-                .multiply(
-                        BigDecimal.valueOf(
-                                100 - percentualDesconto
+        BigDecimal valor =
+                precoVenda
+                        .multiply(
+                                BigDecimal.valueOf(
+                                        100 - percentualDesconto
+                                )
                         )
-                )
-                .divide(
-                        BigDecimal.valueOf(100)
-                );
+                        .divide(
+                                BigDecimal.valueOf(100),
+                                2,
+                                java.math.RoundingMode.HALF_UP
+                        );
+
+        return aplicarArredondamentoComercial(
+                valor
+        );
 
     }
 
@@ -890,4 +928,5 @@ public class PromocaoService {
         );
 
     }
+
 }
