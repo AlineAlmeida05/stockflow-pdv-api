@@ -148,6 +148,12 @@ public class EmpresaService {
         );
     }
 
+    public Empresa obterEntidadeEmpresa() {
+
+        return obterEmpresaDoUsuarioLogado();
+
+    }
+
     private Empresa obterEmpresaDoUsuarioLogado() {
 
         Usuario usuario =
@@ -229,5 +235,6 @@ public class EmpresaService {
         }
 
     }
+
 
 }
