@@ -69,6 +69,25 @@ public class MovimentacaoEstoqueService {
                         );
                 }
 
+                if (
+                        "entrada".equals(request.tipo())
+                                &&
+                                (
+                                        request.precoCompra() == null
+                                                ||
+                                                request.precoCompra()
+                                                        .compareTo(BigDecimal.ZERO) <= 0
+                                )
+                ) {
+
+                        throw new RegraNegocioException(
+                                "Preço de compra obrigatório para entrada."
+                        );
+
+                }
+
+
+
                 if ("entrada".equals(request.tipo())) {
 
                         Integer estoqueAtual = produto.getEstoqueAtual();
@@ -126,7 +145,37 @@ public class MovimentacaoEstoqueService {
                                 throw new RegraNegocioException(
                                         "Estoque insuficiente."
                                 );
+
                         }
+
+                        produto.setEstoqueAtual(
+                                produto.getEstoqueAtual()
+                                        - request.quantidade()
+                        );
+
+                        produto.setDataAtualizacao(
+                                LocalDateTime.now()
+                        );
+
+                        produtoRepository.save(
+                                produto
+                        );
+
+                }
+
+                else if ("ajuste".equals(request.tipo())) {
+
+                        produto.setEstoqueAtual(
+                                request.quantidade()
+                        );
+
+                        produto.setDataAtualizacao(
+                                LocalDateTime.now()
+                        );
+
+                        produtoRepository.save(
+                                produto
+                        );
 
                 }
 

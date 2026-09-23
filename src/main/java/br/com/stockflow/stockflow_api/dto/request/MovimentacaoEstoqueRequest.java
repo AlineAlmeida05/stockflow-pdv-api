@@ -19,8 +19,6 @@ public record MovimentacaoEstoqueRequest(
         @Positive
         Integer quantidade,
 
-        @NotNull
-        @Positive
         BigDecimal precoCompra,
 
         String observacao
