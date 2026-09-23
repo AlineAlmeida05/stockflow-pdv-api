@@ -73,10 +73,19 @@ public class ClienteService {
         cliente.setDataCadastro(
                 LocalDateTime.now());
 
-        cliente.setLimiteCredito(
-                request.limiteCredito() != null
-                        ? request.limiteCredito()
-                        : BigDecimal.valueOf(300));
+        if (request.limiteCredito() == null) {
+
+            cliente.setLimiteCredito(
+                    BigDecimal.valueOf(300)
+            );
+
+        } else {
+
+            cliente.setLimiteCredito(
+                    request.limiteCredito()
+            );
+
+        }
 
         cliente.setObservacao(
                 request.observacao());
