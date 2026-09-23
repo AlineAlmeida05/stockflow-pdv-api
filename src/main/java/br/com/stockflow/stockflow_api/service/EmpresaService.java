@@ -14,6 +14,9 @@ import br.com.stockflow.stockflow_api.security.UsuarioAutenticadoService;
 import br.com.stockflow.stockflow_api.entity.Usuario;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
+import br.com.stockflow.stockflow_api.entity.Perfil;
+import br.com.stockflow.stockflow_api.entity.Usuario;
+import br.com.stockflow.stockflow_api.exception.RegraNegocioException;
 
 
 @Service
@@ -34,6 +37,8 @@ public class EmpresaService {
 
     public List<EmpresaResponse> listarTodas() {
 
+        validarSuperAdmin();
+
         return empresaRepository.findAll()
                 .stream()
                 .map(this::montarResponse)
@@ -42,6 +47,8 @@ public class EmpresaService {
 
     public EmpresaResponse salvar(
             EmpresaCreateRequest request) {
+
+        validarSuperAdmin();
 
         Empresa empresa = new Empresa();
 
@@ -200,6 +207,27 @@ public class EmpresaService {
 
                 empresa.getDataImplantacao()
         );
+    }
+
+    private void validarSuperAdmin() {
+
+        Usuario usuario =
+                usuarioAutenticadoService
+                        .usuarioLogado();
+
+        if (
+                usuario == null
+                        ||
+                        usuario.getPerfil()
+                                != Perfil.SUPER_ADMIN
+        ) {
+
+            throw new RegraNegocioException(
+                    "Acesso permitido apenas para SUPER_ADMIN."
+            );
+
+        }
+
     }
 
 }
