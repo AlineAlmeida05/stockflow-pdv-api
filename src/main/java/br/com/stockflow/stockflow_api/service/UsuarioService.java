@@ -201,7 +201,11 @@ public class UsuarioService {
 
         }
 
-        usuarioRepository.deleteById(id);
+        usuarioAlvo.setAtivo(false);
+
+        usuarioRepository.save(
+                usuarioAlvo
+        );
 
     }
 
