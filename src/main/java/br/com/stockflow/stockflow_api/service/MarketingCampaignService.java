@@ -99,7 +99,6 @@ public class MarketingCampaignService {
                         .gerarPrompt(
                                 produto.getNome(),
                                 empresa.getNomeFantasia(),
-                                empresa.getSlogan(),
                                 precoCampanha,
                                 request.tom(),
                                 request.tipoPromocao(),

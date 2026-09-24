@@ -209,9 +209,6 @@ public class MarketingAiService {
             Empresa:
             %s
 
-            Slogan:
-            %s
-
             Preço Promocional:
             R$ %s
 
