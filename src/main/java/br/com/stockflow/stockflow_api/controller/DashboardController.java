@@ -5,6 +5,7 @@ import br.com.stockflow.stockflow_api.service.DashboardService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @RestController
 @RequestMapping(
@@ -24,10 +25,19 @@ public class DashboardController {
     }
 
     @GetMapping
-    public DashboardResponse obterDashboard() {
+    public DashboardResponse dashboard(
+
+            @RequestParam(
+                    defaultValue = "hoje"
+            )
+            String periodo
+
+    ) {
 
         return dashboardService
-                .obterDashboard();
+                .obterDashboard(
+                        periodo
+                );
 
     }
 
