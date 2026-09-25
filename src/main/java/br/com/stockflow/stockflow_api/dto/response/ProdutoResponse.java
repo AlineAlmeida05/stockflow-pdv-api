@@ -21,7 +21,11 @@ public record ProdutoResponse(
 
         Integer estoqueMinimo,
 
-        Boolean ativo
+        Boolean ativo,
+
+        Boolean promocaoAtiva,
+
+        BigDecimal precoPromocional
 
 ) {
 }

@@ -312,7 +312,11 @@ public class ProdutoService {
 
                 produto.getEstoqueMinimo(),
 
-                produto.getAtivo()
+                produto.getAtivo(),
+
+                produto.getPromocaoAtiva(),
+
+                produto.getPrecoPromocional()
 
         );
 
