@@ -112,7 +112,7 @@ public class ClienteService {
         }
 
         return clienteRepository
-                .findByTenantIdAndAtivoTrue(
+                .findByTenantId(
                         usuarioLogado
                                 .getTenant()
                                 .getId())
@@ -212,7 +212,7 @@ public class ClienteService {
 
         Cliente cliente =
                 clienteRepository
-                        .findByIdAndTenantIdAndAtivoTrue(
+                        .findByIdAndTenantId(
                                 clienteId,
                                 usuarioLogado
                                         .getTenant()
@@ -330,6 +330,31 @@ public class ClienteService {
                 cliente.getObservacao()
 
         );
+
+    }
+
+    public void reativar(
+            UUID id) {
+
+        Usuario usuarioLogado =
+                usuarioAutenticadoService
+                        .usuarioLogado();
+
+        Cliente cliente =
+                clienteRepository
+                        .findByIdAndTenantId(
+                                id,
+                                usuarioLogado
+                                        .getTenant()
+                                        .getId())
+                        .orElseThrow(
+                                () ->
+                                        new RecursoNaoEncontradoException(
+                                                "Cliente não encontrado."));
+
+        cliente.setAtivo(true);
+
+        clienteRepository.save(cliente);
 
     }
 }

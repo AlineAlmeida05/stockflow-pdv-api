@@ -22,5 +22,8 @@ public interface ClienteRepository
             UUID id,
             UUID tenantId);
 
+    List<Cliente> findByTenantId(
+            UUID tenantId);
+
 
 }

@@ -66,4 +66,12 @@ public class ClienteController {
                 .obterResumo(id);
     }
 
+    @PatchMapping("/{id}/reativar")
+    public void reativar(
+            @PathVariable UUID id) {
+
+        clienteService.reativar(id);
+
+    }
+
 }
