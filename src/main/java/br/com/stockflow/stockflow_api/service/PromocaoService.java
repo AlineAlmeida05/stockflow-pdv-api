@@ -2,29 +2,24 @@ package br.com.stockflow.stockflow_api.service;
 
 import br.com.stockflow.stockflow_api.dto.PromocaoMetrics;
 import br.com.stockflow.stockflow_api.dto.request.PromocaoRequest;
-
 import br.com.stockflow.stockflow_api.entity.Produto;
 import br.com.stockflow.stockflow_api.entity.Promocao;
 import br.com.stockflow.stockflow_api.entity.Usuario;
-
 import br.com.stockflow.stockflow_api.exception.RegraNegocioException;
 import br.com.stockflow.stockflow_api.repository.ProdutoRepository;
 import br.com.stockflow.stockflow_api.repository.PromocaoRepository;
-
 import br.com.stockflow.stockflow_api.security.UsuarioAutenticadoService;
-
 import org.springframework.stereotype.Service;
-
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.List;
 import java.time.LocalDateTime;
 import java.util.UUID;
 import java.math.BigDecimal;
-
 import br.com.stockflow.stockflow_api.dto.response.ProdutoPromocaoResponse;
 import br.com.stockflow.stockflow_api.repository.MovimentacaoEstoqueRepository;
 import br.com.stockflow.stockflow_api.entity.MovimentacaoEstoque;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -107,6 +102,7 @@ public class PromocaoService {
         return promocao;
     }
 
+    @Transactional
     public Promocao criarPromocao(
             PromocaoRequest request) {
 
@@ -126,6 +122,19 @@ public class PromocaoService {
                                 new RegraNegocioException(
                                         "Produto não encontrado."
                                 ));
+
+
+        promocaoRepository
+                .findByProdutoAndAtivaTrue(
+                        produto
+                )
+                .ifPresent(
+                        promocao -> {
+                            throw new RegraNegocioException(
+                                    "Já existe uma promoção ativa para este produto."
+                            );
+                        }
+                );
 
         List<MovimentacaoEstoque> movimentacoes =
                 movimentacaoEstoqueRepository
@@ -243,6 +252,7 @@ public class PromocaoService {
 
     }
 
+    @Transactional
     public void finalizarMetaAtingida(
             Promocao promocao,
             Produto produto) {
@@ -269,6 +279,7 @@ public class PromocaoService {
         promocaoRepository.save(promocao);
     }
 
+    @Transactional
     public Promocao encerrarPromocao(
             UUID id) {
 
@@ -464,8 +475,23 @@ public class PromocaoService {
 
         }
 
+        List<ProdutoPromocaoResponse> pendentes =
+                listarCandidatos();
+
+        pendentes.removeIf(
+                candidato ->
+                        ativas.stream()
+                                .anyMatch(
+                                        ativa ->
+                                                ativa.id()
+                                                        .equals(
+                                                                candidato.id()
+                                                        )
+                                )
+        );
+
         return new PromocaoPainelResponse(
-                listarCandidatos(),
+                pendentes,
                 ativas
         );
 
@@ -711,6 +737,36 @@ public class PromocaoService {
 
     }
 
+    private BigDecimal aplicarArredondamentoPromocional(
+            BigDecimal valor
+    ) {
+
+        BigDecimal inteiro =
+                BigDecimal.valueOf(
+                        valor.intValue()
+                );
+
+        BigDecimal decimal =
+                valor.subtract(
+                        inteiro
+                );
+
+        if (
+                decimal.compareTo(
+                        new BigDecimal("0.50")
+                ) < 0
+        ) {
+
+            return inteiro;
+
+        }
+
+        return inteiro.add(
+                new BigDecimal("0.50")
+        );
+
+    }
+
     private BigDecimal calcularPrecoPromocional(
             BigDecimal precoVenda,
             Integer percentualDesconto
@@ -729,7 +785,7 @@ public class PromocaoService {
                                 java.math.RoundingMode.HALF_UP
                         );
 
-        return aplicarArredondamentoComercial(
+        return aplicarArredondamentoPromocional(
                 valor
         );
 
