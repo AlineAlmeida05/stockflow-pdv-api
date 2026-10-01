@@ -369,10 +369,6 @@ public class VendaService {
             if (Boolean.TRUE.equals(
                     produto.getPromocaoAtiva())) {
 
-                promocaoRepository
-                        .findByProdutoAndAtivaTrue(
-                                produto
-                        );
                 var promocaoOpt =
                         promocaoRepository
                                 .findByProdutoAndAtivaTrue(
