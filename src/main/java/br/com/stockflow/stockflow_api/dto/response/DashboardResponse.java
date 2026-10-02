@@ -2,6 +2,7 @@ package br.com.stockflow.stockflow_api.dto.response;
 
 import java.math.BigDecimal;
 import java.util.List;
+import br.com.stockflow.stockflow_api.dto.response.PromocaoAtivaResponse;
 
 public record DashboardResponse(
 
@@ -31,9 +32,14 @@ public record DashboardResponse(
 
         List<TopProdutoDashboardResponse> topProdutosVendidos,
 
-        List<PromocaoEficienteResponse> promocoesEficientes,
+        List<PromocaoEficienteResponse>
+        promocoesEficientes,
 
-        List<ProdutoPromocionalResponse> produtosPromocionaisMaisVendidos,
+        List<PromocaoAtivaResponse>
+        promocoesAtivasDetalhes,
+
+        List<ProdutoPromocionalResponse>
+        produtosPromocionaisMaisVendidos,
 
         Integer totalVendasPromocionais,
 

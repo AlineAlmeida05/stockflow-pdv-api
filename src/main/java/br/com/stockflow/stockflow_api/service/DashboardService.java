@@ -206,6 +206,33 @@ public class DashboardService {
                         )
                         .count();
 
+        List<PromocaoAtivaResponse>
+                promocoesAtivasDetalhes =
+
+                produtos.stream()
+
+                        .filter(
+                                produto ->
+                                        Boolean.TRUE.equals(
+                                                produto.getPromocaoAtiva()
+                                        )
+                        )
+
+                        .map(
+                                produto ->
+                                        new PromocaoAtivaResponse(
+
+                                                produto.getNome(),
+
+                                                produto.getEstoqueAtual(),
+
+                                                produto.getEstoqueMinimo()
+
+                                        )
+                        )
+
+                        .toList();
+
 
         Integer clientesDevedores =
                 (int) fiadosFiltrados.stream()
@@ -826,6 +853,8 @@ public class DashboardService {
                 topProdutosVendidos,
 
                 promocoesEficientes,
+
+                promocoesAtivasDetalhes,
 
                 produtosPromocionaisMaisVendidos,
 
