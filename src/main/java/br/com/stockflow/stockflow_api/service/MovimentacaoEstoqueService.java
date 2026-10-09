@@ -47,8 +47,8 @@ public class MovimentacaoEstoqueService {
                         MovimentacaoEstoqueRequest request) {
 
                 Usuario usuarioLogado =
-                        usuarioAutenticadoService
-                                .usuarioLogado();
+                        obterUsuarioLogado();
+
                 Produto produto = produtoRepository
                         .findByIdAndTenantId(
                                 request.produtoId(),
@@ -179,14 +179,6 @@ public class MovimentacaoEstoqueService {
 
                 }
 
-                if (usuarioLogado == null) {
-
-                        throw new ResponseStatusException(
-                                        HttpStatus.UNAUTHORIZED,
-                                        "Usuário não autenticado");
-
-                }
-
                 MovimentacaoEstoque movimentacao = new MovimentacaoEstoque();
 
                 movimentacao.setProduto(
@@ -223,16 +215,8 @@ public class MovimentacaoEstoqueService {
 
         public List<MovimentacaoEstoqueResponse> listar() {
 
-                Usuario usuarioLogado = usuarioAutenticadoService
-                                .usuarioLogado();
-
-                if (usuarioLogado == null) {
-
-                        throw new ResponseStatusException(
-                                        HttpStatus.UNAUTHORIZED,
-                                        "Usuário não autenticado");
-
-                }
+                Usuario usuarioLogado =
+                        obterUsuarioLogado();
 
                 return repository.findByTenantId(
                                 usuarioLogado
@@ -260,6 +244,25 @@ public class MovimentacaoEstoqueService {
 
                                 ))
                                 .toList();
+
+        }
+
+        private Usuario obterUsuarioLogado() {
+
+                Usuario usuarioLogado =
+                        usuarioAutenticadoService
+                                .usuarioLogado();
+
+                if (usuarioLogado == null) {
+
+                        throw new ResponseStatusException(
+                                HttpStatus.UNAUTHORIZED,
+                                "Usuário não autenticado."
+                        );
+
+                }
+
+                return usuarioLogado;
 
         }
 

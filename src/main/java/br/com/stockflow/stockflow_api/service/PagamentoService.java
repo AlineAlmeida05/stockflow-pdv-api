@@ -46,15 +46,7 @@ public class PagamentoService {
             PagamentoRequest request) {
 
         Usuario usuarioLogado =
-                usuarioAutenticadoService
-                        .usuarioLogado();
-
-        if (usuarioLogado == null) {
-
-            throw new ResponseStatusException(
-                    HttpStatus.UNAUTHORIZED,
-                    "Usuário não autenticado");
-        }
+                obterUsuarioLogado();
 
         Cliente cliente =
                 clienteRepository
@@ -144,15 +136,7 @@ public class PagamentoService {
     public List<PagamentoResponse> listar() {
 
         Usuario usuarioLogado =
-                usuarioAutenticadoService
-                        .usuarioLogado();
-
-        if (usuarioLogado == null) {
-
-            throw new ResponseStatusException(
-                    HttpStatus.UNAUTHORIZED,
-                    "Usuário não autenticado");
-        }
+                obterUsuarioLogado();
 
         return pagamentoRepository
                 .findByTenantId(
@@ -171,5 +155,24 @@ public class PagamentoService {
                                 pagamento.getObservacao(),
                                 pagamento.getFormaPagamento()))
                 .toList();
+    }
+
+    private Usuario obterUsuarioLogado() {
+
+        Usuario usuarioLogado =
+                usuarioAutenticadoService
+                        .usuarioLogado();
+
+        if (usuarioLogado == null) {
+
+            throw new ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED,
+                    "Usuário não autenticado."
+            );
+
+        }
+
+        return usuarioLogado;
+
     }
 }

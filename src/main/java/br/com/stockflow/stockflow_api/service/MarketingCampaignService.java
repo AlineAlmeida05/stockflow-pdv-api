@@ -1,6 +1,7 @@
 package br.com.stockflow.stockflow_api.service;
 
 import br.com.stockflow.stockflow_api.repository.MarketingCampaignRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import br.com.stockflow.stockflow_api.repository.ProdutoRepository;
 import br.com.stockflow.stockflow_api.service.EmpresaService;
@@ -14,6 +15,7 @@ import br.com.stockflow.stockflow_api.entity.Tenant;
 import br.com.stockflow.stockflow_api.entity.Empresa;
 import br.com.stockflow.stockflow_api.dto.response.MarketingAiResultResponse;
 import br.com.stockflow.stockflow_api.entity.MarketingCampaign;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -51,10 +53,16 @@ public class MarketingCampaignService {
             MarketingCampaignCreateRequest request
     ) {
 
+        Usuario usuarioLogado =
+                obterUsuarioLogado();
+
         Produto produto =
                 produtoRepository
-                        .findById(
-                                request.produtoId()
+                        .findByIdAndTenantId(
+                                request.produtoId(),
+                                usuarioLogado
+                                        .getTenant()
+                                        .getId()
                         )
                         .orElseThrow(
                                 () ->
@@ -63,12 +71,8 @@ public class MarketingCampaignService {
                                         )
                         );
 
-        Usuario usuario =
-                usuarioAutenticadoService
-                        .usuarioLogado();
-
         Tenant tenant =
-                usuario.getTenant();
+                usuarioLogado.getTenant();
 
         Empresa empresa =
                 empresaService
@@ -182,12 +186,11 @@ public class MarketingCampaignService {
 
     public List<MarketingCampaignResponse> listar() {
 
-        Usuario usuario =
-                usuarioAutenticadoService
-                        .usuarioLogado();
+        Usuario usuarioLogado =
+                obterUsuarioLogado();
 
         Tenant tenant =
-                usuario.getTenant();
+                usuarioLogado.getTenant();
 
         return marketingCampaignRepository
                 .findByTenantOrderByCriadoEmDesc(
@@ -228,6 +231,25 @@ public class MarketingCampaignService {
                 .collect(
                         Collectors.toList()
                 );
+
+    }
+
+    private Usuario obterUsuarioLogado() {
+
+        Usuario usuarioLogado =
+                usuarioAutenticadoService
+                        .usuarioLogado();
+
+        if (usuarioLogado == null) {
+
+            throw new ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED,
+                    "Usuário não autenticado."
+            );
+
+        }
+
+        return usuarioLogado;
 
     }
 }

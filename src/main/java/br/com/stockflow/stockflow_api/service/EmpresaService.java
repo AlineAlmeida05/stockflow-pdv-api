@@ -15,7 +15,6 @@ import br.com.stockflow.stockflow_api.entity.Usuario;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
 import br.com.stockflow.stockflow_api.entity.Perfil;
-import br.com.stockflow.stockflow_api.entity.Usuario;
 import br.com.stockflow.stockflow_api.exception.RegraNegocioException;
 
 
@@ -156,22 +155,12 @@ public class EmpresaService {
 
     private Empresa obterEmpresaDoUsuarioLogado() {
 
-        Usuario usuario =
-                usuarioAutenticadoService
-                        .usuarioLogado();
-
-        if (usuario == null) {
-
-            throw new ResponseStatusException(
-                    HttpStatus.UNAUTHORIZED,
-                    "Usuário não autenticado"
-            );
-
-        }
+        Usuario usuarioLogado =
+                obterUsuarioLogado();
 
         return empresaRepository
                 .findByTenantId(
-                        usuario.getTenant().getId()
+                        usuarioLogado.getTenant().getId()
                 )
                 .orElseThrow(() ->
                         new RecursoNaoEncontradoException(
@@ -217,16 +206,11 @@ public class EmpresaService {
 
     private void validarSuperAdmin() {
 
-        Usuario usuario =
-                usuarioAutenticadoService
-                        .usuarioLogado();
+        Usuario usuarioLogado =
+                obterUsuarioLogado();
 
-        if (
-                usuario == null
-                        ||
-                        usuario.getPerfil()
-                                != Perfil.SUPER_ADMIN
-        ) {
+        if (usuarioLogado.getPerfil()
+                != Perfil.SUPER_ADMIN) {
 
             throw new RegraNegocioException(
                     "Acesso permitido apenas para SUPER_ADMIN."
@@ -236,5 +220,22 @@ public class EmpresaService {
 
     }
 
+    private Usuario obterUsuarioLogado() {
 
+        Usuario usuarioLogado =
+                usuarioAutenticadoService
+                        .usuarioLogado();
+
+        if (usuarioLogado == null) {
+
+            throw new ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED,
+                    "Usuário não autenticado."
+            );
+
+        }
+
+        return usuarioLogado;
+
+    }
 }

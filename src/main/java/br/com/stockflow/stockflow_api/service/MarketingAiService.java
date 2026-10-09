@@ -1,8 +1,12 @@
 package br.com.stockflow.stockflow_api.service;
 
+import br.com.stockflow.stockflow_api.entity.Usuario;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import br.com.stockflow.stockflow_api.dto.response.MarketingAiSuggestionResponse;
 import br.com.stockflow.stockflow_api.dto.response.MarketingAiResultResponse;
+import org.springframework.web.server.ResponseStatusException;
+
 import java.util.List;
 import java.math.BigDecimal;
 

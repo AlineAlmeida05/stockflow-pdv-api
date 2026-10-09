@@ -5,7 +5,9 @@ import br.com.stockflow.stockflow_api.entity.Usuario;
 import br.com.stockflow.stockflow_api.repository.ProdutoRepository;
 import br.com.stockflow.stockflow_api.security.UsuarioAutenticadoService;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -34,15 +36,8 @@ public class NotificacaoService {
     public List<MenuBadgeResponse>
     obterBadgesMenu() {
 
-        Usuario usuario =
-                usuarioAutenticadoService
-                        .usuarioLogado();
-
-        if (usuario == null) {
-
-            return List.of();
-
-        }
+        Usuario usuarioLogado =
+                obterUsuarioLogado();
 
         int totalPromocoes =
                 promocaoService
@@ -55,5 +50,24 @@ public class NotificacaoService {
                         totalPromocoes
                 )
         );
+    }
+
+    private Usuario obterUsuarioLogado() {
+
+        Usuario usuarioLogado =
+                usuarioAutenticadoService
+                        .usuarioLogado();
+
+        if (usuarioLogado == null) {
+
+            throw new ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED,
+                    "Usuário não autenticado."
+            );
+
+        }
+
+        return usuarioLogado;
+
     }
 }
