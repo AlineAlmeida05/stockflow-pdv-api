@@ -50,15 +50,7 @@ public class ClienteService {
             ClienteRequest request) {
 
         Usuario usuarioLogado =
-                usuarioAutenticadoService
-                        .usuarioLogado();
-
-        if (usuarioLogado == null) {
-
-            throw new ResponseStatusException(
-                    HttpStatus.UNAUTHORIZED,
-                    "Usuário não autenticado");
-        }
+                obterUsuarioLogado();
 
         Cliente cliente = new Cliente();
 
@@ -101,15 +93,7 @@ public class ClienteService {
     public List<ClienteResponse> listar() {
 
         Usuario usuarioLogado =
-                usuarioAutenticadoService
-                        .usuarioLogado();
-
-        if (usuarioLogado == null) {
-
-            throw new ResponseStatusException(
-                    HttpStatus.UNAUTHORIZED,
-                    "Usuário não autenticado");
-        }
+                obterUsuarioLogado();
 
         return clienteRepository
                 .findByTenantId(
@@ -126,15 +110,7 @@ public class ClienteService {
             ClienteRequest request) {
 
         Usuario usuarioLogado =
-                usuarioAutenticadoService
-                        .usuarioLogado();
-
-        if (usuarioLogado == null) {
-
-            throw new ResponseStatusException(
-                    HttpStatus.UNAUTHORIZED,
-                    "Usuário não autenticado");
-        }
+                obterUsuarioLogado();
 
         Cliente cliente =
                 clienteRepository
@@ -169,15 +145,7 @@ public class ClienteService {
             UUID id) {
 
         Usuario usuarioLogado =
-                usuarioAutenticadoService
-                        .usuarioLogado();
-
-        if (usuarioLogado == null) {
-
-            throw new ResponseStatusException(
-                    HttpStatus.UNAUTHORIZED,
-                    "Usuário não autenticado");
-        }
+                obterUsuarioLogado();
 
         Cliente cliente =
                 clienteRepository
@@ -199,16 +167,9 @@ public class ClienteService {
 
     public ClienteResumoResponse obterResumo(
             UUID clienteId) {
+
         Usuario usuarioLogado =
-                usuarioAutenticadoService
-                        .usuarioLogado();
-
-        if (usuarioLogado == null) {
-
-            throw new ResponseStatusException(
-                    HttpStatus.UNAUTHORIZED,
-                    "Usuário não autenticado");
-        }
+                obterUsuarioLogado();
 
         Cliente cliente =
                 clienteRepository
@@ -337,8 +298,7 @@ public class ClienteService {
             UUID id) {
 
         Usuario usuarioLogado =
-                usuarioAutenticadoService
-                        .usuarioLogado();
+                obterUsuarioLogado();
 
         Cliente cliente =
                 clienteRepository
@@ -355,6 +315,25 @@ public class ClienteService {
         cliente.setAtivo(true);
 
         clienteRepository.save(cliente);
+
+    }
+
+    private Usuario obterUsuarioLogado() {
+
+        Usuario usuarioLogado =
+                usuarioAutenticadoService
+                        .usuarioLogado();
+
+        if (usuarioLogado == null) {
+
+            throw new ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED,
+                    "Usuário não autenticado."
+            );
+
+        }
+
+        return usuarioLogado;
 
     }
 }

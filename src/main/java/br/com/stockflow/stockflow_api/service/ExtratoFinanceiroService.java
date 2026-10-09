@@ -7,7 +7,7 @@ import br.com.stockflow.stockflow_api.repository.FiadoRepository;
 import br.com.stockflow.stockflow_api.repository.PagamentoRepository;
 import br.com.stockflow.stockflow_api.security.UsuarioAutenticadoService;
 import org.springframework.stereotype.Service;
-
+import br.com.stockflow.stockflow_api.repository.VendaRepository;
 import java.time.LocalDate;
 import java.util.List;
 import br.com.stockflow.stockflow_api.entity.Usuario;
@@ -25,29 +25,69 @@ public class ExtratoFinanceiroService {
 
     private final UsuarioAutenticadoService usuarioAutenticadoService;
 
+    private final VendaRepository vendaRepository;
+
     public ExtratoFinanceiroService(
             FiadoRepository fiadoRepository,
             PagamentoRepository pagamentoRepository,
+            VendaRepository vendaRepository,
             UsuarioAutenticadoService usuarioAutenticadoService) {
 
         this.fiadoRepository = fiadoRepository;
         this.pagamentoRepository = pagamentoRepository;
-        this.usuarioAutenticadoService =
-                usuarioAutenticadoService;
+        this.usuarioAutenticadoService = usuarioAutenticadoService;
+        this.vendaRepository = vendaRepository;
     }
 
     public List<MovimentacaoFinanceiraResponse>
     listarMovimentacoes() {
+
         Usuario usuarioLogado =
-                usuarioAutenticadoService
-                        .usuarioLogado();
+                obterUsuarioLogado();
 
-        if (usuarioLogado == null) {
+        List<MovimentacaoFinanceiraResponse>
+                movimentacoesVenda =
 
-            throw new ResponseStatusException(
-                    HttpStatus.UNAUTHORIZED,
-                    "Usuário não autenticado");
-        }
+                vendaRepository
+                        .findByTenantId(
+                                usuarioLogado
+                                        .getTenant()
+                                        .getId()
+                        )
+                        .stream()
+
+                        .filter(venda ->
+                                !"cancelada".equalsIgnoreCase(
+                                        venda.getStatus()
+                                )
+                        )
+
+                        .filter(venda ->
+                                !"fiado".equalsIgnoreCase(
+                                        venda.getFormaPagamento()
+                                )
+                        )
+
+                        .map(venda ->
+                                new MovimentacaoFinanceiraResponse(
+
+                                        "venda",
+
+                                        venda.getClienteNome(),
+
+                                        venda.getValorTotal(),
+
+                                        venda.getDataVenda(),
+
+                                        venda.getUsuario()
+                                                .getNome(),
+
+                                        venda.getFormaPagamento()
+
+                                )
+                        )
+
+                        .toList();
 
         List<MovimentacaoFinanceiraResponse>
                 movimentacoesFiado =
@@ -95,10 +135,18 @@ public class ExtratoFinanceiroService {
                         .toList();
 
         return java.util.stream.Stream
-                .concat(
-                        movimentacoesFiado.stream(),
-                        movimentacoesPagamento.stream()
+                .of(
+
+                        movimentacoesFiado,
+
+                        movimentacoesPagamento,
+
+                        movimentacoesVenda
+
                 )
+
+                .flatMap(List::stream)
+
                 .sorted(
                         (a, b) ->
                                 b.data()
@@ -106,6 +154,7 @@ public class ExtratoFinanceiroService {
                                                 a.data()
                                         )
                 )
+
                 .toList();
     }
 
@@ -113,15 +162,7 @@ public class ExtratoFinanceiroService {
     obterIndicadores() {
 
         Usuario usuarioLogado =
-                usuarioAutenticadoService
-                        .usuarioLogado();
-
-        if (usuarioLogado == null) {
-
-            throw new ResponseStatusException(
-                    HttpStatus.UNAUTHORIZED,
-                    "Usuário não autenticado");
-        }
+                obterUsuarioLogado();
 
         BigDecimal totalRecebido =
                 pagamentoRepository
@@ -214,6 +255,25 @@ public class ExtratoFinanceiroService {
                 recebimentosHoje,
                 clientesDevedores
         );
+
+    }
+
+    private Usuario obterUsuarioLogado() {
+
+        Usuario usuarioLogado =
+                usuarioAutenticadoService
+                        .usuarioLogado();
+
+        if (usuarioLogado == null) {
+
+            throw new ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED,
+                    "Usuário não autenticado."
+            );
+
+        }
+
+        return usuarioLogado;
 
     }
 

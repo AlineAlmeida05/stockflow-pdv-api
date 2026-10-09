@@ -41,15 +41,7 @@ public class FiadoService {
             FiadoRequest request) {
 
         Usuario usuarioLogado =
-                usuarioAutenticadoService
-                        .usuarioLogado();
-
-        if (usuarioLogado == null) {
-
-            throw new ResponseStatusException(
-                    HttpStatus.UNAUTHORIZED,
-                    "Usuário não autenticado");
-        }
+                obterUsuarioLogado();
 
         Cliente cliente =
                 clienteRepository
@@ -94,15 +86,7 @@ public class FiadoService {
     public List<FiadoResponse> listar() {
 
         Usuario usuarioLogado =
-                usuarioAutenticadoService
-                        .usuarioLogado();
-
-        if (usuarioLogado == null) {
-
-            throw new ResponseStatusException(
-                    HttpStatus.UNAUTHORIZED,
-                    "Usuário não autenticado");
-        }
+                obterUsuarioLogado();
 
         return fiadoRepository
                 .findByTenantId(
@@ -121,5 +105,24 @@ public class FiadoService {
                                 fiado.getStatus(),
                                 fiado.getObservacao()))
                 .toList();
+    }
+
+    private Usuario obterUsuarioLogado() {
+
+        Usuario usuarioLogado =
+                usuarioAutenticadoService
+                        .usuarioLogado();
+
+        if (usuarioLogado == null) {
+
+            throw new ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED,
+                    "Usuário não autenticado."
+            );
+
+        }
+
+        return usuarioLogado;
+
     }
 }

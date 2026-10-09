@@ -9,6 +9,7 @@ import br.com.stockflow.stockflow_api.exception.RegraNegocioException;
 import br.com.stockflow.stockflow_api.repository.ProdutoRepository;
 import br.com.stockflow.stockflow_api.repository.PromocaoRepository;
 import br.com.stockflow.stockflow_api.security.UsuarioAutenticadoService;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import java.math.RoundingMode;
 import java.time.LocalDate;
@@ -25,6 +26,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 
 import br.com.stockflow.stockflow_api.dto.response.PromocaoPainelResponse;
+import org.springframework.web.server.ResponseStatusException;
 
 
 @Service
@@ -57,8 +59,7 @@ public class PromocaoService {
     public List<Promocao> listar() {
 
         Usuario usuarioLogado =
-                usuarioAutenticadoService
-                        .usuarioLogado();
+                obterUsuarioLogado();
 
         return promocaoRepository
                 .findByTenantAndAtivaTrue(
@@ -69,8 +70,7 @@ public class PromocaoService {
     public List<Promocao> listarAtivas() {
 
         Usuario usuarioLogado =
-                usuarioAutenticadoService
-                        .usuarioLogado();
+                obterUsuarioLogado();
 
         return promocaoRepository
                 .findByTenantAndAtivaTrue(
@@ -82,8 +82,7 @@ public class PromocaoService {
             UUID id) {
 
         Usuario usuarioLogado =
-                usuarioAutenticadoService
-                        .usuarioLogado();
+                obterUsuarioLogado();
 
         Promocao promocao =
                 promocaoRepository
@@ -107,8 +106,7 @@ public class PromocaoService {
             PromocaoRequest request) {
 
         Usuario usuarioLogado =
-                usuarioAutenticadoService
-                        .usuarioLogado();
+                obterUsuarioLogado();
 
         Produto produto =
                 produtoRepository
@@ -316,8 +314,7 @@ public class PromocaoService {
             UUID produtoId) {
 
         Usuario usuarioLogado =
-                usuarioAutenticadoService
-                        .usuarioLogado();
+                obterUsuarioLogado();
 
         Produto produto =
                 produtoRepository
@@ -352,14 +349,13 @@ public class PromocaoService {
     public List<ProdutoPromocaoResponse>
     listarCandidatos() {
 
-        Usuario usuario =
-                usuarioAutenticadoService
-                        .usuarioLogado();
+        Usuario usuarioLogado =
+                obterUsuarioLogado();
 
         List<Produto> produtos =
                 produtoRepository
                         .findByTenantId(
-                                usuario
+                                usuarioLogado
                                         .getTenant()
                                         .getId()
                         );
@@ -367,7 +363,7 @@ public class PromocaoService {
         List<MovimentacaoEstoque> movimentacoes =
                 movimentacaoEstoqueRepository
                         .findByTenantId(
-                                usuario
+                                usuarioLogado
                                         .getTenant()
                                         .getId()
                         );
@@ -424,14 +420,13 @@ public class PromocaoService {
 
     public PromocaoPainelResponse
     listarPainel() {
-        Usuario usuario =
-                usuarioAutenticadoService
-                        .usuarioLogado();
+        Usuario usuarioLogado =
+                obterUsuarioLogado();
 
         List<MovimentacaoEstoque> movimentacoes =
                 movimentacaoEstoqueRepository
                         .findByTenantId(
-                                usuario
+                                usuarioLogado
                                         .getTenant()
                                         .getId()
                         );
@@ -982,6 +977,25 @@ public class PromocaoService {
                 "Giro baixo (%d%% das unidades vendidas).",
                 percentualGiro
         );
+
+    }
+
+    private Usuario obterUsuarioLogado() {
+
+        Usuario usuarioLogado =
+                usuarioAutenticadoService
+                        .usuarioLogado();
+
+        if (usuarioLogado == null) {
+
+            throw new ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED,
+                    "Usuário não autenticado."
+            );
+
+        }
+
+        return usuarioLogado;
 
     }
 

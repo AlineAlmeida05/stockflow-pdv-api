@@ -6,6 +6,7 @@ import br.com.stockflow.stockflow_api.repository.FiadoRepository;
 import br.com.stockflow.stockflow_api.repository.ProdutoRepository;
 import br.com.stockflow.stockflow_api.repository.VendaRepository;
 import br.com.stockflow.stockflow_api.security.UsuarioAutenticadoService;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import br.com.stockflow.stockflow_api.repository.ItemVendaRepository;
 
@@ -17,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 
 import br.com.stockflow.stockflow_api.repository.MovimentacaoEstoqueRepository;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class DashboardService {
@@ -94,8 +96,7 @@ public class DashboardService {
         final LocalDateTime dataFiltro = dataInicial;
 
         Usuario usuarioLogado =
-                usuarioAutenticadoService
-                        .usuarioLogado();
+                obterUsuarioLogado();
 
         Tenant tenant =
                 usuarioLogado.getTenant();
@@ -867,6 +868,25 @@ public class DashboardService {
                 promocoesBaixaEfetividade
 
         );
+
+    }
+
+    private Usuario obterUsuarioLogado() {
+
+        Usuario usuarioLogado =
+                usuarioAutenticadoService
+                        .usuarioLogado();
+
+        if (usuarioLogado == null) {
+
+            throw new ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED,
+                    "Usuário não autenticado."
+            );
+
+        }
+
+        return usuarioLogado;
 
     }
 

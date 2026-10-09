@@ -5,6 +5,7 @@ import br.com.stockflow.stockflow_api.exception.AcessoNegadoException;
 import br.com.stockflow.stockflow_api.exception.RecursoNaoEncontradoException;
 import br.com.stockflow.stockflow_api.repository.UsuarioRepository;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -22,6 +23,7 @@ import br.com.stockflow.stockflow_api.dto.request.UsuarioUpdateRequest;
 import br.com.stockflow.stockflow_api.entity.Tenant;
 import br.com.stockflow.stockflow_api.repository.TenantRepository;
 import br.com.stockflow.stockflow_api.dto.response.UsuarioResponse;
+import org.springframework.web.server.ResponseStatusException;
 
 
 @Service
@@ -49,8 +51,7 @@ public class UsuarioService {
     public List<UsuarioResponse> listarTodos() {
 
         Usuario usuarioLogado =
-                usuarioAutenticadoService
-                        .usuarioLogado();
+                obterUsuarioLogado();
 
         if (
                 usuarioLogado.getPerfil()
@@ -96,8 +97,8 @@ public class UsuarioService {
         usuario.setPerfil(request.perfil());
         usuario.setTenant(tenant);
 
-        Usuario usuarioLogado = usuarioAutenticadoService
-                .usuarioLogado();
+        Usuario usuarioLogado =
+                obterUsuarioLogado();
 
         if (usuario.getTenant() == null) {
 
@@ -107,9 +108,7 @@ public class UsuarioService {
 
         }
 
-        if (usuarioLogado != null
-                &&
-                usuarioLogado.getPerfil() != Perfil.SUPER_ADMIN
+        if (usuarioLogado.getPerfil() != Perfil.SUPER_ADMIN
                 &&
                 !usuarioLogado.getTenant()
                         .getId()
@@ -121,16 +120,12 @@ public class UsuarioService {
                     "Você não pode criar usuários em outro tenant.");
 
         }
-        if (usuarioLogado != null) {
+        if (!podeGerenciarPerfil(
+                usuarioLogado.getPerfil(),
+                usuario.getPerfil())) {
 
-            if (!podeGerenciarPerfil(
-                    usuarioLogado.getPerfil(),
-                    usuario.getPerfil())) {
-
-                throw new AcessoNegadoException(
-                        "Você não possui permissão para criar este perfil.");
-
-            }
+            throw new AcessoNegadoException(
+                    "Você não possui permissão para criar este perfil.");
 
         }
 
@@ -164,12 +159,10 @@ public class UsuarioService {
                                 "Usuário não encontrado."
                         ));
 
-        Usuario usuarioLogado = usuarioAutenticadoService
-                .usuarioLogado();
+        Usuario usuarioLogado =
+                obterUsuarioLogado();
 
-        if (usuarioLogado != null
-                &&
-                usuarioLogado.getPerfil() != Perfil.SUPER_ADMIN
+        if (usuarioLogado.getPerfil() != Perfil.SUPER_ADMIN
                 &&
                 !pertenceAoMesmoTenant(
                         usuarioLogado,
@@ -188,16 +181,12 @@ public class UsuarioService {
 
         }
 
-        if (usuarioLogado != null) {
+        if (!podeGerenciarPerfil(
+                usuarioLogado.getPerfil(),
+                usuarioAlvo.getPerfil())) {
 
-            if (!podeGerenciarPerfil(
-                    usuarioLogado.getPerfil(),
-                    usuarioAlvo.getPerfil())) {
-
-                throw new AcessoNegadoException(
-                        "Você não possui permissão para excluir este usuário.");
-
-            }
+            throw new AcessoNegadoException(
+                    "Você não possui permissão para excluir este usuário.");
 
         }
 
@@ -221,13 +210,10 @@ public class UsuarioService {
                                 "Usuário não encontrado."
                         ));
 
-        Usuario usuarioLogado = usuarioAutenticadoService
-                .usuarioLogado();
+        Usuario usuarioLogado =
+                obterUsuarioLogado();
 
-        if (
-                usuarioLogado != null
-                        &&
-                        usuarioLogado.getPerfil() != Perfil.SUPER_ADMIN
+        if (usuarioLogado.getPerfil() != Perfil.SUPER_ADMIN
                         &&
                         !pertenceAoMesmoTenant(
                                 usuarioLogado,
@@ -241,20 +227,15 @@ public class UsuarioService {
 
         }
 
-        if (usuarioLogado != null) {
+        if (!podeGerenciarPerfil(
+                usuarioLogado.getPerfil(),
+                usuario.getPerfil())) {
 
-            if (!podeGerenciarPerfil(
-                    usuarioLogado.getPerfil(),
-                    usuario.getPerfil())) {
-
-                throw new AcessoNegadoException(
-                        "Você não possui permissão para editar este usuário.");
-
-            }
+            throw new AcessoNegadoException(
+                    "Você não possui permissão para editar este usuário.");
 
         }
-        usuario.setNome(
-                request.nome());
+
 
         usuarioRepository
                 .findByEmail(
@@ -290,17 +271,14 @@ public class UsuarioService {
         usuario.setAtivo(
                 request.ativo());
 
-        if (usuarioLogado != null) {
+        if (!podeGerenciarPerfil(
+                usuarioLogado.getPerfil(),
+                request.perfil())) {
 
-            if (!podeGerenciarPerfil(
-                    usuarioLogado.getPerfil(),
-                    request.perfil())) {
+            throw new AcessoNegadoException(
+                    "Você não possui permissão para atribuir este perfil.");
 
-                throw new AcessoNegadoException(
-                        "Você não possui permissão para atribuir este perfil.");
-
-            }
-
+        }
 
             usuario.setPerfil(
                     request.perfil()
@@ -321,8 +299,6 @@ public class UsuarioService {
 
                 }
 
-            }
-
         }
 
         return montarResponse(
@@ -335,12 +311,10 @@ public class UsuarioService {
     public List<UsuarioResponse> listarPorTenant(
             UUID tenantId) {
 
-        Usuario usuarioLogado = usuarioAutenticadoService
-                .usuarioLogado();
+        Usuario usuarioLogado =
+                obterUsuarioLogado();
 
-        if (usuarioLogado != null
-                &&
-                usuarioLogado.getPerfil() != Perfil.SUPER_ADMIN
+        if (usuarioLogado.getPerfil() != Perfil.SUPER_ADMIN
                 &&
                 !usuarioLogado.getTenant()
                         .getId()
@@ -387,15 +361,8 @@ public class UsuarioService {
     public void alterarSenha(
             AlterarSenhaRequest request) {
 
-        Usuario usuarioLogado = usuarioAutenticadoService
-                .usuarioLogado();
-
-        if (usuarioLogado == null) {
-
-            throw new RegraNegocioException(
-                    "Usuário não autenticado.");
-
-        }
+        Usuario usuarioLogado =
+                obterUsuarioLogado();
 
         boolean senhaCorreta = passwordEncoder.matches(
                 request.senhaAtual(),
@@ -446,6 +413,25 @@ public class UsuarioService {
                         : null
 
         );
+
+    }
+
+    private Usuario obterUsuarioLogado() {
+
+        Usuario usuarioLogado =
+                usuarioAutenticadoService
+                        .usuarioLogado();
+
+        if (usuarioLogado == null) {
+
+            throw new ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED,
+                    "Usuário não autenticado."
+            );
+
+        }
+
+        return usuarioLogado;
 
     }
 

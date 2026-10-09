@@ -7,12 +7,14 @@ import br.com.stockflow.stockflow_api.entity.Usuario;
 import br.com.stockflow.stockflow_api.exception.RecursoNaoEncontradoException;
 import br.com.stockflow.stockflow_api.repository.TenantRepository;
 import br.com.stockflow.stockflow_api.security.UsuarioAutenticadoService;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.UUID;
 import br.com.stockflow.stockflow_api.exception.RegraNegocioException;
 import br.com.stockflow.stockflow_api.dto.request.TenantRequest;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class TenantService {
@@ -242,16 +244,11 @@ public class TenantService {
 
     private void validarSuperAdmin() {
 
-        Usuario usuario =
-                usuarioAutenticadoService
-                        .usuarioLogado();
+        Usuario usuarioLogado =
+                obterUsuarioLogado();
 
-        if (
-                usuario == null
-                        ||
-                        usuario.getPerfil()
-                                != Perfil.SUPER_ADMIN
-        ) {
+        if (usuarioLogado.getPerfil()
+                != Perfil.SUPER_ADMIN) {
 
             throw new RegraNegocioException(
                     "Acesso permitido apenas para SUPER_ADMIN."
@@ -270,6 +267,25 @@ public class TenantService {
                 tenant.getCodigoTenant(),
                 tenant.getAtivo()
         );
+    }
+
+    private Usuario obterUsuarioLogado() {
+
+        Usuario usuarioLogado =
+                usuarioAutenticadoService
+                        .usuarioLogado();
+
+        if (usuarioLogado == null) {
+
+            throw new ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED,
+                    "Usuário não autenticado."
+            );
+
+        }
+
+        return usuarioLogado;
+
     }
 
 }

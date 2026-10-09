@@ -76,8 +76,8 @@ public class VendaService {
     public Venda salvar(
             VendaRequest request) {
 
-        Usuario usuarioLogado = usuarioAutenticadoService
-                .usuarioLogado();
+        Usuario usuarioLogado =
+                obterUsuarioLogado();
 
         if (usuarioLogado == null) {
 
@@ -475,8 +475,8 @@ public class VendaService {
             UUID vendaId,
             CancelarVendaRequest request) {
 
-        Usuario usuarioLogado = usuarioAutenticadoService
-                .usuarioLogado();
+        Usuario usuarioLogado =
+                obterUsuarioLogado();
 
         if (usuarioLogado == null) {
 
@@ -583,8 +583,8 @@ public class VendaService {
 
     public List<VendaResponse> listar() {
 
-        Usuario usuarioLogado = usuarioAutenticadoService
-                .usuarioLogado();
+        Usuario usuarioLogado =
+                obterUsuarioLogado();
 
         if (usuarioLogado == null) {
 
@@ -615,8 +615,7 @@ public class VendaService {
             UUID vendaId) {
 
         Usuario usuarioLogado =
-                usuarioAutenticadoService
-                        .usuarioLogado();
+                obterUsuarioLogado();
 
         if (usuarioLogado == null) {
 
@@ -672,5 +671,23 @@ public class VendaService {
                 itens);
     }
 
+    private Usuario obterUsuarioLogado() {
+
+        Usuario usuarioLogado =
+                usuarioAutenticadoService
+                        .usuarioLogado();
+
+        if (usuarioLogado == null) {
+
+            throw new ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED,
+                    "Usuário não autenticado."
+            );
+
+        }
+
+        return usuarioLogado;
+
+    }
 
 }

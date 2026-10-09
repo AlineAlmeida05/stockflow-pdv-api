@@ -6,6 +6,7 @@ import br.com.stockflow.stockflow_api.exception.AcessoNegadoException;
 import br.com.stockflow.stockflow_api.repository.ProdutoRepository;
 import br.com.stockflow.stockflow_api.security.UsuarioAutenticadoService;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -17,6 +18,7 @@ import br.com.stockflow.stockflow_api.exception.RegraNegocioException;
 import br.com.stockflow.stockflow_api.dto.request.ProdutoCreateRequest;
 import br.com.stockflow.stockflow_api.dto.request.ProdutoUpdateRequest;
 import br.com.stockflow.stockflow_api.dto.response.ProdutoResponse;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class ProdutoService {
@@ -37,8 +39,8 @@ public class ProdutoService {
 
     public List<ProdutoResponse> listar() {
 
-        Usuario usuarioLogado = usuarioAutenticadoService
-                .usuarioLogado();
+        Usuario usuarioLogado =
+                obterUsuarioLogado();
 
         return produtoRepository
                 .findByTenantId(
@@ -56,8 +58,7 @@ public class ProdutoService {
             UUID id) {
 
         Usuario usuarioLogado =
-                usuarioAutenticadoService
-                        .usuarioLogado();
+                obterUsuarioLogado();
 
         Produto produto = produtoRepository
                 .findByIdAndTenantId(
@@ -101,8 +102,8 @@ public class ProdutoService {
 
         produto.setAtivo(true);
 
-        Usuario usuarioLogado = usuarioAutenticadoService
-                .usuarioLogado();
+        Usuario usuarioLogado =
+                obterUsuarioLogado();
 
         produto.setTenant(
                 usuarioLogado.getTenant());
@@ -128,8 +129,8 @@ public class ProdutoService {
             UUID id,
             ProdutoUpdateRequest request) {
 
-        Usuario usuarioLogado = usuarioAutenticadoService
-                .usuarioLogado();
+        Usuario usuarioLogado =
+                obterUsuarioLogado();
 
         Produto produto = produtoRepository
                 .findByIdAndTenantId(
@@ -177,9 +178,7 @@ public class ProdutoService {
             UUID id) {
 
         Usuario usuarioLogado =
-                usuarioAutenticadoService
-
-                        .usuarioLogado();
+                obterUsuarioLogado();
 
         Produto produto = produtoRepository
                 .findByIdAndTenantId(
@@ -207,8 +206,7 @@ public class ProdutoService {
             UUID id) {
 
         Usuario usuarioLogado =
-                usuarioAutenticadoService
-                        .usuarioLogado();
+                obterUsuarioLogado();
 
         Produto produto = produtoRepository
                 .findByIdAndTenantId(
@@ -319,6 +317,25 @@ public class ProdutoService {
                 produto.getPrecoPromocional()
 
         );
+
+    }
+
+    private Usuario obterUsuarioLogado() {
+
+        Usuario usuarioLogado =
+                usuarioAutenticadoService
+                        .usuarioLogado();
+
+        if (usuarioLogado == null) {
+
+            throw new ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED,
+                    "Usuário não autenticado."
+            );
+
+        }
+
+        return usuarioLogado;
 
     }
 
