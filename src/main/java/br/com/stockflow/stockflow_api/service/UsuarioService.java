@@ -4,17 +4,12 @@ import br.com.stockflow.stockflow_api.entity.Usuario;
 import br.com.stockflow.stockflow_api.exception.AcessoNegadoException;
 import br.com.stockflow.stockflow_api.exception.RecursoNaoEncontradoException;
 import br.com.stockflow.stockflow_api.repository.UsuarioRepository;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-
 import org.springframework.security.crypto.password.PasswordEncoder;
-
 import java.util.List;
 import java.util.UUID;
-
 import br.com.stockflow.stockflow_api.security.UsuarioAutenticadoService;
-
 import br.com.stockflow.stockflow_api.entity.Perfil;
 import br.com.stockflow.stockflow_api.dto.request.AlterarSenhaRequest;
 import br.com.stockflow.stockflow_api.exception.RegraNegocioException;
@@ -33,18 +28,20 @@ public class UsuarioService {
     private final PasswordEncoder passwordEncoder;
     private final UsuarioAutenticadoService usuarioAutenticadoService;
     private final TenantRepository tenantRepository;
+    private final AuditoriaService auditoriaService;
 
     public UsuarioService(
             UsuarioRepository usuarioRepository,
             PasswordEncoder passwordEncoder,
             UsuarioAutenticadoService usuarioAutenticadoService,
-            TenantRepository tenantRepository) {
+            TenantRepository tenantRepository,
+            AuditoriaService auditoriaService) {
 
         this.usuarioRepository = usuarioRepository;
         this.passwordEncoder = passwordEncoder;
         this.usuarioAutenticadoService = usuarioAutenticadoService;
         this.tenantRepository = tenantRepository;
-
+        this.auditoriaService = auditoriaService;
     }
 
 
@@ -143,9 +140,23 @@ public class UsuarioService {
                 passwordEncoder.encode(
                         usuario.getSenha()));
 
-        return montarResponse(
-                usuarioRepository.save(usuario)
+        Usuario usuarioSalvo =
+                usuarioRepository.save(usuario);
+
+        auditoriaService.registrar(
+                usuarioLogado.getTenant().getId(),
+                usuarioLogado.getId(),
+                usuarioLogado.getNome(),
+                "USUARIO_CRIADO",
+                "Usuario",
+                usuarioSalvo.getId().toString(),
+                "Usuário "
+                        + usuarioSalvo.getNome()
+                        + " criado com perfil "
+                        + usuarioSalvo.getPerfil()
         );
+
+        return montarResponse(usuarioSalvo);
 
     }
 
@@ -194,6 +205,18 @@ public class UsuarioService {
 
         usuarioRepository.save(
                 usuarioAlvo
+        );
+
+        auditoriaService.registrar(
+                usuarioLogado.getTenant().getId(),
+                usuarioLogado.getId(),
+                usuarioLogado.getNome(),
+                "USUARIO_INATIVADO",
+                "Usuario",
+                usuarioAlvo.getId().toString(),
+                "Usuário "
+                        + usuarioAlvo.getNome()
+                        + " inativado."
         );
 
     }
@@ -301,9 +324,22 @@ public class UsuarioService {
 
         }
 
-        return montarResponse(
-                usuarioRepository.save(usuario)
+        Usuario usuarioAtualizado =
+                usuarioRepository.save(usuario);
+
+        auditoriaService.registrar(
+                usuarioLogado.getTenant().getId(),
+                usuarioLogado.getId(),
+                usuarioLogado.getNome(),
+                "USUARIO_EDITADO",
+                "Usuario",
+                usuarioAtualizado.getId().toString(),
+                "Usuário "
+                        + usuarioAtualizado.getNome()
+                        + " atualizado."
         );
+
+        return montarResponse(usuarioAtualizado);
 
     }
 
@@ -389,6 +425,16 @@ public class UsuarioService {
 
         usuarioRepository.save(
                 usuarioLogado);
+
+        auditoriaService.registrar(
+                usuarioLogado.getTenant().getId(),
+                usuarioLogado.getId(),
+                usuarioLogado.getNome(),
+                "SENHA_ALTERADA",
+                "Usuario",
+                usuarioLogado.getId().toString(),
+                "Senha alterada pelo usuário."
+        );
 
     }
 

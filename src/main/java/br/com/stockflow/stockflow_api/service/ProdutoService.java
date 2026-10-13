@@ -5,14 +5,11 @@ import br.com.stockflow.stockflow_api.entity.Usuario;
 import br.com.stockflow.stockflow_api.exception.AcessoNegadoException;
 import br.com.stockflow.stockflow_api.repository.ProdutoRepository;
 import br.com.stockflow.stockflow_api.security.UsuarioAutenticadoService;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
-
 import br.com.stockflow.stockflow_api.exception.RecursoNaoEncontradoException;
 import br.com.stockflow.stockflow_api.exception.RegraNegocioException;
 import br.com.stockflow.stockflow_api.dto.request.ProdutoCreateRequest;
@@ -27,14 +24,19 @@ public class ProdutoService {
 
     private final UsuarioAutenticadoService usuarioAutenticadoService;
 
+    private final AuditoriaService auditoriaService;
+
     public ProdutoService(
             ProdutoRepository produtoRepository,
-            UsuarioAutenticadoService usuarioAutenticadoService) {
+            UsuarioAutenticadoService usuarioAutenticadoService,
+            AuditoriaService auditoriaService) {
 
         this.produtoRepository = produtoRepository;
 
-        this.usuarioAutenticadoService = usuarioAutenticadoService;
+        this.usuarioAutenticadoService =
+                usuarioAutenticadoService;
 
+        this.auditoriaService = auditoriaService;
     }
 
     public List<ProdutoResponse> listar() {
@@ -119,9 +121,20 @@ public class ProdutoService {
                 java.math.BigDecimal.ZERO);
 
 
-        return montarResponse(
-                produtoRepository.save(produto)
+        Produto produtoSalvo =
+                produtoRepository.save(produto);
+
+        auditoriaService.registrar(
+                usuarioLogado.getTenant().getId(),
+                usuarioLogado.getId(),
+                usuarioLogado.getNome(),
+                "PRODUTO_CRIADO",
+                "Produto",
+                produtoSalvo.getId().toString(),
+                "Produto " + produtoSalvo.getNome() + " criado."
         );
+
+        return montarResponse(produtoSalvo);
 
     }
 
@@ -168,9 +181,20 @@ public class ProdutoService {
         produto.setDataAtualizacao(
                 LocalDateTime.now());
 
-        return montarResponse(
-                produtoRepository.save(produto)
+        Produto produtoAtualizado =
+                produtoRepository.save(produto);
+
+        auditoriaService.registrar(
+                usuarioLogado.getTenant().getId(),
+                usuarioLogado.getId(),
+                usuarioLogado.getNome(),
+                "PRODUTO_EDITADO",
+                "Produto",
+                produtoAtualizado.getId().toString(),
+                "Produto " + produtoAtualizado.getNome() + " atualizado."
         );
+
+        return montarResponse(produtoAtualizado);
 
     }
 
@@ -200,6 +224,16 @@ public class ProdutoService {
         produtoRepository.save(
                 produto);
 
+        auditoriaService.registrar(
+                usuarioLogado.getTenant().getId(),
+                usuarioLogado.getId(),
+                usuarioLogado.getNome(),
+                "PRODUTO_INATIVADO",
+                "Produto",
+                produto.getId().toString(),
+                "Produto " + produto.getNome() + " inativado."
+        );
+
     }
 
     public void reativar(
@@ -227,6 +261,17 @@ public class ProdutoService {
 
         produtoRepository.save(
                 produto);
+
+        auditoriaService.registrar(
+                usuarioLogado.getTenant().getId(),
+                usuarioLogado.getId(),
+                usuarioLogado.getNome(),
+                "PRODUTO_REATIVADO",
+                "Produto",
+                produto.getId().toString(),
+                "Produto " + produto.getNome() + " reativado."
+        );
+
 
     }
 

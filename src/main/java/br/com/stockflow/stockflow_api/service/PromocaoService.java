@@ -33,27 +33,23 @@ import org.springframework.web.server.ResponseStatusException;
 public class PromocaoService {
 
     private final PromocaoRepository promocaoRepository;
-
     private final UsuarioAutenticadoService usuarioAutenticadoService;
-
     private final ProdutoRepository produtoRepository;
-
     private final MovimentacaoEstoqueRepository movimentacaoEstoqueRepository;
+    private final AuditoriaService auditoriaService;
 
     public PromocaoService(
             PromocaoRepository promocaoRepository,
             ProdutoRepository produtoRepository,
             UsuarioAutenticadoService usuarioAutenticadoService,
-            MovimentacaoEstoqueRepository movimentacaoEstoqueRepository) {
+            MovimentacaoEstoqueRepository movimentacaoEstoqueRepository,
+            AuditoriaService auditoriaService) {
 
         this.promocaoRepository = promocaoRepository;
-
         this.produtoRepository = produtoRepository;
-
         this.usuarioAutenticadoService = usuarioAutenticadoService;
-
         this.movimentacaoEstoqueRepository = movimentacaoEstoqueRepository;
-
+        this.auditoriaService = auditoriaService;
     }
 
     public List<Promocao> listar() {
@@ -244,8 +240,26 @@ public class PromocaoService {
         produtoRepository.save(
                 produto);
 
-        return promocaoRepository
-                .save(promocao);
+        Promocao promocaoSalva =
+                promocaoRepository.save(
+                        promocao
+                );
+
+        auditoriaService.registrar(
+                usuarioLogado.getTenant().getId(),
+                usuarioLogado.getId(),
+                usuarioLogado.getNome(),
+                "PROMOCAO_CRIADA",
+                "Promocao",
+                promocaoSalva.getId().toString(),
+                "Promoção criada para o produto "
+                        + produto.getNome()
+                        + " com desconto de "
+                        + promocaoSalva.getPercentualDesconto()
+                        + "%"
+        );
+
+        return promocaoSalva;
 
 
     }
@@ -275,6 +289,21 @@ public class PromocaoService {
         produtoRepository.save(produto);
 
         promocaoRepository.save(promocao);
+
+        Usuario usuarioLogado =
+                obterUsuarioLogado();
+
+        auditoriaService.registrar(
+                usuarioLogado.getTenant().getId(),
+                usuarioLogado.getId(),
+                usuarioLogado.getNome(),
+                "PROMOCAO_FINALIZADA_META",
+                "Promocao",
+                promocao.getId().toString(),
+                "Promoção do produto "
+                        + produto.getNome()
+                        + " finalizada automaticamente ao atingir a meta."
+        );
     }
 
     @Transactional
@@ -306,8 +335,27 @@ public class PromocaoService {
         produtoRepository.save(
                 produto);
 
-        return promocaoRepository.save(
-                promocao);
+        Promocao promocaoEncerrada =
+                promocaoRepository.save(
+                        promocao
+                );
+
+        Usuario usuarioLogado =
+                obterUsuarioLogado();
+
+        auditoriaService.registrar(
+                usuarioLogado.getTenant().getId(),
+                usuarioLogado.getId(),
+                usuarioLogado.getNome(),
+                "PROMOCAO_ENCERRADA",
+                "Promocao",
+                promocaoEncerrada.getId().toString(),
+                "Promoção encerrada para o produto "
+                        + produto.getNome()
+        );
+
+        return promocaoEncerrada;
+
     }
 
     public List<Promocao> listarPorProduto(

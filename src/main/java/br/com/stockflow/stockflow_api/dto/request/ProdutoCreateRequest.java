@@ -29,7 +29,7 @@ public record ProdutoCreateRequest(
         @NotNull(
                 message = "Estoque atual é obrigatório."
         )
-        @Positive(
+        @PositiveOrZero(
                 message = "Estoque mínimo deve ser maior que zero."
         )
         Integer estoqueAtual,

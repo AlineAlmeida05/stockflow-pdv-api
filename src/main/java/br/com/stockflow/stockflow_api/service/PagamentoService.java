@@ -29,17 +29,20 @@ public class PagamentoService {
     private final ClienteRepository clienteRepository;
     private final UsuarioAutenticadoService usuarioAutenticadoService;
     private final FiadoRepository fiadoRepository;
+    private final AuditoriaService auditoriaService;
 
     public PagamentoService(
             PagamentoRepository pagamentoRepository,
             ClienteRepository clienteRepository,
             FiadoRepository fiadoRepository,
-            UsuarioAutenticadoService usuarioAutenticadoService) {
+            UsuarioAutenticadoService usuarioAutenticadoService,
+            AuditoriaService auditoriaService) {
 
         this.pagamentoRepository = pagamentoRepository;
         this.clienteRepository = clienteRepository;
         this.usuarioAutenticadoService = usuarioAutenticadoService;
         this.fiadoRepository = fiadoRepository;
+        this.auditoriaService = auditoriaService;
     }
 
     public Pagamento salvar(
@@ -129,8 +132,24 @@ public class PagamentoService {
         pagamento.setUsuario(
                 usuarioLogado);
 
-        return pagamentoRepository.save(
-                pagamento);
+        Pagamento pagamentoSalvo =
+                pagamentoRepository.save(
+                        pagamento);
+
+        auditoriaService.registrar(
+                usuarioLogado.getTenant().getId(),
+                usuarioLogado.getId(),
+                usuarioLogado.getNome(),
+                "PAGAMENTO_REALIZADO",
+                "Pagamento",
+                pagamentoSalvo.getId().toString(),
+                "Pagamento de R$ "
+                        + pagamentoSalvo.getValorPago()
+                        + " para o cliente "
+                        + cliente.getNome()
+        );
+
+        return pagamentoSalvo;
     }
 
     public List<PagamentoResponse> listar() {
