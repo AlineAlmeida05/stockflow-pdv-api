@@ -2,6 +2,7 @@ package br.com.stockflow.stockflow_api.controller;
 
 import br.com.stockflow.stockflow_api.dto.response.MovimentacaoFinanceiraResponse;
 import br.com.stockflow.stockflow_api.service.ExtratoFinanceiroService;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -28,8 +29,10 @@ public class ExtratoFinanceiroController {
     }
 
     @GetMapping
-    public List<
-            MovimentacaoFinanceiraResponse>
+    @PreAuthorize(
+            "hasAnyRole('SUPER_ADMIN','PROPRIETARIO','SOCIO','GERENTE')"
+    )
+    public List<MovimentacaoFinanceiraResponse>
     listarMovimentacoes() {
 
         return extratoFinanceiroService
@@ -37,6 +40,9 @@ public class ExtratoFinanceiroController {
     }
 
     @GetMapping("/indicadores")
+    @PreAuthorize(
+            "hasAnyRole('SUPER_ADMIN','PROPRIETARIO','SOCIO','GERENTE')"
+    )
     public IndicadoresExtratoResponse
     obterIndicadores() {
 

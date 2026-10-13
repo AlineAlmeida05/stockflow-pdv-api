@@ -8,14 +8,13 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
-
+import java.util.List;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import java.io.IOException;
-
 import br.com.stockflow.stockflow_api.entity.Usuario;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import java.util.Collections;
 
 @Component
 public class JwtAuthenticationFilter
@@ -62,10 +61,17 @@ public class JwtAuthenticationFilter
                         .findByEmail(email)
                         .ifPresent(usuario -> {
 
-                            UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                                    usuario,
-                                    null,
-                                    Collections.emptyList());
+                            var authorities = List.of(
+                                    new SimpleGrantedAuthority(
+                                            "ROLE_" + usuario.getPerfil().name()
+                                    )
+                            );
+
+                            UsernamePasswordAuthenticationToken authentication =
+                                    new UsernamePasswordAuthenticationToken(
+                                            usuario,
+                                            null,
+                                            authorities);
 
                             SecurityContextHolder
                                     .getContext()

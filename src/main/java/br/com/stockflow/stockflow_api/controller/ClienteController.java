@@ -4,10 +4,9 @@ import br.com.stockflow.stockflow_api.dto.request.ClienteRequest;
 import br.com.stockflow.stockflow_api.dto.response.ClienteResponse;
 import br.com.stockflow.stockflow_api.entity.Cliente;
 import br.com.stockflow.stockflow_api.service.ClienteService;
-
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import br.com.stockflow.stockflow_api.dto.response.ClienteResumoResponse;
-
 import java.util.List;
 import java.util.UUID;
 import jakarta.validation.Valid;
@@ -26,6 +25,9 @@ public class ClienteController {
     }
 
     @PostMapping
+    @PreAuthorize(
+            "hasAnyRole('SUPER_ADMIN','PROPRIETARIO','SOCIO','GERENTE','OPERADOR_CAIXA')"
+    )
     public ClienteResponse salvar(
             @Valid
             @RequestBody ClienteRequest request) {
@@ -35,6 +37,9 @@ public class ClienteController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize(
+            "hasAnyRole('SUPER_ADMIN','PROPRIETARIO','SOCIO','GERENTE','OPERADOR_CAIXA')"
+    )
     public ClienteResponse atualizar(
             @PathVariable UUID id,
             @Valid
@@ -46,12 +51,18 @@ public class ClienteController {
     }
 
     @GetMapping
+    @PreAuthorize(
+            "hasAnyRole('SUPER_ADMIN','PROPRIETARIO','SOCIO','GERENTE','OPERADOR_CAIXA','ESTOQUISTA')"
+    )
     public List<ClienteResponse> listar() {
 
         return clienteService.listar();
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize(
+            "hasAnyRole('SUPER_ADMIN','PROPRIETARIO','SOCIO','GERENTE')"
+    )
     public void inativar(
             @PathVariable UUID id) {
 
@@ -59,6 +70,9 @@ public class ClienteController {
     }
 
     @GetMapping("/{id}/resumo")
+    @PreAuthorize(
+            "hasAnyRole('SUPER_ADMIN','PROPRIETARIO','SOCIO','GERENTE','OPERADOR_CAIXA','ESTOQUISTA')"
+    )
     public ClienteResumoResponse obterResumo(
             @PathVariable UUID id) {
 
@@ -67,6 +81,9 @@ public class ClienteController {
     }
 
     @PatchMapping("/{id}/reativar")
+    @PreAuthorize(
+            "hasAnyRole('SUPER_ADMIN','PROPRIETARIO','SOCIO','GERENTE')"
+    )
     public void reativar(
             @PathVariable UUID id) {
 

@@ -4,14 +4,13 @@ import br.com.stockflow.stockflow_api.dto.request.EmpresaCreateRequest;
 import br.com.stockflow.stockflow_api.dto.response.EmpresaResponse;
 import br.com.stockflow.stockflow_api.entity.Empresa;
 import br.com.stockflow.stockflow_api.service.EmpresaService;
-
 import jakarta.validation.Valid;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
 import java.util.List;
 
 @RestController
@@ -27,6 +26,7 @@ public class AdminEmpresaController {
     }
 
     @GetMapping
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     public List<EmpresaResponse> listar() {
 
         return empresaService.listarTodas();
@@ -34,6 +34,7 @@ public class AdminEmpresaController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     public EmpresaResponse salvar(
 
             @Valid
