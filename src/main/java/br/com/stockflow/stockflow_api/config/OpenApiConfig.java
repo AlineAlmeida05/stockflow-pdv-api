@@ -21,7 +21,7 @@ public class OpenApiConfig {
                 .info(
                         new Info()
                                 .title("StockFlow API")
-                                .description("Sistema de gestão de estoque, vendas e multi-tenant")
+                                .description("Sistema de controle de estoque, vendas, clientes, fiados, promoções e auditoria.")
                                 .version("v1.0.0")
                                 .contact(
                                         new Contact()

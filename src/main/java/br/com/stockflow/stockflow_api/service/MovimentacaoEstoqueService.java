@@ -135,18 +135,6 @@ public class MovimentacaoEstoqueService {
                         produtoRepository.save(
                                         produto);
 
-                        auditoriaService.registrar(
-                                usuarioLogado.getTenant().getId(),
-                                usuarioLogado.getId(),
-                                usuarioLogado.getNome(),
-                                "ENTRADA_ESTOQUE",
-                                "Produto",
-                                produto.getId().toString(),
-                                "Entrada de "
-                                        + request.quantidade()
-                                        + " unidade(s) no produto "
-                                        + produto.getNome()
-                        );
                                         
                 } else if ("saida".equals(request.tipo())) {
 
@@ -171,19 +159,6 @@ public class MovimentacaoEstoqueService {
                                 produto
                         );
 
-                        auditoriaService.registrar(
-                                usuarioLogado.getTenant().getId(),
-                                usuarioLogado.getId(),
-                                usuarioLogado.getNome(),
-                                "SAIDA_ESTOQUE",
-                                "Produto",
-                                produto.getId().toString(),
-                                "Saída manual de "
-                                        + request.quantidade()
-                                        + " unidade(s) do produto "
-                                        + produto.getNome()
-                        );
-
                 }
 
                 else if ("ajuste".equals(request.tipo())) {
@@ -198,19 +173,6 @@ public class MovimentacaoEstoqueService {
 
                         produtoRepository.save(
                                 produto
-                        );
-
-                        auditoriaService.registrar(
-                                usuarioLogado.getTenant().getId(),
-                                usuarioLogado.getId(),
-                                usuarioLogado.getNome(),
-                                "AJUSTE_ESTOQUE",
-                                "Produto",
-                                produto.getId().toString(),
-                                "Estoque ajustado para "
-                                        + request.quantidade()
-                                        + " unidade(s) no produto "
-                                        + produto.getNome()
                         );
 
                 }
@@ -248,6 +210,53 @@ public class MovimentacaoEstoqueService {
                 MovimentacaoEstoque movimentacaoSalva =
                         repository.save(
                                 movimentacao);
+
+                if ("entrada".equals(request.tipo())) {
+
+                        auditoriaService.registrar(
+                                usuarioLogado.getTenant().getId(),
+                                usuarioLogado.getId(),
+                                usuarioLogado.getNome(),
+                                "ENTRADA_ESTOQUE",
+                                "Produto",
+                                produto.getId().toString(),
+                                "Entrada de "
+                                        + request.quantidade()
+                                        + " unidade(s) no produto "
+                                        + produto.getNome()
+                        );
+
+                } else if ("saida".equals(request.tipo())) {
+
+                        auditoriaService.registrar(
+                                usuarioLogado.getTenant().getId(),
+                                usuarioLogado.getId(),
+                                usuarioLogado.getNome(),
+                                "SAIDA_ESTOQUE",
+                                "Produto",
+                                produto.getId().toString(),
+                                "Saída manual de "
+                                        + request.quantidade()
+                                        + " unidade(s) do produto "
+                                        + produto.getNome()
+                        );
+
+                } else if ("ajuste".equals(request.tipo())) {
+
+                        auditoriaService.registrar(
+                                usuarioLogado.getTenant().getId(),
+                                usuarioLogado.getId(),
+                                usuarioLogado.getNome(),
+                                "AJUSTE_ESTOQUE",
+                                "Produto",
+                                produto.getId().toString(),
+                                "Estoque ajustado para "
+                                        + request.quantidade()
+                                        + " unidade(s) no produto "
+                                        + produto.getNome()
+                        );
+
+                }
 
                 return movimentacaoSalva;
         }
