@@ -1,0 +1,197 @@
+package br.service;
+
+import br.dto.request.PagamentoRequest;
+import br.dto.response.PagamentoResponse;
+import br.entity.Cliente;
+import br.entity.Pagamento;
+import br.entity.Usuario;
+import br.exception.RecursoNaoEncontradoException;
+import br.repository.ClienteRepository;
+import br.repository.PagamentoRepository;
+import br.security.UsuarioAutenticadoService;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import br.entity.Fiado;
+import br.exception.RegraNegocioException;
+import br.repository.FiadoRepository;
+
+import java.math.BigDecimal;
+
+@Service
+public class PagamentoService {
+
+    private final PagamentoRepository pagamentoRepository;
+    private final ClienteRepository clienteRepository;
+    private final UsuarioAutenticadoService usuarioAutenticadoService;
+    private final FiadoRepository fiadoRepository;
+    private final AuditoriaService auditoriaService;
+
+    public PagamentoService(
+            PagamentoRepository pagamentoRepository,
+            ClienteRepository clienteRepository,
+            FiadoRepository fiadoRepository,
+            UsuarioAutenticadoService usuarioAutenticadoService,
+            AuditoriaService auditoriaService) {
+
+        this.pagamentoRepository = pagamentoRepository;
+        this.clienteRepository = clienteRepository;
+        this.usuarioAutenticadoService = usuarioAutenticadoService;
+        this.fiadoRepository = fiadoRepository;
+        this.auditoriaService = auditoriaService;
+    }
+
+    public Pagamento salvar(
+            PagamentoRequest request) {
+
+        Usuario usuarioLogado =
+                obterUsuarioLogado();
+
+        Cliente cliente =
+                clienteRepository
+                        .findByIdAndTenantId(
+                                request.clienteId(),
+                                usuarioLogado
+                                        .getTenant()
+                                        .getId()
+                        )
+                        .orElseThrow(() ->
+                                new RecursoNaoEncontradoException(
+                                        "Cliente não encontrado."
+                                ));
+
+        BigDecimal totalFiado =
+                fiadoRepository
+                        .findByClienteIdAndTenantId(
+                                cliente.getId(),
+                                usuarioLogado
+                                        .getTenant()
+                                        .getId()
+                        )
+                        .stream()
+                        .map(Fiado::getValorTotal)
+                        .reduce(
+                                BigDecimal.ZERO,
+                                BigDecimal::add
+                        );
+
+        BigDecimal totalPago =
+                pagamentoRepository
+                        .findByClienteIdAndTenantId(
+                                cliente.getId(),
+                                usuarioLogado
+                                        .getTenant()
+                                        .getId()
+                        )
+                        .stream()
+                        .map(Pagamento::getValorPago)
+                        .reduce(
+                                BigDecimal.ZERO,
+                                BigDecimal::add
+                        );
+
+        BigDecimal saldoDevedor =
+                totalFiado.subtract(totalPago);
+
+        if (
+                request.valorPago()
+                        .compareTo(saldoDevedor)
+                        > 0
+        ) {
+
+            throw new RegraNegocioException(
+                    "Valor do pagamento superior ao saldo devedor."
+            );
+        }
+
+        Pagamento pagamento =
+                new Pagamento();
+
+        pagamento.setCliente(
+                cliente);
+
+        pagamento.setValorPago(
+                request.valorPago());
+
+        pagamento.setDataPagamento(
+                LocalDateTime.now());
+
+        pagamento.setObservacao(
+                request.observacao());
+
+        pagamento.setFormaPagamento(
+                request.formaPagamento());
+
+        pagamento.setTenant(
+                usuarioLogado.getTenant());
+
+        pagamento.setUsuario(
+                usuarioLogado);
+
+        Pagamento pagamentoSalvo =
+                pagamentoRepository.save(
+                        pagamento);
+
+        auditoriaService.registrar(
+                usuarioLogado.getTenant().getId(),
+                usuarioLogado.getId(),
+                usuarioLogado.getNome(),
+                "PAGAMENTO_REALIZADO",
+                "Pagamento",
+                pagamentoSalvo.getId().toString(),
+                "Pagamento de R$ "
+                        + pagamentoSalvo.getValorPago()
+                        + " para o cliente "
+                        + cliente.getNome()
+        );
+
+        return pagamentoSalvo;
+    }
+
+    public List<PagamentoResponse> listar() {
+
+        Usuario usuarioLogado =
+                obterUsuarioLogado();
+
+        return pagamentoRepository
+                .findByTenantId(
+                        usuarioLogado
+                                .getTenant()
+                                .getId())
+                .stream()
+                .map(pagamento ->
+                        new PagamentoResponse(
+                                pagamento.getId(),
+                                pagamento.getCliente().getId(),
+                                pagamento.getCliente().getNome(),
+                                pagamento.getValorPago(),
+                                pagamento.getUsuario().getNome(),
+                                pagamento.getDataPagamento(),
+                                pagamento.getObservacao(),
+                                pagamento.getFormaPagamento()))
+                .toList();
+    }
+
+    private Usuario obterUsuarioLogado() {
+
+        Usuario usuarioLogado =
+                usuarioAutenticadoService
+                        .usuarioLogado();
+
+        if (usuarioLogado == null) {
+
+            throw new ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED,
+                    "Usuário não autenticado."
+            );
+
+        }
+
+        return usuarioLogado;
+
+    }
+}

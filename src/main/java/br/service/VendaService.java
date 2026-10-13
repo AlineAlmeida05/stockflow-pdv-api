@@ -1,0 +1,719 @@
+package br.service;
+
+import br.dto.request.VendaRequest;
+import br.dto.response.VendaResponse;
+import br.entity.*;
+import br.exception.RecursoNaoEncontradoException;
+import br.exception.RegraNegocioException;
+import br.repository.*;
+import br.security.UsuarioAutenticadoService;
+import org.springframework.stereotype.Service;
+import java.util.List;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
+import br.dto.request.ItemVendaRequest;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import org.springframework.transaction.annotation.Transactional;
+import br.dto.request.CancelarVendaRequest;
+import java.util.UUID;
+import br.dto.response.VendaDetalhesResponse;
+import br.dto.response.ItemVendaResponse;
+
+@Service
+public class VendaService {
+
+    private final VendaRepository vendaRepository;
+    private final ItemVendaRepository itemVendaRepository;
+    private final ProdutoRepository produtoRepository;
+    private final UsuarioAutenticadoService usuarioAutenticadoService;
+    private final MovimentacaoEstoqueRepository movimentacaoRepository;
+    private final FiadoRepository fiadoRepository;
+    private final ClienteRepository clienteRepository;
+    private final PromocaoRepository promocaoRepository;
+    private final PromocaoService promocaoService;
+    private final PagamentoRepository pagamentoRepository;
+    private final AuditoriaService auditoriaService;
+
+    public VendaService(
+            VendaRepository vendaRepository,
+            ItemVendaRepository itemVendaRepository,
+            ProdutoRepository produtoRepository,
+            MovimentacaoEstoqueRepository movimentacaoRepository,
+            UsuarioAutenticadoService usuarioAutenticadoService,
+            FiadoRepository fiadoRepository,
+            ClienteRepository clienteRepository,
+            PromocaoRepository promocaoRepository,
+            PromocaoService promocaoService,
+            PagamentoRepository pagamentoRepository,
+            AuditoriaService auditoriaService) {
+
+
+        this.vendaRepository = vendaRepository;
+        this.itemVendaRepository = itemVendaRepository;
+        this.produtoRepository = produtoRepository;
+        this.usuarioAutenticadoService = usuarioAutenticadoService;
+        this.movimentacaoRepository = movimentacaoRepository;
+        this.fiadoRepository = fiadoRepository;
+        this.clienteRepository = clienteRepository;
+        this.promocaoRepository = promocaoRepository;
+        this.promocaoService = promocaoService;
+        this.pagamentoRepository = pagamentoRepository;
+        this.auditoriaService = auditoriaService;
+
+    }
+
+    @Transactional
+    public Venda salvar(
+            VendaRequest request) {
+
+        Usuario usuarioLogado =
+                obterUsuarioLogado();
+
+        if (usuarioLogado == null) {
+
+            throw new ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED,
+                    "Usuário não autenticado");
+        }
+
+        if ("fiado".equals(
+                request.formaPagamento())
+                && request.clienteId() == null) {
+
+            throw new RegraNegocioException(
+                    "Selecione um cliente para venda fiada."
+            );
+        }
+
+        BigDecimal valorTotal = BigDecimal.ZERO;
+
+        Integer quantidadeItens = 0;
+
+        for (ItemVendaRequest item : request.itens()) {
+
+            Produto produto = produtoRepository
+                    .findByIdAndTenantId(
+                            item.produtoId(),
+                            usuarioLogado
+                                    .getTenant()
+                                    .getId()
+                    )
+                    .orElseThrow(() ->
+                            new RecursoNaoEncontradoException(
+                                    "Produto não encontrado."
+                            ));
+
+
+
+            if (Boolean.FALSE.equals(
+                    produto.getAtivo())) {
+
+                throw new RegraNegocioException(
+                        "Produto inativo: "
+                                + produto.getNome()
+                );
+            }
+
+            if (produto.getEstoqueAtual() < item.quantidade()) {
+
+                throw new RegraNegocioException(
+                        "Estoque insuficiente para o produto: "
+                                + produto.getNome()
+                );
+            }
+
+            BigDecimal precoAplicado;
+
+            if (Boolean.TRUE.equals(
+                    produto.getPromocaoAtiva())
+                    && produto.getPrecoPromocional() != null) {
+
+                precoAplicado = produto.getPrecoPromocional();
+
+            } else {
+
+                precoAplicado = produto.getPrecoVenda();
+            }
+
+            BigDecimal subtotal = precoAplicado.multiply(
+                    BigDecimal.valueOf(
+                            item.quantidade()));
+
+            valorTotal = valorTotal.add(subtotal);
+
+            quantidadeItens += item.quantidade();
+        }
+
+        if ("dinheiro".equalsIgnoreCase(
+                request.formaPagamento())) {
+
+            if (request.valorRecebido() == null) {
+
+                throw new RegraNegocioException(
+                        "Valor recebido é obrigatório para pagamento em dinheiro."
+                );
+            }
+
+            if (request.valorRecebido()
+                    .compareTo(valorTotal) < 0) {
+
+                throw new RegraNegocioException(
+                        "Valor recebido insuficiente."
+                );
+            }
+        }
+
+        Venda venda = new Venda();
+
+        venda.setDataVenda(
+                LocalDateTime.now());
+
+        venda.setFormaPagamento(
+                request.formaPagamento());
+
+        venda.setValorTotal(
+                valorTotal);
+
+        venda.setQuantidadeItens(
+                quantidadeItens);
+
+        venda.setStatus(
+                "finalizada");
+
+        venda.setUsuario(
+                usuarioLogado);
+
+        venda.setTenant(
+                usuarioLogado.getTenant());
+
+        venda.setClienteId(
+                request.clienteId());
+
+        if (request.clienteId() != null) {
+
+            Cliente cliente =
+                    clienteRepository
+                            .findByIdAndTenantId(
+                                    request.clienteId(),
+                                    usuarioLogado
+                                            .getTenant()
+                                            .getId()
+                            )
+                            .orElseThrow(() ->
+                                    new RecursoNaoEncontradoException(
+                                            "Cliente não encontrado."
+                                    ));
+
+            venda.setClienteNome(
+                    cliente.getNome()
+            );
+        }
+
+        Venda vendaSalva = vendaRepository.save(
+                venda);
+        if ("fiado".equalsIgnoreCase(
+                request.formaPagamento())) {
+
+            Cliente cliente =
+                    clienteRepository
+                            .findByIdAndTenantId(
+                                    request.clienteId(),
+                                    usuarioLogado.getTenant().getId()
+                            )
+                            .orElseThrow(
+                                    () ->
+                                            new RecursoNaoEncontradoException(
+                                                    "Cliente não encontrado."
+                                            ));
+
+            List<Fiado> fiadosCliente =
+                    fiadoRepository
+                            .findByClienteIdAndTenantId(
+                                    cliente.getId(),
+                                    usuarioLogado
+                                            .getTenant()
+                                            .getId()
+                            );
+
+            BigDecimal totalFiado =
+                    fiadosCliente.stream()
+                            .map(Fiado::getValorTotal)
+                            .reduce(
+                                    BigDecimal.ZERO,
+                                    BigDecimal::add
+                            );
+
+            BigDecimal totalPago =
+                    pagamentoRepository
+                            .findByClienteIdAndTenantId(
+                                    cliente.getId(),
+                                    usuarioLogado
+                                            .getTenant()
+                                            .getId()
+                            )
+                            .stream()
+                            .map(Pagamento::getValorPago)
+                            .reduce(
+                                    BigDecimal.ZERO,
+                                    BigDecimal::add
+                            );
+
+            BigDecimal saldoDevedor =
+                    totalFiado.subtract(
+                            totalPago
+                    );
+
+            BigDecimal novaDivida =
+                    saldoDevedor.add(
+                            valorTotal
+                    );
+
+            if (novaDivida.compareTo(
+                    cliente.getLimiteCredito()
+            ) > 0) {
+
+                throw new RegraNegocioException(
+                        "Limite de crédito do cliente excedido."
+                );
+            }
+
+            Fiado fiado = new Fiado();
+
+            fiado.setCliente(
+                    cliente);
+
+            fiado.setVendaId(
+                    vendaSalva.getId());
+
+            fiado.setValorTotal(
+                    valorTotal);
+
+            fiado.setDataLancamento(
+                    LocalDateTime.now());
+
+            fiado.setStatus(
+                    "pendente");
+
+            fiado.setTenant(
+                    usuarioLogado.getTenant());
+
+            fiadoRepository.save(
+                    fiado);
+
+            auditoriaService.registrar(
+                    usuarioLogado.getTenant().getId(),
+                    usuarioLogado.getId(),
+                    usuarioLogado.getNome(),
+                    "FIADO_CRIADO",
+                    "Fiado",
+                    fiado.getId().toString(),
+                    "Fiado criado para "
+                            + cliente.getNome()
+                            + " no valor de R$ "
+                            + valorTotal
+            );
+        }
+
+        for (ItemVendaRequest item : request.itens()) {
+
+            Produto produto = produtoRepository
+                    .findByIdAndTenantId(
+                            item.produtoId(),
+                            usuarioLogado.getTenant().getId()
+                    )
+                    .orElseThrow(() ->
+                            new RecursoNaoEncontradoException(
+                                    "Produto não encontrado."
+                            ));
+
+            BigDecimal precoAplicado;
+
+
+            if (Boolean.TRUE.equals(
+                    produto.getPromocaoAtiva())
+                    && produto.getPrecoPromocional() != null) {
+
+                precoAplicado = produto.getPrecoPromocional();
+
+            } else {
+
+                precoAplicado = produto.getPrecoVenda();
+            }
+
+            ItemVenda itemVenda = new ItemVenda();
+
+            itemVenda.setVenda(
+                    vendaSalva);
+
+            itemVenda.setProduto(
+                    produto);
+
+            itemVenda.setProdutoNome(
+                    produto.getNome());
+
+            itemVenda.setQuantidade(
+                    item.quantidade());
+
+            itemVenda.setValorUnitario(
+                    precoAplicado);
+
+            itemVenda.setSubtotal(
+                    precoAplicado.multiply(
+                            BigDecimal.valueOf(
+                                    item.quantidade())));
+
+            itemVenda.setPromocaoAplicada(
+                    Boolean.TRUE.equals(
+                            produto.getPromocaoAtiva()));
+
+            itemVendaRepository.save(
+                    itemVenda);
+
+            if (Boolean.TRUE.equals(
+                    produto.getPromocaoAtiva())) {
+
+                var promocaoOpt =
+                        promocaoRepository
+                                .findByProdutoAndAtivaTrue(
+                                        produto
+                                );
+
+
+                promocaoOpt.ifPresent(promocao -> {
+
+                            Integer vendidas =
+                                    promocao.getUnidadesVendidas();
+
+                            if (vendidas == null) {
+                                vendidas = 0;
+                            }
+
+                            promocao.setUnidadesVendidas(
+                                    vendidas +
+                                            item.quantidade()
+                            );
+
+                            BigDecimal receitaAtual =
+                                    promocao.getReceitaGerada();
+
+                            if (receitaAtual == null) {
+                                receitaAtual =
+                                        BigDecimal.ZERO;
+                            }
+
+                            BigDecimal receitaVenda =
+                                    precoAplicado.multiply(
+                                            BigDecimal.valueOf(
+                                                    item.quantidade()
+                                            )
+                                    );
+
+                            promocao.setReceitaGerada(
+                                    receitaAtual.add(
+                                            receitaVenda
+                                    )
+                            );
+
+                    promocaoRepository.save(promocao);
+
+                    if (promocao.getMetaUnidades() != null
+                            && promocao.getUnidadesVendidas()
+                            >= promocao.getMetaUnidades()) {
+
+                        promocaoService.finalizarMetaAtingida(
+                                promocao,
+                                produto
+                        );
+                    }
+
+                        });
+
+            }
+
+            produto.setEstoqueAtual(
+                    produto.getEstoqueAtual()
+                            - item.quantidade());
+
+            produto.setDataAtualizacao(
+                    LocalDateTime.now());
+
+            produtoRepository.save(
+                    produto);
+            MovimentacaoEstoque movimentacao = new MovimentacaoEstoque();
+
+            movimentacao.setProduto(
+                    produto);
+
+            movimentacao.setProdutoNome(
+                    produto.getNome());
+
+            movimentacao.setTipo(
+                    "saida");
+
+            movimentacao.setQuantidade(
+                    item.quantidade());
+
+            movimentacao.setPrecoCompra(
+                    BigDecimal.ZERO);
+
+            movimentacao.setUsuario(
+                    usuarioLogado);
+
+            movimentacao.setTenant(
+                    usuarioLogado.getTenant());
+
+            movimentacao.setDataMovimentacao(
+                    LocalDateTime.now());
+
+            movimentacaoRepository.save(
+                    movimentacao);
+
+        }
+
+        auditoriaService.registrar(
+                usuarioLogado.getTenant().getId(),
+                usuarioLogado.getId(),
+                usuarioLogado.getNome(),
+                "VENDA_CRIADA",
+                "Venda",
+                vendaSalva.getId().toString(),
+                "Venda criada no valor de R$ "
+                        + vendaSalva.getValorTotal()
+        );
+
+        return vendaSalva;
+    }
+
+    @Transactional
+    public void cancelarVenda(
+            UUID vendaId,
+            CancelarVendaRequest request) {
+
+        Usuario usuarioLogado =
+                obterUsuarioLogado();
+
+        if (usuarioLogado == null) {
+
+            throw new ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED,
+                    "Usuário não autenticado");
+        }
+
+        Venda venda = vendaRepository
+                .findByIdAndTenantId(
+                        vendaId,
+                        usuarioLogado
+                                .getTenant()
+                                .getId()
+                )
+                .orElseThrow(() ->
+                        new RecursoNaoEncontradoException(
+                                "Venda não encontrada."
+                        ));
+
+        if ("cancelada".equals(
+                venda.getStatus())) {
+
+            throw new RegraNegocioException(
+                    "Venda já cancelada."
+            );
+
+        }
+
+        if (venda.getDataVenda()
+                .isBefore(
+                        LocalDateTime.now()
+                                .minusHours(24))) {
+
+            throw new RegraNegocioException(
+                    "Esta venda não pode mais ser cancelada. Prazo máximo excedido."
+            );
+        }
+
+        venda.setStatus(
+                "cancelada");
+
+        venda.setMotivoCancelamento(
+                request.motivo());
+
+        venda.setDataCancelamento(
+                LocalDateTime.now());
+
+        venda.setUsuarioCancelamento(
+                usuarioLogado);
+
+        List<ItemVenda> itensVenda = itemVendaRepository
+                .findByVendaId(
+                        venda.getId());
+        for (ItemVenda item : itensVenda) {
+
+            Produto produto = item.getProduto();
+
+            produto.setEstoqueAtual(
+                    produto.getEstoqueAtual()
+                            + item.getQuantidade());
+
+            produto.setDataAtualizacao(
+                    LocalDateTime.now());
+
+            produtoRepository.save(
+                    produto);
+
+            MovimentacaoEstoque movimentacao = new MovimentacaoEstoque();
+
+            movimentacao.setProduto(
+                    produto);
+
+            movimentacao.setProdutoNome(
+                    produto.getNome());
+
+            movimentacao.setTipo(
+                    "ajuste");
+
+            movimentacao.setQuantidade(
+                    item.getQuantidade());
+
+            movimentacao.setPrecoCompra(
+                    BigDecimal.ZERO);
+
+            movimentacao.setObservacao(
+                    "Estorno de venda cancelada");
+
+            movimentacao.setUsuario(
+                    usuarioLogado);
+
+            movimentacao.setTenant(
+                    usuarioLogado.getTenant());
+
+            movimentacao.setDataMovimentacao(
+                    LocalDateTime.now());
+
+            movimentacaoRepository.save(
+                    movimentacao);
+        }
+        vendaRepository.save(
+                venda);
+
+        auditoriaService.registrar(
+                usuarioLogado.getTenant().getId(),
+                usuarioLogado.getId(),
+                usuarioLogado.getNome(),
+                "VENDA_CANCELADA",
+                "Venda",
+                venda.getId().toString(),
+                "Venda cancelada. Motivo: "
+                        + request.motivo()
+        );
+    }
+
+    public List<VendaResponse> listar() {
+
+        Usuario usuarioLogado =
+                obterUsuarioLogado();
+
+        if (usuarioLogado == null) {
+
+            throw new ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED,
+                    "Usuário não autenticado");
+        }
+
+        return vendaRepository
+                .findByTenantId(
+                        usuarioLogado
+                                .getTenant()
+                                .getId())
+                .stream()
+                .map(venda -> new VendaResponse(
+                        venda.getId(),
+                        venda.getDataVenda(),
+                        venda.getFormaPagamento(),
+                        venda.getValorTotal(),
+                        venda.getQuantidadeItens(),
+                        venda.getClienteNome(),
+                        venda.getStatus(),
+                        venda.getUsuario().getNome()))
+                .toList();
+    }
+
+    public VendaDetalhesResponse buscarPorId(
+            UUID vendaId) {
+
+        Usuario usuarioLogado =
+                obterUsuarioLogado();
+
+        if (usuarioLogado == null) {
+
+            throw new ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED,
+                    "Usuário não autenticado");
+        }
+
+        Venda venda =
+                vendaRepository
+                        .findByIdAndTenantId(
+                                vendaId,
+                                usuarioLogado
+                                        .getTenant()
+                                        .getId()
+                        )
+                        .orElseThrow(() ->
+                                new RecursoNaoEncontradoException(
+                                        "Venda não encontrada."
+                                ));
+
+        List<ItemVendaResponse> itens =
+                itemVendaRepository
+                        .findByVendaId(vendaId)
+                        .stream()
+                        .map(item ->
+                                new ItemVendaResponse(
+                                        item.getProduto().getId(),
+                                        item.getProdutoNome(),
+                                        item.getQuantidade(),
+                                        item.getSubtotal(),
+                                        item.getPromocaoAplicada()))
+                        .toList();
+
+        return new VendaDetalhesResponse(
+                venda.getId(),
+                venda.getDataVenda(),
+                venda.getFormaPagamento(),
+                venda.getValorTotal(),
+                venda.getQuantidadeItens(),
+                venda.getClienteNome(),
+                venda.getStatus(),
+                venda.getMotivoCancelamento(),
+                venda.getDataCancelamento(),
+                venda.getUsuarioCancelamento() != null
+                        ? venda.getUsuarioCancelamento().getNome()
+                        : null,
+
+                venda.getUsuario() != null
+                        ? venda.getUsuario().getNome()
+                        : null,
+
+                itens);
+    }
+
+    private Usuario obterUsuarioLogado() {
+
+        Usuario usuarioLogado =
+                usuarioAutenticadoService
+                        .usuarioLogado();
+
+        if (usuarioLogado == null) {
+
+            throw new ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED,
+                    "Usuário não autenticado."
+            );
+
+        }
+
+        return usuarioLogado;
+
+    }
+
+}

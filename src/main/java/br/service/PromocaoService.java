@@ -1,0 +1,1050 @@
+package br.service;
+
+import br.dto.PromocaoMetrics;
+import br.dto.request.PromocaoRequest;
+import br.entity.Produto;
+import br.entity.Promocao;
+import br.entity.Usuario;
+import br.exception.RegraNegocioException;
+import br.repository.ProdutoRepository;
+import br.repository.PromocaoRepository;
+import br.security.UsuarioAutenticadoService;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+
+import java.time.LocalDate;
+import java.util.List;
+import java.time.LocalDateTime;
+import java.util.UUID;
+import java.math.BigDecimal;
+import br.dto.response.ProdutoPromocaoResponse;
+import br.repository.MovimentacaoEstoqueRepository;
+import br.entity.MovimentacaoEstoque;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+
+import br.dto.response.PromocaoPainelResponse;
+import org.springframework.web.server.ResponseStatusException;
+
+
+@Service
+public class PromocaoService {
+
+    private final PromocaoRepository promocaoRepository;
+    private final UsuarioAutenticadoService usuarioAutenticadoService;
+    private final ProdutoRepository produtoRepository;
+    private final MovimentacaoEstoqueRepository movimentacaoEstoqueRepository;
+    private final AuditoriaService auditoriaService;
+
+    public PromocaoService(
+            PromocaoRepository promocaoRepository,
+            ProdutoRepository produtoRepository,
+            UsuarioAutenticadoService usuarioAutenticadoService,
+            MovimentacaoEstoqueRepository movimentacaoEstoqueRepository,
+            AuditoriaService auditoriaService) {
+
+        this.promocaoRepository = promocaoRepository;
+        this.produtoRepository = produtoRepository;
+        this.usuarioAutenticadoService = usuarioAutenticadoService;
+        this.movimentacaoEstoqueRepository = movimentacaoEstoqueRepository;
+        this.auditoriaService = auditoriaService;
+    }
+
+    public List<Promocao> listar() {
+
+        Usuario usuarioLogado =
+                obterUsuarioLogado();
+
+        return promocaoRepository
+                .findByTenantAndAtivaTrue(
+                        usuarioLogado.getTenant()
+                );
+    }
+
+    public List<Promocao> listarAtivas() {
+
+        Usuario usuarioLogado =
+                obterUsuarioLogado();
+
+        return promocaoRepository
+                .findByTenantAndAtivaTrue(
+                        usuarioLogado.getTenant()
+                );
+    }
+
+    public Promocao buscarPorId(
+            UUID id) {
+
+        Usuario usuarioLogado =
+                obterUsuarioLogado();
+
+        Promocao promocao =
+                promocaoRepository
+                        .findByIdAndTenantId(
+                                id,
+                                usuarioLogado
+                                        .getTenant()
+                                        .getId()
+                        )
+                        .orElseThrow(
+                                () -> new RegraNegocioException(
+                                        "Promoção não encontrada."
+                                )
+                        );
+
+        return promocao;
+    }
+
+    @Transactional
+    public Promocao criarPromocao(
+            PromocaoRequest request) {
+
+        Usuario usuarioLogado =
+                obterUsuarioLogado();
+
+        Produto produto =
+                produtoRepository
+                        .findByIdAndTenantId(
+                                request.produtoId(),
+                                usuarioLogado
+                                        .getTenant()
+                                        .getId()
+                        )
+                        .orElseThrow(() ->
+                                new RegraNegocioException(
+                                        "Produto não encontrado."
+                                ));
+
+
+        promocaoRepository
+                .findByProdutoAndAtivaTrue(
+                        produto
+                )
+                .ifPresent(
+                        promocao -> {
+                            throw new RegraNegocioException(
+                                    "Já existe uma promoção ativa para este produto."
+                            );
+                        }
+                );
+
+        List<MovimentacaoEstoque> movimentacoes =
+                movimentacaoEstoqueRepository
+                        .findByTenantId(
+                                usuarioLogado
+                                        .getTenant()
+                                        .getId()
+                        );
+
+        long diasEstoque =
+                calcularDiasEstoque(
+                        produto,
+                        movimentacoes
+                );
+
+        PromocaoMetrics metrics =
+                calcularMetrics(
+                        produto,
+                        movimentacoes,
+                        diasEstoque
+                );
+
+        BigDecimal precoPromocional =
+                calcularPrecoPromocional(
+                        produto.getPrecoVenda(),
+                        metrics.percentualDesconto()
+                );
+
+
+        if (Boolean.FALSE.equals(
+                produto.getAtivo())) {
+
+            throw new RegraNegocioException(
+                    "Não é possível criar promoção para produto inativo."
+            );
+        }
+
+
+        Promocao promocao =
+                new Promocao();
+
+        Integer estoqueInicio =
+                produto.getEstoqueAtual();
+
+        Integer metaUnidades =
+                (int) Math.ceil(
+                        estoqueInicio * 0.5
+                );
+
+        promocao.setEstoqueInicio(
+                estoqueInicio
+        );
+
+        promocao.setMetaUnidades(
+                metaUnidades
+        );
+
+        promocao.setUnidadesVendidas(
+                0
+        );
+
+        promocao.setReceitaGerada(
+                BigDecimal.ZERO
+        );
+
+        promocao.setProduto(
+                produto);
+
+        promocao.setPrecoOriginal(
+                produto.getPrecoVenda());
+
+        promocao.setPrecoPromocional(
+                precoPromocional);
+
+        promocao.setPercentualDesconto(
+                BigDecimal.valueOf(
+                        metrics.percentualDesconto()
+                ));
+
+        promocao.setMotivo(
+                metrics.motivo());
+
+        promocao.setDataInicio(
+                LocalDateTime.now());
+
+        promocao.setDataCriacao(
+                LocalDateTime.now());
+
+        promocao.setAtiva(true);
+
+        promocao.setTenant(
+                usuarioLogado.getTenant());
+
+        produto.setPromocaoAtiva(
+                true);
+
+        produto.setPrecoPromocional(
+                precoPromocional);
+
+        produto.setPromocaoMotivo(
+                metrics.motivo());
+
+        produto.setDataInicioPromocao(
+                LocalDate.now());
+
+        produto.setDataFimPromocao(
+                null);
+
+        produtoRepository.save(
+                produto);
+
+        Promocao promocaoSalva =
+                promocaoRepository.save(
+                        promocao
+                );
+
+        auditoriaService.registrar(
+                usuarioLogado.getTenant().getId(),
+                usuarioLogado.getId(),
+                usuarioLogado.getNome(),
+                "PROMOCAO_CRIADA",
+                "Promocao",
+                promocaoSalva.getId().toString(),
+                "Promoção criada para o produto "
+                        + produto.getNome()
+                        + " com desconto de "
+                        + promocaoSalva.getPercentualDesconto()
+                        + "%"
+        );
+
+        return promocaoSalva;
+
+
+    }
+
+    @Transactional
+    public void finalizarMetaAtingida(
+            Promocao promocao,
+            Produto produto) {
+
+        promocao.setAtiva(false);
+
+        promocao.setDataFim(
+                LocalDateTime.now()
+        );
+
+        produto.setPromocaoAtiva(false);
+
+        produto.setPrecoPromocional(null);
+
+        produto.setDataInicioPromocao(null);
+
+        produto.setDataFimPromocao(null);
+
+        produto.setPromocaoMotivo(
+                "Meta atingida");
+
+        produtoRepository.save(produto);
+
+        promocaoRepository.save(promocao);
+
+        Usuario usuarioLogado =
+                obterUsuarioLogado();
+
+        auditoriaService.registrar(
+                usuarioLogado.getTenant().getId(),
+                usuarioLogado.getId(),
+                usuarioLogado.getNome(),
+                "PROMOCAO_FINALIZADA_META",
+                "Promocao",
+                promocao.getId().toString(),
+                "Promoção do produto "
+                        + produto.getNome()
+                        + " finalizada automaticamente ao atingir a meta."
+        );
+    }
+
+    @Transactional
+    public Promocao encerrarPromocao(
+            UUID id) {
+
+        Promocao promocao =
+                buscarPorId(id);
+
+        promocao.setAtiva(false);
+
+        promocao.setDataFim(
+                LocalDateTime.now());
+
+        Produto produto =
+                promocao.getProduto();
+
+        produto.setPromocaoAtiva(false);
+
+        produto.setPrecoPromocional(
+                null);
+
+        produto.setPromocaoMotivo(
+                null);
+
+        produto.setDataFimPromocao(
+                LocalDate.now());
+
+        produtoRepository.save(
+                produto);
+
+        Promocao promocaoEncerrada =
+                promocaoRepository.save(
+                        promocao
+                );
+
+        Usuario usuarioLogado =
+                obterUsuarioLogado();
+
+        auditoriaService.registrar(
+                usuarioLogado.getTenant().getId(),
+                usuarioLogado.getId(),
+                usuarioLogado.getNome(),
+                "PROMOCAO_ENCERRADA",
+                "Promocao",
+                promocaoEncerrada.getId().toString(),
+                "Promoção encerrada para o produto "
+                        + produto.getNome()
+        );
+
+        return promocaoEncerrada;
+
+    }
+
+    public List<Promocao> listarPorProduto(
+            UUID produtoId) {
+
+        Usuario usuarioLogado =
+                obterUsuarioLogado();
+
+        Produto produto =
+                produtoRepository
+                        .findByIdAndTenantId(
+                                produtoId,
+                                usuarioLogado
+                                        .getTenant()
+                                        .getId()
+                        )
+                        .orElseThrow(() ->
+                                new RegraNegocioException(
+                                        "Produto não encontrado."
+                                ));
+
+        if (!produto.getTenant()
+                .getId()
+                .equals(
+                        usuarioLogado
+                                .getTenant()
+                                .getId()
+                )) {
+
+            throw new RegraNegocioException(
+                    "Você não possui acesso a este produto."
+            );
+        }
+
+        return promocaoRepository
+                .findByProduto(produto);
+    }
+
+    public List<ProdutoPromocaoResponse>
+    listarCandidatos() {
+
+        Usuario usuarioLogado =
+                obterUsuarioLogado();
+
+        List<Produto> produtos =
+                produtoRepository
+                        .findByTenantId(
+                                usuarioLogado
+                                        .getTenant()
+                                        .getId()
+                        );
+
+        List<MovimentacaoEstoque> movimentacoes =
+                movimentacaoEstoqueRepository
+                        .findByTenantId(
+                                usuarioLogado
+                                        .getTenant()
+                                        .getId()
+                        );
+
+        List<ProdutoPromocaoResponse> candidatos =
+                new ArrayList<>();
+
+        for (Produto produto : produtos) {
+
+            long diasEstoque =
+                    calcularDiasEstoque(
+                            produto,
+                            movimentacoes
+                    );
+
+            PromocaoMetrics metrics =
+                    calcularMetrics(
+                            produto,
+                            movimentacoes,
+                            diasEstoque
+                    );
+
+            boolean candidatoPromocao =
+                    deveSerCandidatoPromocao(
+                            produto,
+                            metrics.diasEstoque(),
+                            metrics.percentualGiro()
+                    );
+
+            if (candidatoPromocao) {
+
+                BigDecimal precoPromocional =
+                        calcularPrecoPromocional(
+                                produto.getPrecoVenda(),
+                                metrics.percentualDesconto()
+                        );
+
+                candidatos.add(
+                        montarProdutoPromocao(
+                                produto,
+                                metrics,
+                                produto.getPromocaoAtiva(),
+                                precoPromocional
+                        )
+                );
+
+            }
+
+        }
+
+        return candidatos;
+
+    }
+
+    public PromocaoPainelResponse
+    listarPainel() {
+        Usuario usuarioLogado =
+                obterUsuarioLogado();
+
+        List<MovimentacaoEstoque> movimentacoes =
+                movimentacaoEstoqueRepository
+                        .findByTenantId(
+                                usuarioLogado
+                                        .getTenant()
+                                        .getId()
+                        );
+
+        List<ProdutoPromocaoResponse> ativas =
+                new ArrayList<>();
+
+        for (Promocao promocao : listarAtivas()) {
+
+            Produto produto =
+                    promocao.getProduto();
+
+            PromocaoMetrics metrics =
+                    calcularMetricsBasicas(
+                            produto,
+                            movimentacoes
+                    );
+
+            PromocaoMetrics metricsPromocao =
+                    new PromocaoMetrics(
+                            metrics.quantidadeComprada(),
+                            metrics.quantidadeVendida(),
+                            0,
+                            0,
+                            promocao.getMotivo(),
+                            "ATIVA",
+                            promocao.getPercentualDesconto()
+                                    .intValue(),
+                            promocao.getMetaUnidades()
+                    );
+
+            ativas.add(
+                    montarProdutoPromocao(
+                            produto,
+                            metricsPromocao,
+                            true,
+                            promocao.getPrecoPromocional()
+                    )
+            );
+
+
+        }
+
+        List<ProdutoPromocaoResponse> pendentes =
+                listarCandidatos();
+
+        pendentes.removeIf(
+                candidato ->
+                        ativas.stream()
+                                .anyMatch(
+                                        ativa ->
+                                                ativa.id()
+                                                        .equals(
+                                                                candidato.id()
+                                                        )
+                                )
+        );
+
+        return new PromocaoPainelResponse(
+                pendentes,
+                ativas
+        );
+
+    }
+
+    private int calcularQuantidadeComprada(
+            UUID produtoId,
+            List<MovimentacaoEstoque> movimentacoes
+    ) {
+
+        return movimentacoes
+                .stream()
+                .filter(
+                        mov ->
+                                mov.getProduto()
+                                        .getId()
+                                        .equals(produtoId)
+                )
+                .filter(
+                        mov ->
+                                "entrada".equalsIgnoreCase(
+                                        mov.getTipo()
+                                )
+                )
+                .mapToInt(
+                        MovimentacaoEstoque::getQuantidade
+                )
+                .sum();
+
+    }
+
+    private int calcularQuantidadeVendida(
+            UUID produtoId,
+            List<MovimentacaoEstoque> movimentacoes
+    ) {
+
+        return movimentacoes
+                .stream()
+                .filter(
+                        mov ->
+                                mov.getProduto()
+                                        .getId()
+                                        .equals(produtoId)
+                )
+                .filter(
+                        mov ->
+                                "saida".equalsIgnoreCase(
+                                        mov.getTipo()
+                                )
+                )
+                .mapToInt(
+                        MovimentacaoEstoque::getQuantidade
+                )
+                .sum();
+
+    }
+
+    private BigDecimal calcularReceitaPotencial(
+            BigDecimal precoPromocional,
+            Integer metaSugestao
+    ) {
+
+        return precoPromocional.multiply(
+                BigDecimal.valueOf(
+                        metaSugestao
+                )
+        );
+
+    }
+
+    private BigDecimal calcularEconomiaUnitaria(
+            BigDecimal precoOriginal,
+            BigDecimal precoPromocional
+    ) {
+
+        return precoOriginal.subtract(
+                precoPromocional
+        );
+
+    }
+
+    private BigDecimal calcularImpactoFinanceiro(
+            BigDecimal economiaUnitaria,
+            Integer estoqueAtual
+    ) {
+
+        return economiaUnitaria.multiply(
+                BigDecimal.valueOf(
+                        estoqueAtual
+                )
+        );
+
+    }
+
+    private ProdutoPromocaoResponse montarProdutoPromocao(
+            Produto produto,
+            PromocaoMetrics metrics,
+            Boolean promocaoAtiva,
+            BigDecimal precoPromocional
+    ) {
+
+        BigDecimal receitaPotencial =
+                calcularReceitaPotencial(
+                        precoPromocional,
+                        metrics.metaSugestao()
+                );
+
+        BigDecimal economiaUnitaria =
+                calcularEconomiaUnitaria(
+                        produto.getPrecoVenda(),
+                        precoPromocional
+                );
+
+        BigDecimal impactoFinanceiro =
+                calcularImpactoFinanceiro(
+                        economiaUnitaria,
+                        produto.getEstoqueAtual()
+                );
+
+        boolean promocaoEficiente =
+                calcularPromocaoEficiente(
+                        metrics.percentualGiro()
+                );
+
+        String descricaoPromocao =
+                calcularDescricaoPromocao(
+                        metrics.diasEstoque(),
+                        metrics.percentualGiro()
+                );
+
+        return new ProdutoPromocaoResponse(
+                produto.getId(),
+                produto.getNome(),
+                produto.getEstoqueAtual(),
+                metrics.percentualGiro(),
+                (int) metrics.diasEstoque(),
+                promocaoAtiva,
+                metrics.prioridade(),
+                metrics.motivo(),
+                metrics.percentualDesconto(),
+                metrics.metaSugestao(),
+                precoPromocional,
+                receitaPotencial,
+                economiaUnitaria,
+                impactoFinanceiro,
+                metrics.quantidadeComprada(),
+                metrics.quantidadeVendida(),
+                promocaoEficiente,
+                descricaoPromocao
+        );
+
+    }
+
+    private String calcularMotivo(
+            long diasEstoque,
+            int percentualGiro
+    ) {
+
+        if (diasEstoque >= 30
+                && percentualGiro < 40) {
+
+            return "Crítico";
+
+        }
+
+        if (diasEstoque >= 30) {
+
+            return "Estoque Parado";
+
+        }
+
+        return "Baixo Giro";
+
+    }
+
+    private int calcularPercentualDesconto(
+            String motivo
+    ) {
+
+        if ("Crítico".equals(motivo)) {
+
+            return 20;
+
+        }
+
+        if ("Estoque Parado".equals(motivo)) {
+
+            return 15;
+
+        }
+
+        return 10;
+
+    }
+
+    private String calcularPrioridade(
+            int percentualGiro
+    ) {
+
+        return percentualGiro < 40
+                ? "ALTA"
+                : "MEDIA";
+
+    }
+
+    private int calcularMetaSugestao(
+            Integer estoqueAtual
+    ) {
+
+        return (int) Math.ceil(
+                estoqueAtual * 0.5
+        );
+
+    }
+
+    private BigDecimal aplicarArredondamentoComercial(
+            BigDecimal valor
+    ) {
+
+        BigDecimal inteiro =
+                BigDecimal.valueOf(
+                        valor.intValue()
+                );
+
+        BigDecimal decimal =
+                valor.subtract(inteiro);
+
+        if (
+                decimal.compareTo(
+                        new BigDecimal("0.50")
+                ) <= 0
+        ) {
+
+            return inteiro.add(
+                    new BigDecimal("0.50")
+            );
+
+        }
+
+        return inteiro.add(
+                BigDecimal.ONE
+        );
+
+    }
+
+    private BigDecimal aplicarArredondamentoPromocional(
+            BigDecimal valor
+    ) {
+
+        BigDecimal inteiro =
+                BigDecimal.valueOf(
+                        valor.intValue()
+                );
+
+        BigDecimal decimal =
+                valor.subtract(
+                        inteiro
+                );
+
+        if (
+                decimal.compareTo(
+                        new BigDecimal("0.50")
+                ) < 0
+        ) {
+
+            return inteiro;
+
+        }
+
+        return inteiro.add(
+                new BigDecimal("0.50")
+        );
+
+    }
+
+    private BigDecimal calcularPrecoPromocional(
+            BigDecimal precoVenda,
+            Integer percentualDesconto
+    ) {
+
+        BigDecimal valor =
+                precoVenda
+                        .multiply(
+                                BigDecimal.valueOf(
+                                        100 - percentualDesconto
+                                )
+                        )
+                        .divide(
+                                BigDecimal.valueOf(100),
+                                2,
+                                java.math.RoundingMode.HALF_UP
+                        );
+
+        return aplicarArredondamentoPromocional(
+                valor
+        );
+
+    }
+
+    private boolean deveSerCandidatoPromocao(
+            Produto produto,
+            long diasEstoque,
+            int percentualGiro
+    ) {
+
+        return Boolean.TRUE.equals(
+                produto.getAtivo()
+        )
+                && produto.getEstoqueAtual() > 0
+                && !Boolean.TRUE.equals(
+                produto.getPromocaoAtiva()
+        )
+                && (
+                diasEstoque >= 30
+                        || percentualGiro < 40
+        );
+
+    }
+
+    private PromocaoMetrics calcularMetricsBasicas(
+            Produto produto,
+            List<MovimentacaoEstoque> movimentacoes
+    ) {
+
+        int quantidadeComprada =
+                calcularQuantidadeComprada(
+                        produto.getId(),
+                        movimentacoes
+                );
+
+        int quantidadeVendida =
+                calcularQuantidadeVendida(
+                        produto.getId(),
+                        movimentacoes
+                );
+
+        int percentualGiro =
+                calcularPercentualGiro(
+                        quantidadeComprada,
+                        quantidadeVendida
+                );
+
+        return new PromocaoMetrics(
+                quantidadeComprada,
+                quantidadeVendida,
+                percentualGiro,
+                0,
+                "",
+                "",
+                0,
+                0
+        );
+
+    }
+
+    private PromocaoMetrics calcularMetrics(
+            Produto produto,
+            List<MovimentacaoEstoque> movimentacoes,
+            long diasEstoque
+    ) {
+
+        PromocaoMetrics basicas =
+                calcularMetricsBasicas(
+                        produto,
+                        movimentacoes
+                );
+
+        String motivo =
+                calcularMotivo(
+                        diasEstoque,
+                        basicas.percentualGiro()
+                );
+
+        return new PromocaoMetrics(
+                basicas.quantidadeComprada(),
+                basicas.quantidadeVendida(),
+                basicas.percentualGiro(),
+                diasEstoque,
+                motivo,
+                calcularPrioridade(
+                        basicas.percentualGiro()
+                ),
+                calcularPercentualDesconto(
+                        motivo
+                ),
+                calcularMetaSugestao(
+                        produto.getEstoqueAtual()
+                )
+        );
+
+    }
+
+    private long calcularDiasEstoque(
+            Produto produto,
+            List<MovimentacaoEstoque> movimentacoes
+    ) {
+
+        LocalDateTime ultimaEntrada =
+                movimentacoes
+                        .stream()
+                        .filter(
+                                mov ->
+                                        mov.getProduto()
+                                                .getId()
+                                                .equals(
+                                                        produto.getId()
+                                                )
+                        )
+                        .filter(
+                                mov ->
+                                        "entrada".equalsIgnoreCase(
+                                                mov.getTipo()
+                                        )
+                        )
+                        .map(
+                                MovimentacaoEstoque::getDataMovimentacao
+                        )
+                        .max(
+                                LocalDateTime::compareTo
+                        )
+                        .orElse(null);
+
+        if (ultimaEntrada == null) {
+
+            return 0;
+
+        }
+
+        return ChronoUnit.DAYS.between(
+                ultimaEntrada.toLocalDate(),
+                LocalDate.now()
+        );
+
+    }
+
+    private int calcularPercentualGiro(
+            int quantidadeComprada,
+            int quantidadeVendida
+    ) {
+
+        if (quantidadeComprada <= 0) {
+
+            return 0;
+
+        }
+
+        return (quantidadeVendida * 100)
+                / quantidadeComprada;
+
+    }
+
+    private boolean calcularPromocaoEficiente(
+            int percentualGiro
+    ) {
+
+        return percentualGiro >= 70;
+
+    }
+
+    private String calcularDescricaoPromocao(
+            long diasEstoque,
+            int percentualGiro
+    ) {
+
+        if (
+                diasEstoque >= 30
+                        && percentualGiro < 40
+        ) {
+
+            return String.format(
+                    "Produto com baixo giro (%d%%) e %d dias em estoque.",
+                    percentualGiro,
+                    diasEstoque
+            );
+
+        }
+
+        if (diasEstoque >= 30) {
+
+            return String.format(
+                    "Produto parado há %d dias.",
+                    diasEstoque
+            );
+
+        }
+
+        return String.format(
+                "Giro baixo (%d%% das unidades vendidas).",
+                percentualGiro
+        );
+
+    }
+
+    private Usuario obterUsuarioLogado() {
+
+        Usuario usuarioLogado =
+                usuarioAutenticadoService
+                        .usuarioLogado();
+
+        if (usuarioLogado == null) {
+
+            throw new ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED,
+                    "Usuário não autenticado."
+            );
+
+        }
+
+        return usuarioLogado;
+
+    }
+
+}
