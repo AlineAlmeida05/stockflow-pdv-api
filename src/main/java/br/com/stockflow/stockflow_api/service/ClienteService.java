@@ -7,16 +7,13 @@ import br.com.stockflow.stockflow_api.entity.Usuario;
 import br.com.stockflow.stockflow_api.exception.RecursoNaoEncontradoException;
 import br.com.stockflow.stockflow_api.repository.ClienteRepository;
 import br.com.stockflow.stockflow_api.security.UsuarioAutenticadoService;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
-
 import br.com.stockflow.stockflow_api.dto.response.ClienteResumoResponse;
 import br.com.stockflow.stockflow_api.entity.Fiado;
 import br.com.stockflow.stockflow_api.entity.Pagamento;
@@ -27,23 +24,23 @@ import br.com.stockflow.stockflow_api.repository.PagamentoRepository;
 public class ClienteService {
 
     private final ClienteRepository clienteRepository;
-
     private final UsuarioAutenticadoService usuarioAutenticadoService;
-
     private final FiadoRepository fiadoRepository;
-
     private final PagamentoRepository pagamentoRepository;
+    private final AuditoriaService auditoriaService;
 
     public ClienteService(
             ClienteRepository clienteRepository,
             FiadoRepository fiadoRepository,
             PagamentoRepository pagamentoRepository,
-            UsuarioAutenticadoService usuarioAutenticadoService) {
+            UsuarioAutenticadoService usuarioAutenticadoService,
+            AuditoriaService auditoriaService) {
 
         this.clienteRepository = clienteRepository;
         this.fiadoRepository = fiadoRepository;
         this.pagamentoRepository = pagamentoRepository;
         this.usuarioAutenticadoService = usuarioAutenticadoService;
+        this.auditoriaService = auditoriaService;
     }
 
     public ClienteResponse salvar(
@@ -85,9 +82,20 @@ public class ClienteService {
         cliente.setTenant(
                 usuarioLogado.getTenant());
 
-        return montarResponse(
-                clienteRepository.save(cliente)
+        Cliente clienteSalvo =
+                clienteRepository.save(cliente);
+
+        auditoriaService.registrar(
+                usuarioLogado.getTenant().getId(),
+                usuarioLogado.getId(),
+                usuarioLogado.getNome(),
+                "CLIENTE_CRIADO",
+                "Cliente",
+                clienteSalvo.getId().toString(),
+                "Cliente " + clienteSalvo.getNome() + " criado."
         );
+
+        return montarResponse(clienteSalvo);
     }
 
     public List<ClienteResponse> listar() {
@@ -136,9 +144,21 @@ public class ClienteService {
         cliente.setObservacao(
                 request.observacao());
 
-        return montarResponse(
-                clienteRepository.save(cliente)
+        Cliente clienteAtualizado =
+                clienteRepository.save(cliente);
+
+        auditoriaService.registrar(
+                usuarioLogado.getTenant().getId(),
+                usuarioLogado.getId(),
+                usuarioLogado.getNome(),
+                "CLIENTE_EDITADO",
+                "Cliente",
+                clienteAtualizado.getId().toString(),
+                "Cliente " + clienteAtualizado.getNome() + " atualizado."
         );
+
+        return montarResponse(clienteAtualizado);
+
     }
 
     public void inativar(
@@ -163,6 +183,16 @@ public class ClienteService {
 
         clienteRepository.save(
                 cliente);
+
+        auditoriaService.registrar(
+                usuarioLogado.getTenant().getId(),
+                usuarioLogado.getId(),
+                usuarioLogado.getNome(),
+                "CLIENTE_INATIVADO",
+                "Cliente",
+                cliente.getId().toString(),
+                "Cliente " + cliente.getNome() + " inativado."
+        );
     }
 
     public ClienteResumoResponse obterResumo(
@@ -315,6 +345,16 @@ public class ClienteService {
         cliente.setAtivo(true);
 
         clienteRepository.save(cliente);
+
+        auditoriaService.registrar(
+                usuarioLogado.getTenant().getId(),
+                usuarioLogado.getId(),
+                usuarioLogado.getNome(),
+                "CLIENTE_REATIVADO",
+                "Cliente",
+                cliente.getId().toString(),
+                "Cliente " + cliente.getNome() + " reativado."
+        );
 
     }
 

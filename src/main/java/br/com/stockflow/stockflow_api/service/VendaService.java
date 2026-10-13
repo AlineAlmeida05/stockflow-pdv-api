@@ -45,6 +45,7 @@ public class VendaService {
     private final PromocaoRepository promocaoRepository;
     private final PromocaoService promocaoService;
     private final PagamentoRepository pagamentoRepository;
+    private final AuditoriaService auditoriaService;
 
     public VendaService(
             VendaRepository vendaRepository,
@@ -56,7 +57,8 @@ public class VendaService {
             ClienteRepository clienteRepository,
             PromocaoRepository promocaoRepository,
             PromocaoService promocaoService,
-            PagamentoRepository pagamentoRepository) {
+            PagamentoRepository pagamentoRepository,
+            AuditoriaService auditoriaService) {
 
 
         this.vendaRepository = vendaRepository;
@@ -69,6 +71,7 @@ public class VendaService {
         this.promocaoRepository = promocaoRepository;
         this.promocaoService = promocaoService;
         this.pagamentoRepository = pagamentoRepository;
+        this.auditoriaService = auditoriaService;
 
     }
 
@@ -309,6 +312,19 @@ public class VendaService {
 
             fiadoRepository.save(
                     fiado);
+
+            auditoriaService.registrar(
+                    usuarioLogado.getTenant().getId(),
+                    usuarioLogado.getId(),
+                    usuarioLogado.getNome(),
+                    "FIADO_CRIADO",
+                    "Fiado",
+                    fiado.getId().toString(),
+                    "Fiado criado para "
+                            + cliente.getNome()
+                            + " no valor de R$ "
+                            + valorTotal
+            );
         }
 
         for (ItemVendaRequest item : request.itens()) {
@@ -467,6 +483,17 @@ public class VendaService {
 
         }
 
+        auditoriaService.registrar(
+                usuarioLogado.getTenant().getId(),
+                usuarioLogado.getId(),
+                usuarioLogado.getNome(),
+                "VENDA_CRIADA",
+                "Venda",
+                vendaSalva.getId().toString(),
+                "Venda criada no valor de R$ "
+                        + vendaSalva.getValorTotal()
+        );
+
         return vendaSalva;
     }
 
@@ -579,6 +606,17 @@ public class VendaService {
         }
         vendaRepository.save(
                 venda);
+
+        auditoriaService.registrar(
+                usuarioLogado.getTenant().getId(),
+                usuarioLogado.getId(),
+                usuarioLogado.getNome(),
+                "VENDA_CANCELADA",
+                "Venda",
+                venda.getId().toString(),
+                "Venda cancelada. Motivo: "
+                        + request.motivo()
+        );
     }
 
     public List<VendaResponse> listar() {

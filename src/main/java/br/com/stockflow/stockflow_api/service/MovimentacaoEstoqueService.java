@@ -16,7 +16,6 @@ import org.springframework.web.server.ResponseStatusException;
 import br.com.stockflow.stockflow_api.dto.response.MovimentacaoEstoqueResponse;
 import org.springframework.transaction.annotation.Transactional;
 import br.com.stockflow.stockflow_api.exception.RegraNegocioException;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
@@ -24,22 +23,20 @@ import java.math.RoundingMode;
 public class MovimentacaoEstoqueService {
 
         private final MovimentacaoEstoqueRepository repository;
-
         private final ProdutoRepository produtoRepository;
-
         private final UsuarioAutenticadoService usuarioAutenticadoService;
+        private final AuditoriaService auditoriaService;
 
         public MovimentacaoEstoqueService(
                         MovimentacaoEstoqueRepository repository,
                         ProdutoRepository produtoRepository,
-                        UsuarioAutenticadoService usuarioAutenticadoService) {
+                        UsuarioAutenticadoService usuarioAutenticadoService,
+                        AuditoriaService auditoriaService) {
 
                 this.repository = repository;
-
                 this.produtoRepository = produtoRepository;
-
                 this.usuarioAutenticadoService = usuarioAutenticadoService;
-
+                this.auditoriaService = auditoriaService;
         }
 
         @Transactional
@@ -137,6 +134,19 @@ public class MovimentacaoEstoqueService {
 
                         produtoRepository.save(
                                         produto);
+
+                        auditoriaService.registrar(
+                                usuarioLogado.getTenant().getId(),
+                                usuarioLogado.getId(),
+                                usuarioLogado.getNome(),
+                                "ENTRADA_ESTOQUE",
+                                "Produto",
+                                produto.getId().toString(),
+                                "Entrada de "
+                                        + request.quantidade()
+                                        + " unidade(s) no produto "
+                                        + produto.getNome()
+                        );
                                         
                 } else if ("saida".equals(request.tipo())) {
 
@@ -161,6 +171,19 @@ public class MovimentacaoEstoqueService {
                                 produto
                         );
 
+                        auditoriaService.registrar(
+                                usuarioLogado.getTenant().getId(),
+                                usuarioLogado.getId(),
+                                usuarioLogado.getNome(),
+                                "SAIDA_ESTOQUE",
+                                "Produto",
+                                produto.getId().toString(),
+                                "Saída manual de "
+                                        + request.quantidade()
+                                        + " unidade(s) do produto "
+                                        + produto.getNome()
+                        );
+
                 }
 
                 else if ("ajuste".equals(request.tipo())) {
@@ -177,7 +200,21 @@ public class MovimentacaoEstoqueService {
                                 produto
                         );
 
+                        auditoriaService.registrar(
+                                usuarioLogado.getTenant().getId(),
+                                usuarioLogado.getId(),
+                                usuarioLogado.getNome(),
+                                "AJUSTE_ESTOQUE",
+                                "Produto",
+                                produto.getId().toString(),
+                                "Estoque ajustado para "
+                                        + request.quantidade()
+                                        + " unidade(s) no produto "
+                                        + produto.getNome()
+                        );
+
                 }
+
 
                 MovimentacaoEstoque movimentacao = new MovimentacaoEstoque();
 
@@ -208,9 +245,11 @@ public class MovimentacaoEstoqueService {
                 movimentacao.setDataMovimentacao(
                                 LocalDateTime.now());
 
-                return repository.save(
+                MovimentacaoEstoque movimentacaoSalva =
+                        repository.save(
                                 movimentacao);
 
+                return movimentacaoSalva;
         }
 
         public List<MovimentacaoEstoqueResponse> listar() {
