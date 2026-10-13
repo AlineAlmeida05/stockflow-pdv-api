@@ -1,0 +1,26 @@
+package br.dto.response;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.UUID;
+
+public record VendaResponse(
+
+        UUID id,
+
+        LocalDateTime dataVenda,
+
+        String formaPagamento,
+
+        BigDecimal valorTotal,
+
+        Integer quantidadeItens,
+
+        String clienteNome,
+
+        String status,
+
+        String usuarioNome
+
+) {
+}

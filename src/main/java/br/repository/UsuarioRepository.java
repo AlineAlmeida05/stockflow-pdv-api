@@ -1,0 +1,24 @@
+package br.repository;
+
+import br.entity.Usuario;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.UUID;
+import java.util.Optional;
+import java.util.List;
+
+public interface UsuarioRepository
+                extends JpaRepository<Usuario, UUID> {
+
+        Optional<Usuario> findByEmail(
+                        String email);
+
+        Optional<Usuario> findByEmailAndTenant_Slug(
+                        String email,
+                        String slug);
+
+        List<Usuario> findByTenantId(
+                        UUID tenantId);
+
+}
