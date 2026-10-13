@@ -1,69 +1,98 @@
 package br.com.stockflow.stockflow_api.config;
 
+import br.com.stockflow.stockflow_api.security.JwtAuthenticationFilter;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.web.cors.CorsConfigurationSource;
-
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.web.SecurityFilterChain;
-
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import java.util.List;
 
 @Configuration
+@EnableWebSecurity
+@EnableMethodSecurity
 public class SecurityConfig {
 
-        @Bean
-        SecurityFilterChain securityFilterChain(
-                        HttpSecurity http) throws Exception {
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
-                http
-                                .cors(Customizer.withDefaults())
-                                .csrf(csrf -> csrf.disable())
-                                .authorizeHttpRequests(auth -> auth
-                                                .anyRequest().permitAll());
+    public SecurityConfig(
+            JwtAuthenticationFilter jwtAuthenticationFilter) {
 
-                return http.build();
-        }
+        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+    }
 
-        @Bean
-        CorsConfigurationSource corsConfigurationSource() {
+    @Bean
+    SecurityFilterChain securityFilterChain(
+            HttpSecurity http) throws Exception {
 
-                CorsConfiguration configuration = new CorsConfiguration();
+        http
+                .cors(Customizer.withDefaults())
+                .csrf(csrf -> csrf.disable())
 
-                configuration.setAllowedOriginPatterns(
-                                List.of(
-                                                "http://localhost:4200",
-                                                "https://*.app.github.dev"));
+                .authorizeHttpRequests(auth -> auth
 
-                configuration.setAllowedMethods(
-                                List.of("*"));
+                        .requestMatchers(
+                                "/api/auth/login",
+                                "/api/auth/refresh",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html",
+                                "/v3/api-docs/**"
+                        ).permitAll()
 
-                configuration.setAllowedHeaders(
-                                List.of("*"));
+                        .anyRequest()
+                        .authenticated()
+                )
 
-                configuration.setAllowCredentials(
-                                true);
+                .addFilterBefore(
+                        jwtAuthenticationFilter,
+                        UsernamePasswordAuthenticationFilter.class
+                );
 
-                UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        return http.build();
+    }
 
-                source.registerCorsConfiguration(
-                                "/**",
-                                configuration);
+    @Bean
+    CorsConfigurationSource corsConfigurationSource() {
 
-                return source;
-        }
+        CorsConfiguration configuration =
+                new CorsConfiguration();
 
-        @Bean
-        PasswordEncoder passwordEncoder() {
+        configuration.setAllowedOriginPatterns(
+                List.of(
+                        "http://localhost:4200",
+                        "https://*.app.github.dev"
+                ));
 
-                return new BCryptPasswordEncoder();
+        configuration.setAllowedMethods(
+                List.of("*"));
 
-        }
+        configuration.setAllowedHeaders(
+                List.of("*"));
+
+        configuration.setAllowCredentials(
+                true);
+
+        UrlBasedCorsConfigurationSource source =
+                new UrlBasedCorsConfigurationSource();
+
+        source.registerCorsConfiguration(
+                "/**",
+                configuration);
+
+        return source;
+    }
+
+    @Bean
+    PasswordEncoder passwordEncoder() {
+
+        return new BCryptPasswordEncoder();
+    }
 }

@@ -6,6 +6,7 @@ import br.com.stockflow.stockflow_api.service.MarketingCampaignService;
 import java.util.List;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -17,6 +18,9 @@ public class MarketingCampaignController {
             marketingCampaignService;
 
     @PostMapping
+    @PreAuthorize(
+            "hasAnyRole('SUPER_ADMIN','PROPRIETARIO','SOCIO','GERENTE')"
+    )
     public MarketingCampaignResponse gerarCampanha(
 
             @Valid
@@ -33,6 +37,9 @@ public class MarketingCampaignController {
     }
 
     @GetMapping
+    @PreAuthorize(
+            "hasAnyRole('SUPER_ADMIN','PROPRIETARIO','SOCIO','GERENTE')"
+    )
     public List<MarketingCampaignResponse> listar() {
 
         return marketingCampaignService

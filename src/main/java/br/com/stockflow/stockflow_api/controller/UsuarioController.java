@@ -5,6 +5,7 @@ import br.com.stockflow.stockflow_api.security.UsuarioAutenticadoService;
 import br.com.stockflow.stockflow_api.service.UsuarioService;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -34,6 +35,7 @@ public class UsuarioController {
         }
 
         @GetMapping
+        @PreAuthorize("hasRole('SUPER_ADMIN')")
         public ResponseEntity<List<UsuarioResponse>> listarTodos() {
                 var usuario = usuarioAutenticadoService
                                 .usuarioLogado();
@@ -44,6 +46,7 @@ public class UsuarioController {
         }
 
         @PostMapping
+        @PreAuthorize("hasAnyRole('SUPER_ADMIN','PROPRIETARIO')")
         public ResponseEntity<UsuarioResponse> salvar(
                 @Valid
                 @RequestBody UsuarioCreateRequest request) {
@@ -55,18 +58,20 @@ public class UsuarioController {
         }
 
         @DeleteMapping("/{id}")
+        @PreAuthorize("hasRole('SUPER_ADMIN')")
         public ResponseEntity<Void> excluir(
-                        @PathVariable UUID id) {
+                @PathVariable UUID id) {
 
                 usuarioService.excluir(id);
 
                 return ResponseEntity
-                                .noContent()
-                                .build();
+                        .noContent()
+                        .build();
 
         }
 
         @PutMapping("/{id}")
+        @PreAuthorize("hasAnyRole('SUPER_ADMIN','PROPRIETARIO')")
         public ResponseEntity<UsuarioResponse> atualizar(
                 @PathVariable UUID id,
                 @Valid
@@ -83,8 +88,11 @@ public class UsuarioController {
 
 
         @GetMapping("/tenant/{tenantId}")
+        @PreAuthorize(
+                "hasAnyRole('SUPER_ADMIN')"
+        )
         public ResponseEntity<List<UsuarioResponse>> listarPorTenant(
-                        @PathVariable UUID tenantId) {
+                @PathVariable UUID tenantId) {
 
                 return ResponseEntity.ok(
                         usuarioService.listarPorTenant(
@@ -95,17 +103,16 @@ public class UsuarioController {
         }
 
         @PutMapping("/alterar-senha")
+        @PreAuthorize("isAuthenticated()")
         public ResponseEntity<Void> alterarSenha(
                 @Valid
                 @RequestBody AlterarSenhaRequest request) {
 
-                usuarioService.alterarSenha(
-                        request);
+                usuarioService.alterarSenha(request);
 
                 return ResponseEntity
                         .ok()
                         .build();
-
         }
 
 }

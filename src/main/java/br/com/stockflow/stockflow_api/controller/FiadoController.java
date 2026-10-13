@@ -4,10 +4,9 @@ import br.com.stockflow.stockflow_api.dto.request.FiadoRequest;
 import br.com.stockflow.stockflow_api.dto.response.FiadoResponse;
 import br.com.stockflow.stockflow_api.entity.Fiado;
 import br.com.stockflow.stockflow_api.service.FiadoService;
-
 import jakarta.validation.Valid;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 
 @RestController
@@ -23,6 +22,9 @@ public class FiadoController {
     }
 
     @PostMapping
+    @PreAuthorize(
+            "hasAnyRole('SUPER_ADMIN','PROPRIETARIO','SOCIO','GERENTE','OPERADOR_CAIXA')"
+    )
     public Fiado salvar(
             @Valid
             @RequestBody FiadoRequest request) {
@@ -32,6 +34,9 @@ public class FiadoController {
     }
 
     @GetMapping
+    @PreAuthorize(
+            "hasAnyRole('SUPER_ADMIN','PROPRIETARIO','SOCIO','GERENTE','OPERADOR_CAIXA')"
+    )
     public List<FiadoResponse> listar() {
 
         return fiadoService.listar();

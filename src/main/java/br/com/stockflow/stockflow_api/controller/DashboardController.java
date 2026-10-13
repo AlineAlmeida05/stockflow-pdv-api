@@ -2,6 +2,7 @@ package br.com.stockflow.stockflow_api.controller;
 
 import br.com.stockflow.stockflow_api.dto.response.DashboardResponse;
 import br.com.stockflow.stockflow_api.service.DashboardService;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -25,6 +26,9 @@ public class DashboardController {
     }
 
     @GetMapping
+    @PreAuthorize(
+            "hasAnyRole('SUPER_ADMIN','PROPRIETARIO','SOCIO','GERENTE','OPERADOR_CAIXA','ESTOQUISTA')"
+    )
     public DashboardResponse dashboard(
 
             @RequestParam(

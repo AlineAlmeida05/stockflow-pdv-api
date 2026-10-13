@@ -5,12 +5,13 @@ import br.com.stockflow.stockflow_api.dto.response.TenantResponse;
 import br.com.stockflow.stockflow_api.entity.Tenant;
 import br.com.stockflow.stockflow_api.service.TenantService;
 import jakarta.validation.Valid;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 import java.util.UUID;
 
 @RestController
+@PreAuthorize("hasRole('SUPER_ADMIN')")
 @RequestMapping("/api/tenants")
 
 public class TenantController {
@@ -23,11 +24,13 @@ public class TenantController {
     }
 
     @GetMapping
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     public List<Tenant> listar() {
         return tenantService.listarTodos();
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     public TenantResponse salvar(
             @Valid @RequestBody TenantRequest request) {
 
@@ -35,6 +38,7 @@ public class TenantController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN')")
     public TenantResponse atualizar(
             @PathVariable UUID id,
             @Valid @RequestBody TenantRequest request) {
@@ -45,24 +49,19 @@ public class TenantController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     public void excluir(
             @PathVariable UUID id) {
         tenantService.excluir(id);
     }
 
     @GetMapping("/slug/{slug}")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     public Tenant buscarPorSlug(
             @PathVariable String slug) {
 
         return tenantService.buscarPorSlug(
                 slug);
-
-    }
-
-    @GetMapping("/teste")
-    public String teste() {
-
-        return "OKOKOK";
 
     }
 }
