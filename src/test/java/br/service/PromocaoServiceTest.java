@@ -237,4 +237,42 @@ class PromocaoServiceTest {
                         contains("Produto")
                 );
     }
+
+    @Test
+    void deveLancarExcecaoQuandoJaExistePromocaoAtivaParaProduto() {
+
+        Tenant tenant = new Tenant();
+        tenant.setId(UUID.randomUUID());
+
+        Usuario usuario = new Usuario();
+        usuario.setTenant(tenant);
+
+        Produto produto = new Produto();
+        produto.setId(UUID.randomUUID());
+        produto.setAtivo(true);
+        produto.setEstoqueAtual(100);
+        produto.setPrecoVenda(BigDecimal.valueOf(100));
+
+        Promocao promocaoExistente = new Promocao();
+
+        PromocaoRequest request =
+                new PromocaoRequest(produto.getId());
+
+        when(usuarioAutenticadoService.usuarioLogado())
+                .thenReturn(usuario);
+
+        when(produtoRepository.findByIdAndTenantId(
+                produto.getId(),
+                tenant.getId()))
+                .thenReturn(Optional.of(produto));
+
+        when(promocaoRepository.findByProdutoAndAtivaTrue(
+                produto))
+                .thenReturn(Optional.of(promocaoExistente));
+
+        assertThrows(
+                RegraNegocioException.class,
+                () -> promocaoService.criarPromocao(request)
+        );
+    }
 }
