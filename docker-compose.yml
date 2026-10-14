@@ -1,0 +1,13 @@
+services:
+
+  stockflow-api:
+    image: stockflow-api:latest
+    container_name: stockflow-api
+
+    ports:
+      - "8080:8080"
+
+    env_file:
+      - .env
+
+    restart: unless-stopped
