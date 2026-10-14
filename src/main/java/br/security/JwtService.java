@@ -4,19 +4,23 @@ import br.entity.Usuario;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.stereotype.Service;
-
 import javax.crypto.SecretKey;
 import java.util.Date;
-
 import io.jsonwebtoken.JwtException;
+import org.springframework.beans.factory.annotation.Value;
+
 
 @Service
 public class JwtService {
 
-        private static final String SECRET = "stockflow-pdv-super-secret-key-2026-stockflow-api";
+        @Value("${jwt.secret}")
+        private String secret;
 
-        private final SecretKey key = Keys.hmacShaKeyFor(
-                        SECRET.getBytes());
+        private SecretKey getKey() {
+                return Keys.hmacShaKeyFor(
+                        secret.getBytes()
+                );
+        }
 
         public String gerarToken(
                         Usuario usuario) {
@@ -38,7 +42,7 @@ public class JwtService {
                                                 new Date(
                                                                 System.currentTimeMillis()
                                                                                 + 1000L * 60 * 60 * 24))
-                                .signWith(key)
+                        .signWith(getKey())
                                 .compact();
 
         }
@@ -47,7 +51,7 @@ public class JwtService {
                         String token) {
 
                 return Jwts.parser()
-                                .verifyWith(key)
+                        .verifyWith(getKey())
                                 .build()
                                 .parseSignedClaims(token)
                                 .getPayload()
@@ -61,7 +65,7 @@ public class JwtService {
                 try {
 
                         Jwts.parser()
-                                        .verifyWith(key)
+                                .verifyWith(getKey())
                                         .build()
                                         .parseSignedClaims(token);
 
