@@ -2,13 +2,12 @@ package br.com.stockflow.stockflow_api.controller;
 
 import br.com.stockflow.stockflow_api.entity.MovimentacaoEstoque;
 import br.com.stockflow.stockflow_api.service.MovimentacaoEstoqueService;
-
+import jakarta.validation.Valid;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
-
-import br.com.stockflow.stockflow_api.dto.MovimentacaoEstoqueRequest;
-import br.com.stockflow.stockflow_api.dto.MovimentacaoEstoqueResponse;
+import br.com.stockflow.stockflow_api.dto.request.MovimentacaoEstoqueRequest;
+import br.com.stockflow.stockflow_api.dto.response.MovimentacaoEstoqueResponse;
 
 @RestController
 @RequestMapping("/api/movimentacoes-estoque")
@@ -24,6 +23,9 @@ public class MovimentacaoEstoqueController {
     }
 
     @GetMapping
+    @PreAuthorize(
+            "hasAnyRole('SUPER_ADMIN','PROPRIETARIO','SOCIO','GERENTE','ESTOQUISTA')"
+    )
     public List<MovimentacaoEstoqueResponse> listar() {
 
         return service.listar();
@@ -31,11 +33,14 @@ public class MovimentacaoEstoqueController {
     }
 
     @PostMapping
+    @PreAuthorize(
+            "hasAnyRole('SUPER_ADMIN','PROPRIETARIO','SOCIO','GERENTE','ESTOQUISTA')"
+    )
     public MovimentacaoEstoque salvar(
+            @Valid
             @RequestBody MovimentacaoEstoqueRequest request) {
 
-        return service.salvar(
-                request);
+        return service.salvar(request);
 
     }
 

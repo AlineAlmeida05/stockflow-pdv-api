@@ -1,16 +1,20 @@
 package br.com.stockflow.stockflow_api.controller;
 
-import br.com.stockflow.stockflow_api.entity.Usuario;
+import br.com.stockflow.stockflow_api.dto.response.UsuarioResponse;
 import br.com.stockflow.stockflow_api.security.UsuarioAutenticadoService;
 import br.com.stockflow.stockflow_api.service.UsuarioService;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.UUID;
 
-import br.com.stockflow.stockflow_api.dto.AlterarSenhaRequest;
+import br.com.stockflow.stockflow_api.dto.request.AlterarSenhaRequest;
+import jakarta.validation.Valid;
+import br.com.stockflow.stockflow_api.dto.request.UsuarioCreateRequest;
+import br.com.stockflow.stockflow_api.dto.request.UsuarioUpdateRequest;
 
 @RestController
 @RequestMapping("/api/usuarios")
@@ -31,76 +35,84 @@ public class UsuarioController {
         }
 
         @GetMapping
-        public List<Usuario> listarTodos() {
+        @PreAuthorize("hasRole('SUPER_ADMIN')")
+        public ResponseEntity<List<UsuarioResponse>> listarTodos() {
                 var usuario = usuarioAutenticadoService
                                 .usuarioLogado();
 
-                System.out.println(
-                                "USUARIO AUTENTICADO: "
-                                                + usuario.getEmail());
-
-                System.out.println(
-                                "PERFIL: "
-                                                + usuario.getPerfil());
-                return usuarioService
-                                .listarTodos();
+                return ResponseEntity.ok(
+                        usuarioService.listarTodos());
 
         }
 
         @PostMapping
-        public Usuario salvar(
-                        @RequestBody Usuario usuario) {
+        @PreAuthorize("hasAnyRole('SUPER_ADMIN','PROPRIETARIO')")
+        public ResponseEntity<UsuarioResponse> salvar(
+                @Valid
+                @RequestBody UsuarioCreateRequest request) {
 
-                return usuarioService
-                                .salvar(usuario);
+                return ResponseEntity.ok(
+                        usuarioService.salvar(request)
+                );
 
         }
 
         @DeleteMapping("/{id}")
+        @PreAuthorize("hasRole('SUPER_ADMIN')")
         public ResponseEntity<Void> excluir(
-                        @PathVariable UUID id) {
+                @PathVariable UUID id) {
 
                 usuarioService.excluir(id);
 
                 return ResponseEntity
-                                .noContent()
-                                .build();
+                        .noContent()
+                        .build();
 
         }
 
         @PutMapping("/{id}")
-        public Usuario atualizar(
-                        @PathVariable UUID id,
-                        @RequestBody Usuario usuario) {
+        @PreAuthorize("hasAnyRole('SUPER_ADMIN','PROPRIETARIO')")
+        public ResponseEntity<UsuarioResponse> atualizar(
+                @PathVariable UUID id,
+                @Valid
+                @RequestBody UsuarioUpdateRequest request) {
 
-                return usuarioService
-                                .atualizar(
-                                                id,
-                                                usuario);
+                return ResponseEntity.ok(
+                        usuarioService.atualizar(
+                                id,
+                                request
+                        )
+                );
 
         }
 
-        @GetMapping("/tenant/{tenantId}")
-        public List<Usuario> listarPorTenant(
-                        @PathVariable UUID tenantId) {
 
-                return usuarioService
-                                .listarPorTenant(
-                                                tenantId);
+        @GetMapping("/tenant/{tenantId}")
+        @PreAuthorize(
+                "hasAnyRole('SUPER_ADMIN')"
+        )
+        public ResponseEntity<List<UsuarioResponse>> listarPorTenant(
+                @PathVariable UUID tenantId) {
+
+                return ResponseEntity.ok(
+                        usuarioService.listarPorTenant(
+                                tenantId
+                        )
+                );
 
         }
 
         @PutMapping("/alterar-senha")
+        @PreAuthorize("isAuthenticated()")
         public ResponseEntity<Void> alterarSenha(
-                        @RequestBody AlterarSenhaRequest request) {
+                @Valid
+                @RequestBody AlterarSenhaRequest request) {
 
-                usuarioService.alterarSenha(
-                                request);
+                usuarioService.alterarSenha(request);
 
                 return ResponseEntity
-                                .ok()
-                                .build();
-
+                        .ok()
+                        .build();
         }
 
 }

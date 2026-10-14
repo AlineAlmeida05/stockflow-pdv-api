@@ -1,27 +1,21 @@
 package br.com.stockflow.stockflow_api.service;
 
 import br.com.stockflow.stockflow_api.entity.MovimentacaoEstoque;
+import br.com.stockflow.stockflow_api.exception.RecursoNaoEncontradoException;
 import br.com.stockflow.stockflow_api.repository.MovimentacaoEstoqueRepository;
-
 import org.springframework.stereotype.Service;
-
 import java.util.List;
-
-import br.com.stockflow.stockflow_api.dto.MovimentacaoEstoqueRequest;
-
+import br.com.stockflow.stockflow_api.dto.request.MovimentacaoEstoqueRequest;
 import br.com.stockflow.stockflow_api.entity.Produto;
 import br.com.stockflow.stockflow_api.entity.Usuario;
-
 import br.com.stockflow.stockflow_api.repository.ProdutoRepository;
-
 import br.com.stockflow.stockflow_api.security.UsuarioAutenticadoService;
-
 import java.time.LocalDateTime;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
-import br.com.stockflow.stockflow_api.dto.MovimentacaoEstoqueResponse;
+import br.com.stockflow.stockflow_api.dto.response.MovimentacaoEstoqueResponse;
 import org.springframework.transaction.annotation.Transactional;
+import br.com.stockflow.stockflow_api.exception.RegraNegocioException;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -51,37 +45,50 @@ public class MovimentacaoEstoqueService {
         @Transactional
         public MovimentacaoEstoque salvar(
                         MovimentacaoEstoqueRequest request) {
+
+                Usuario usuarioLogado =
+                        obterUsuarioLogado();
+
                 Produto produto = produtoRepository
-                                .findById(
-                                                request.getProdutoId())
-                                .orElseThrow();
-
-                if (request.getQuantidade() == null
-                                || request.getQuantidade() <= 0) {
-
-                        throw new ResponseStatusException(
-                                        HttpStatus.BAD_REQUEST,
-                                        "Quantidade inválida.");
-                }
-
-                if (request.getPrecoCompra() == null
-                                || request.getPrecoCompra()
-                                                .compareTo(BigDecimal.ZERO) <= 0) {
-
-                        throw new ResponseStatusException(
-                                        HttpStatus.BAD_REQUEST,
-                                        "Preço de compra inválido.");
-                }
+                        .findByIdAndTenantId(
+                                request.produtoId(),
+                                usuarioLogado
+                                        .getTenant()
+                                        .getId()
+                        )
+                        .orElseThrow(() ->
+                                new RecursoNaoEncontradoException(
+                                        "Produto não encontrado."
+                                ));
 
                 if (Boolean.FALSE.equals(
                                 produto.getAtivo())) {
 
-                        throw new ResponseStatusException(
-                                        HttpStatus.BAD_REQUEST,
-                                        "Produto inativo.");
+                        throw new RegraNegocioException(
+                                "Produto inativo."
+                        );
                 }
 
-                if ("entrada".equals(request.getTipo())) {
+                if (
+                        "entrada".equals(request.tipo())
+                                &&
+                                (
+                                        request.precoCompra() == null
+                                                ||
+                                                request.precoCompra()
+                                                        .compareTo(BigDecimal.ZERO) <= 0
+                                )
+                ) {
+
+                        throw new RegraNegocioException(
+                                "Preço de compra obrigatório para entrada."
+                        );
+
+                }
+
+
+
+                if ("entrada".equals(request.tipo())) {
 
                         Integer estoqueAtual = produto.getEstoqueAtual();
 
@@ -89,9 +96,9 @@ public class MovimentacaoEstoqueService {
                                         ? produto.getCustoMedio()
                                         : BigDecimal.ZERO;
 
-                        Integer quantidadeEntrada = request.getQuantidade();
+                        Integer quantidadeEntrada = request.quantidade();
 
-                        BigDecimal precoCompra = request.getPrecoCompra();
+                        BigDecimal precoCompra = request.precoCompra();
 
                         if (estoqueAtual == 0) {
 
@@ -131,25 +138,44 @@ public class MovimentacaoEstoqueService {
                         produtoRepository.save(
                                         produto);
                                         
-                } else if ("saida".equals(request.getTipo())) {
+                } else if ("saida".equals(request.tipo())) {
 
-                        if (produto.getEstoqueAtual() < request.getQuantidade()) {
+                        if (produto.getEstoqueAtual() < request.quantidade()) {
 
-                                throw new ResponseStatusException(
-                                                HttpStatus.BAD_REQUEST,
-                                                "Estoque insuficiente.");
+                                throw new RegraNegocioException(
+                                        "Estoque insuficiente."
+                                );
+
                         }
+
+                        produto.setEstoqueAtual(
+                                produto.getEstoqueAtual()
+                                        - request.quantidade()
+                        );
+
+                        produto.setDataAtualizacao(
+                                LocalDateTime.now()
+                        );
+
+                        produtoRepository.save(
+                                produto
+                        );
 
                 }
 
-                Usuario usuarioLogado = usuarioAutenticadoService
-                                .usuarioLogado();
+                else if ("ajuste".equals(request.tipo())) {
 
-                if (usuarioLogado == null) {
+                        produto.setEstoqueAtual(
+                                request.quantidade()
+                        );
 
-                        throw new ResponseStatusException(
-                                        HttpStatus.UNAUTHORIZED,
-                                        "Usuário não autenticado");
+                        produto.setDataAtualizacao(
+                                LocalDateTime.now()
+                        );
+
+                        produtoRepository.save(
+                                produto
+                        );
 
                 }
 
@@ -162,16 +188,16 @@ public class MovimentacaoEstoqueService {
                                 produto.getNome());
 
                 movimentacao.setTipo(
-                                request.getTipo());
+                                request.tipo());
 
                 movimentacao.setQuantidade(
-                                request.getQuantidade());
+                                request.quantidade());
 
                 movimentacao.setPrecoCompra(
-                                request.getPrecoCompra());
+                                request.precoCompra());
 
                 movimentacao.setObservacao(
-                                request.getObservacao());
+                                request.observacao());
 
                 movimentacao.setUsuario(
                                 usuarioLogado);
@@ -189,16 +215,8 @@ public class MovimentacaoEstoqueService {
 
         public List<MovimentacaoEstoqueResponse> listar() {
 
-                Usuario usuarioLogado = usuarioAutenticadoService
-                                .usuarioLogado();
-
-                if (usuarioLogado == null) {
-
-                        throw new ResponseStatusException(
-                                        HttpStatus.UNAUTHORIZED,
-                                        "Usuário não autenticado");
-
-                }
+                Usuario usuarioLogado =
+                        obterUsuarioLogado();
 
                 return repository.findByTenantId(
                                 usuarioLogado
@@ -226,6 +244,25 @@ public class MovimentacaoEstoqueService {
 
                                 ))
                                 .toList();
+
+        }
+
+        private Usuario obterUsuarioLogado() {
+
+                Usuario usuarioLogado =
+                        usuarioAutenticadoService
+                                .usuarioLogado();
+
+                if (usuarioLogado == null) {
+
+                        throw new ResponseStatusException(
+                                HttpStatus.UNAUTHORIZED,
+                                "Usuário não autenticado."
+                        );
+
+                }
+
+                return usuarioLogado;
 
         }
 

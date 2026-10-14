@@ -1,10 +1,11 @@
 package br.com.stockflow.stockflow_api.service;
 
-import br.com.stockflow.stockflow_api.dto.FiadoRequest;
-import br.com.stockflow.stockflow_api.dto.FiadoResponse;
+import br.com.stockflow.stockflow_api.dto.request.FiadoRequest;
+import br.com.stockflow.stockflow_api.dto.response.FiadoResponse;
 import br.com.stockflow.stockflow_api.entity.Cliente;
 import br.com.stockflow.stockflow_api.entity.Fiado;
 import br.com.stockflow.stockflow_api.entity.Usuario;
+import br.com.stockflow.stockflow_api.exception.RecursoNaoEncontradoException;
 import br.com.stockflow.stockflow_api.repository.ClienteRepository;
 import br.com.stockflow.stockflow_api.repository.FiadoRepository;
 import br.com.stockflow.stockflow_api.security.UsuarioAutenticadoService;
@@ -15,7 +16,6 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
 
 @Service
 public class FiadoService {
@@ -41,25 +41,20 @@ public class FiadoService {
             FiadoRequest request) {
 
         Usuario usuarioLogado =
-                usuarioAutenticadoService
-                        .usuarioLogado();
-
-        if (usuarioLogado == null) {
-
-            throw new ResponseStatusException(
-                    HttpStatus.UNAUTHORIZED,
-                    "Usuário não autenticado");
-        }
+                obterUsuarioLogado();
 
         Cliente cliente =
                 clienteRepository
-                        .findById(
-                                request.getClienteId())
-                        .orElseThrow(
-                                () ->
-                                        new ResponseStatusException(
-                                                HttpStatus.NOT_FOUND,
-                                                "Cliente não encontrado."));
+                        .findByIdAndTenantId(
+                                request.clienteId(),
+                                usuarioLogado
+                                        .getTenant()
+                                        .getId()
+                        )
+                        .orElseThrow(() ->
+                                new RecursoNaoEncontradoException(
+                                        "Cliente não encontrado."
+                                ));
 
         Fiado fiado = new Fiado();
 
@@ -67,10 +62,10 @@ public class FiadoService {
                 cliente);
 
         fiado.setVendaId(
-                request.getVendaId());
+                request.vendaId());
 
         fiado.setValorTotal(
-                request.getValorTotal());
+                request.valorTotal());
 
         fiado.setDataLancamento(
                 LocalDateTime.now());
@@ -79,7 +74,7 @@ public class FiadoService {
                 "pendente");
 
         fiado.setObservacao(
-                request.getObservacao());
+                request.observacao());
 
         fiado.setTenant(
                 usuarioLogado.getTenant());
@@ -91,15 +86,7 @@ public class FiadoService {
     public List<FiadoResponse> listar() {
 
         Usuario usuarioLogado =
-                usuarioAutenticadoService
-                        .usuarioLogado();
-
-        if (usuarioLogado == null) {
-
-            throw new ResponseStatusException(
-                    HttpStatus.UNAUTHORIZED,
-                    "Usuário não autenticado");
-        }
+                obterUsuarioLogado();
 
         return fiadoRepository
                 .findByTenantId(
@@ -118,5 +105,24 @@ public class FiadoService {
                                 fiado.getStatus(),
                                 fiado.getObservacao()))
                 .toList();
+    }
+
+    private Usuario obterUsuarioLogado() {
+
+        Usuario usuarioLogado =
+                usuarioAutenticadoService
+                        .usuarioLogado();
+
+        if (usuarioLogado == null) {
+
+            throw new ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED,
+                    "Usuário não autenticado."
+            );
+
+        }
+
+        return usuarioLogado;
+
     }
 }

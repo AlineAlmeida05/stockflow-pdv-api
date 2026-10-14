@@ -1,9 +1,10 @@
 package br.com.stockflow.stockflow_api.service;
 
-import br.com.stockflow.stockflow_api.dto.ClienteRequest;
-import br.com.stockflow.stockflow_api.dto.ClienteResponse;
+import br.com.stockflow.stockflow_api.dto.request.ClienteRequest;
+import br.com.stockflow.stockflow_api.dto.response.ClienteResponse;
 import br.com.stockflow.stockflow_api.entity.Cliente;
 import br.com.stockflow.stockflow_api.entity.Usuario;
+import br.com.stockflow.stockflow_api.exception.RecursoNaoEncontradoException;
 import br.com.stockflow.stockflow_api.repository.ClienteRepository;
 import br.com.stockflow.stockflow_api.security.UsuarioAutenticadoService;
 
@@ -16,7 +17,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
-import br.com.stockflow.stockflow_api.dto.ClienteResumoResponse;
+import br.com.stockflow.stockflow_api.dto.response.ClienteResumoResponse;
 import br.com.stockflow.stockflow_api.entity.Fiado;
 import br.com.stockflow.stockflow_api.entity.Pagamento;
 import br.com.stockflow.stockflow_api.repository.FiadoRepository;
@@ -45,133 +46,71 @@ public class ClienteService {
         this.usuarioAutenticadoService = usuarioAutenticadoService;
     }
 
-    public Cliente salvar(
+    public ClienteResponse salvar(
             ClienteRequest request) {
 
         Usuario usuarioLogado =
-                usuarioAutenticadoService
-                        .usuarioLogado();
-
-        if (usuarioLogado == null) {
-
-            throw new ResponseStatusException(
-                    HttpStatus.UNAUTHORIZED,
-                    "Usuário não autenticado");
-        }
-
-        if (request.getNome() == null
-                || request.getNome().isBlank()) {
-
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "Nome do cliente é obrigatório.");
-        }
-        if (request.getLimiteCredito() != null
-                && request.getLimiteCredito()
-                .compareTo(BigDecimal.ZERO) < 0) {
-
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "Limite de crédito não pode ser negativo.");
-        }
-        if (request.getTelefone() == null
-                || request.getTelefone().isBlank()) {
-
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "Telefone é obrigatório.");
-        }
-
+                obterUsuarioLogado();
 
         Cliente cliente = new Cliente();
 
         cliente.setNome(
-                request.getNome());
+                request.nome());
 
         cliente.setTelefone(
-                request.getTelefone());
+                request.telefone());
 
         cliente.setAtivo(true);
 
         cliente.setDataCadastro(
                 LocalDateTime.now());
 
-        cliente.setLimiteCredito(
-                request.getLimiteCredito() != null
-                        ? request.getLimiteCredito()
-                        : BigDecimal.valueOf(300));
+        if (request.limiteCredito() == null) {
+
+            cliente.setLimiteCredito(
+                    BigDecimal.valueOf(300)
+            );
+
+        } else {
+
+            cliente.setLimiteCredito(
+                    request.limiteCredito()
+            );
+
+        }
 
         cliente.setObservacao(
-                request.getObservacao());
+                request.observacao());
 
         cliente.setTenant(
                 usuarioLogado.getTenant());
 
-        return clienteRepository.save(
-                cliente);
+        return montarResponse(
+                clienteRepository.save(cliente)
+        );
     }
 
     public List<ClienteResponse> listar() {
 
         Usuario usuarioLogado =
-                usuarioAutenticadoService
-                        .usuarioLogado();
-
-        if (usuarioLogado == null) {
-
-            throw new ResponseStatusException(
-                    HttpStatus.UNAUTHORIZED,
-                    "Usuário não autenticado");
-        }
+                obterUsuarioLogado();
 
         return clienteRepository
-                .findByTenantIdAndAtivoTrue(
+                .findByTenantId(
                         usuarioLogado
                                 .getTenant()
                                 .getId())
                 .stream()
-                .map(cliente ->
-                        new ClienteResponse(
-                                cliente.getId(),
-                                cliente.getNome(),
-                                cliente.getTelefone(),
-                                cliente.getAtivo(),
-                                cliente.getDataCadastro(),
-                                cliente.getLimiteCredito(),
-                                cliente.getObservacao()))
+                .map(this::montarResponse)
                 .toList();
     }
 
-    public Cliente atualizar(
+    public ClienteResponse atualizar(
             UUID id,
             ClienteRequest request) {
 
         Usuario usuarioLogado =
-                usuarioAutenticadoService
-                        .usuarioLogado();
-
-        if (usuarioLogado == null) {
-
-            throw new ResponseStatusException(
-                    HttpStatus.UNAUTHORIZED,
-                    "Usuário não autenticado");
-        }
-        if (request.getLimiteCredito() != null
-                && request.getLimiteCredito()
-                .compareTo(BigDecimal.ZERO) < 0) {
-
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "Limite de crédito não pode ser negativo.");
-        }
-        if (request.getTelefone() == null
-                || request.getTelefone().isBlank()) {
-
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "Telefone é obrigatório.");
-        }
-
+                obterUsuarioLogado();
 
         Cliente cliente =
                 clienteRepository
@@ -182,39 +121,31 @@ public class ClienteService {
                                         .getId())
                         .orElseThrow(
                                 () ->
-                                        new ResponseStatusException(
-                                                HttpStatus.NOT_FOUND,
+                                        new RecursoNaoEncontradoException(
                                                 "Cliente não encontrado."));
 
         cliente.setNome(
-                request.getNome());
+                request.nome());
 
         cliente.setTelefone(
-                request.getTelefone());
+                request.telefone());
 
         cliente.setLimiteCredito(
-                request.getLimiteCredito());
+                request.limiteCredito());
 
         cliente.setObservacao(
-                request.getObservacao());
+                request.observacao());
 
-        return clienteRepository.save(
-                cliente);
+        return montarResponse(
+                clienteRepository.save(cliente)
+        );
     }
 
     public void inativar(
             UUID id) {
 
         Usuario usuarioLogado =
-                usuarioAutenticadoService
-                        .usuarioLogado();
-
-        if (usuarioLogado == null) {
-
-            throw new ResponseStatusException(
-                    HttpStatus.UNAUTHORIZED,
-                    "Usuário não autenticado");
-        }
+                obterUsuarioLogado();
 
         Cliente cliente =
                 clienteRepository
@@ -225,8 +156,7 @@ public class ClienteService {
                                         .getId())
                         .orElseThrow(
                                 () ->
-                                        new ResponseStatusException(
-                                                HttpStatus.NOT_FOUND,
+                                        new RecursoNaoEncontradoException(
                                                 "Cliente não encontrado."));
 
         cliente.setAtivo(false);
@@ -237,28 +167,20 @@ public class ClienteService {
 
     public ClienteResumoResponse obterResumo(
             UUID clienteId) {
+
         Usuario usuarioLogado =
-                usuarioAutenticadoService
-                        .usuarioLogado();
-
-        if (usuarioLogado == null) {
-
-            throw new ResponseStatusException(
-                    HttpStatus.UNAUTHORIZED,
-                    "Usuário não autenticado");
-        }
+                obterUsuarioLogado();
 
         Cliente cliente =
                 clienteRepository
-                        .findByIdAndTenantIdAndAtivoTrue(
+                        .findByIdAndTenantId(
                                 clienteId,
                                 usuarioLogado
                                         .getTenant()
                                         .getId())
                         .orElseThrow(
                                 () ->
-                                        new ResponseStatusException(
-                                                HttpStatus.NOT_FOUND,
+                                        new RecursoNaoEncontradoException(
                                                 "Cliente não encontrado."));
         List<Fiado> fiados =
                 fiadoRepository
@@ -346,6 +268,73 @@ public class ClienteService {
                 creditoDisponivel,
                 status,
                 diasSemPagamento);
+    }
+
+    private ClienteResponse montarResponse(
+            Cliente cliente
+    ) {
+
+        return new ClienteResponse(
+
+                cliente.getId(),
+
+                cliente.getNome(),
+
+                cliente.getTelefone(),
+
+                cliente.getAtivo(),
+
+                cliente.getDataCadastro(),
+
+                cliente.getLimiteCredito(),
+
+                cliente.getObservacao()
+
+        );
+
+    }
+
+    public void reativar(
+            UUID id) {
+
+        Usuario usuarioLogado =
+                obterUsuarioLogado();
+
+        Cliente cliente =
+                clienteRepository
+                        .findByIdAndTenantId(
+                                id,
+                                usuarioLogado
+                                        .getTenant()
+                                        .getId())
+                        .orElseThrow(
+                                () ->
+                                        new RecursoNaoEncontradoException(
+                                                "Cliente não encontrado."));
+
+        cliente.setAtivo(true);
+
+        clienteRepository.save(cliente);
+
+    }
+
+    private Usuario obterUsuarioLogado() {
+
+        Usuario usuarioLogado =
+                usuarioAutenticadoService
+                        .usuarioLogado();
+
+        if (usuarioLogado == null) {
+
+            throw new ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED,
+                    "Usuário não autenticado."
+            );
+
+        }
+
+        return usuarioLogado;
+
     }
 }
 

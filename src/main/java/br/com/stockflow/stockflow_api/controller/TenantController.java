@@ -1,13 +1,17 @@
 package br.com.stockflow.stockflow_api.controller;
 
+import br.com.stockflow.stockflow_api.dto.request.TenantRequest;
+import br.com.stockflow.stockflow_api.dto.response.TenantResponse;
 import br.com.stockflow.stockflow_api.entity.Tenant;
 import br.com.stockflow.stockflow_api.service.TenantService;
+import jakarta.validation.Valid;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 import java.util.UUID;
 
 @RestController
+@PreAuthorize("hasRole('SUPER_ADMIN')")
 @RequestMapping("/api/tenants")
 
 public class TenantController {
@@ -20,46 +24,44 @@ public class TenantController {
     }
 
     @GetMapping
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     public List<Tenant> listar() {
         return tenantService.listarTodos();
     }
 
     @PostMapping
-    public Tenant salvar(
-            @RequestBody Tenant tenant) {
-        return tenantService.salvar(tenant);
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    public TenantResponse salvar(
+            @Valid @RequestBody TenantRequest request) {
+
+        return tenantService.salvar(request);
     }
 
     @PutMapping("/{id}")
-    public Tenant atualizar(
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN')")
+    public TenantResponse atualizar(
             @PathVariable UUID id,
-            @RequestBody Tenant tenant) {
+            @Valid @RequestBody TenantRequest request) {
 
         return tenantService.atualizar(
                 id,
-                tenant);
-
+                request);
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     public void excluir(
             @PathVariable UUID id) {
         tenantService.excluir(id);
     }
 
     @GetMapping("/slug/{slug}")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     public Tenant buscarPorSlug(
             @PathVariable String slug) {
 
         return tenantService.buscarPorSlug(
                 slug);
-
-    }
-
-    @GetMapping("/teste")
-    public String teste() {
-
-        return "OKOKOK";
 
     }
 }

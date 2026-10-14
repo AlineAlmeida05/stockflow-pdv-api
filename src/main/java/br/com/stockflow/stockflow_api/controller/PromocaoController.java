@@ -1,16 +1,16 @@
 package br.com.stockflow.stockflow_api.controller;
 
-import br.com.stockflow.stockflow_api.dto.PromocaoRequest;
+import br.com.stockflow.stockflow_api.dto.response.PromocaoPainelResponse;
+import br.com.stockflow.stockflow_api.dto.request.PromocaoRequest;
 import br.com.stockflow.stockflow_api.entity.Promocao;
 import br.com.stockflow.stockflow_api.service.PromocaoService;
-
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 import java.util.UUID;
-
-import br.com.stockflow.stockflow_api.dto.ProdutoPromocaoResponse;
+import br.com.stockflow.stockflow_api.dto.response.ProdutoPromocaoResponse;
 
 @RestController
 @RequestMapping("/api/promocoes")
@@ -26,12 +26,18 @@ public class PromocaoController {
     }
 
     @GetMapping
+    @PreAuthorize(
+            "hasAnyRole('SUPER_ADMIN','PROPRIETARIO','SOCIO','GERENTE','OPERADOR_CAIXA','ESTOQUISTA')"
+    )
     public List<Promocao> listar() {
 
         return promocaoService.listar();
     }
 
     @GetMapping("/ativas")
+    @PreAuthorize(
+            "hasAnyRole('SUPER_ADMIN','PROPRIETARIO','SOCIO','GERENTE','OPERADOR_CAIXA','ESTOQUISTA')"
+    )
     public List<Promocao> listarAtivas() {
 
         return promocaoService.listarAtivas();
@@ -39,7 +45,11 @@ public class PromocaoController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize(
+            "hasAnyRole('SUPER_ADMIN','PROPRIETARIO','SOCIO','GERENTE')"
+    )
     public Promocao criar(
+            @Valid
             @RequestBody
             PromocaoRequest request) {
 
@@ -48,6 +58,9 @@ public class PromocaoController {
     }
 
     @PatchMapping("/{id}/encerrar")
+    @PreAuthorize(
+            "hasAnyRole('SUPER_ADMIN','PROPRIETARIO','SOCIO','GERENTE')"
+    )
     public Promocao encerrar(
             @PathVariable
             UUID id) {
@@ -56,7 +69,21 @@ public class PromocaoController {
                 .encerrarPromocao(id);
     }
 
+    @GetMapping("/painel")
+    @PreAuthorize(
+            "hasAnyRole('SUPER_ADMIN','PROPRIETARIO','SOCIO','GERENTE')"
+    )
+    public PromocaoPainelResponse listarPainel() {
+
+        return promocaoService
+                .listarPainel();
+
+    }
+
     @GetMapping("/{id}")
+    @PreAuthorize(
+            "hasAnyRole('SUPER_ADMIN','PROPRIETARIO','SOCIO','GERENTE','OPERADOR_CAIXA','ESTOQUISTA')"
+    )
     public Promocao buscarPorId(
             @PathVariable
             UUID id) {
@@ -66,6 +93,9 @@ public class PromocaoController {
     }
 
     @GetMapping("/produto/{produtoId}")
+    @PreAuthorize(
+            "hasAnyRole('SUPER_ADMIN','PROPRIETARIO','SOCIO','GERENTE','OPERADOR_CAIXA','ESTOQUISTA')"
+    )
     public List<Promocao> listarPorProduto(
             @PathVariable
             UUID produtoId) {
@@ -77,12 +107,16 @@ public class PromocaoController {
     }
 
     @GetMapping("/candidatos")
-    public List<ProdutoPromocaoResponse>
-    listarCandidatos() {
+    @PreAuthorize(
+            "hasAnyRole('SUPER_ADMIN','PROPRIETARIO','SOCIO','GERENTE')"
+    )
+    public List<ProdutoPromocaoResponse> listarCandidatos() {
 
         return promocaoService
                 .listarCandidatos();
 
     }
+
+
 
 }
