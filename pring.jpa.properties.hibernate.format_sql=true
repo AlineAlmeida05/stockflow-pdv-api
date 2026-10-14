@@ -1,0 +1,15 @@
+[1mdiff --git a/src/main/resources/application.properties b/src/main/resources/application.properties[m
+[1mindex 2caec32..e15b88c 100644[m
+[1m--- a/src/main/resources/application.properties[m
+[1m+++ b/src/main/resources/application.properties[m
+[36m@@ -14,4 +14,7 @@[m [mspring.jpa.show-sql=true[m
+ [m
+ spring.jpa.properties.hibernate.format_sql=true[m
+ [m
+[31m-spring.flyway.enabled=true[m
+\ No newline at end of file[m
+[32m+[m[32mspring.flyway.enabled=true[m
+[32m+[m
+[32m+[m[32m# colocar valor de prd para quando subir a aplicação[m
+[32m+[m[32mspring.profiles.active=local[m
+\ No newline at end of file[m
