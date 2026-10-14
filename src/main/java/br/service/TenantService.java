@@ -9,7 +9,6 @@ import br.repository.TenantRepository;
 import br.security.UsuarioAutenticadoService;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-
 import java.util.List;
 import java.util.UUID;
 import br.exception.RegraNegocioException;
