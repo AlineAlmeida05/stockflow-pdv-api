@@ -3,18 +3,16 @@ package br.controller;
 import br.dto.response.UsuarioResponse;
 import br.security.UsuarioAutenticadoService;
 import br.service.UsuarioService;
-
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 import java.util.UUID;
-
 import br.dto.request.AlterarSenhaRequest;
 import jakarta.validation.Valid;
 import br.dto.request.UsuarioCreateRequest;
 import br.dto.request.UsuarioUpdateRequest;
+
 
 @RestController
 @RequestMapping("/api/usuarios")
