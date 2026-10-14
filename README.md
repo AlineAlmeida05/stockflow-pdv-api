@@ -228,8 +228,31 @@ src/main/java/br/com/stockflow/stockflow_api
 - PostgreSQL
 - Node.js
 - Angular CLI
+- Docker
 
 ---
+# 🐳 Docker
+O projeto pode ser executado em containers Docker.
+
+Gerar o artefato
+```
+./mvnw clean package
+```
+Construir a imagem Shell
+```
+docker build -t stockflow-api .
+```
+
+Executar diretamente Shell
+```
+docker run -p 8080:8080 stockflow-api
+
+docker compose up -d
+```
+Aplicação disponível em: 
+```
+http://localhost:8080
+```
 
 ## Clonar o Repositório
 
