@@ -65,8 +65,14 @@ public class RelatorioService {
         var evolucao = relatorioRepository.findSalesEvolution(tenantId, inicioDia, fimDia);
         var topProdutos = relatorioRepository.findTopProducts(tenantId, inicioDia, fimDia, PageRequest.of(0, 5));
 
-        var historico = relatorioRepository.findHistory(
-                tenantId, inicioDia, fimDia, formaPagamento, PageRequest.of(0, 9));
+        var historico = relatorioRepository
+                .findHistory(
+                        tenantId,
+                        inicioDia,
+                        fimDia,
+                        formaPagamento,
+                        PageRequest.
+                                of(0, 9));
 
         return new DashboardVendas(resumo, melhorDia, receitaPorPagamento, evolucao, topProdutos, historico);
     }

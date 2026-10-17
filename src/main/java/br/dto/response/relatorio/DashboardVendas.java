@@ -10,5 +10,5 @@ public record DashboardVendas(
         List<ReceitaPorFormaPagamento> receitaPorFormaPagamento,
         List<EvolucaoVendas> evolucaoVendas,
         List<TopProduto> top5Produtos,
-        Page<VendaHistorico> historico
+        List<VendaHistorico> historico
 ) {}
