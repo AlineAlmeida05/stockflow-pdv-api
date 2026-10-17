@@ -1,7 +1,6 @@
 package br.dto.response.relatorio;
 
 import org.springframework.data.domain.Page;
-
 import java.util.List;
 
 public record DashboardVendas(

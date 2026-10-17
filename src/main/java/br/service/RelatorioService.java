@@ -35,21 +35,31 @@ public class RelatorioService {
             LocalDate fim,
             String formaPagamento) {
 
-        Usuario usuarioLogado =
-                obterUsuarioLogado();
+        Usuario usuarioLogado = obterUsuarioLogado();
 
-        UUID tenantId =
-                usuarioLogado.getTenant().getId();
-
+        UUID tenantId = usuarioLogado.getTenant().getId();
 
         LocalDateTime inicioDia = inicio.atStartOfDay();
+
         LocalDateTime fimDia = fim.atTime(LocalTime.MAX);
 
-        var resumoBase = relatorioRepository.findSummary(tenantId, inicioDia, fimDia);
-        var receitaPorPagamento = relatorioRepository.findRevenueByPaymentMethod(tenantId, inicioDia, fimDia);
+        var resumoBase = relatorioRepository.findSummary(
+                tenantId,
+                inicioDia,
+                fimDia
+        );
+        var receitaPorPagamento = relatorioRepository.findRevenueByPaymentMethod(
+                tenantId,
+                inicioDia,
+                fimDia
+        );
 
         // "forma mais utilizada" não vem pronto do banco — é o primeiro item já ordenado por valor
-        String formaMaisUtilizada = receitaPorPagamento.isEmpty() ? "-" : receitaPorPagamento.getFirst().formaPagamento();
+        String formaMaisUtilizada = receitaPorPagamento.isEmpty() ? "-"
+                : receitaPorPagamento
+                  .getFirst()
+                  .formaPagamento();
+
         var resumo = new ResumoVendas(
                 resumoBase.totalVendas(),
                 resumoBase.faturamento(),
@@ -57,13 +67,31 @@ public class RelatorioService {
                 formaMaisUtilizada
         );
 
-        var melhoresDias = relatorioRepository.findBestDays(tenantId, inicioDia, fimDia, PageRequest.of(0, 1));
+        var melhoresDias = relatorioRepository.findBestDays(
+                tenantId,
+                inicioDia,
+                fimDia,
+                PageRequest.
+                        of(0, 1
+                        ));
         var melhorDia = melhoresDias.isEmpty()
-                ? new MelhorDia(null, BigDecimal.ZERO)
+                ? new MelhorDia(
+                        null,
+                BigDecimal.ZERO
+        )
                 : melhoresDias.getFirst();
 
-        var evolucao = relatorioRepository.findSalesEvolution(tenantId, inicioDia, fimDia);
-        var topProdutos = relatorioRepository.findTopProducts(tenantId, inicioDia, fimDia, PageRequest.of(0, 5));
+        var evolucao = relatorioRepository.findSalesEvolution(
+                tenantId,
+                inicioDia,
+                fimDia
+        );
+        var topProdutos = relatorioRepository.findTopProducts(
+                tenantId,
+                inicioDia,
+                fimDia,
+                PageRequest.
+                        of(0, 5));
 
         var historico = relatorioRepository
                 .findHistory(
@@ -71,10 +99,17 @@ public class RelatorioService {
                         inicioDia,
                         fimDia,
                         formaPagamento,
-                        PageRequest.
-                                of(0, 9));
+                        PageRequest.of(0, 9))
+                .getContent();
 
-        return new DashboardVendas(resumo, melhorDia, receitaPorPagamento, evolucao, topProdutos, historico);
+        return new DashboardVendas(
+                resumo,
+                melhorDia,
+                receitaPorPagamento,
+                evolucao,
+                topProdutos,
+                historico
+        );
     }
 
     private Usuario obterUsuarioLogado() {
