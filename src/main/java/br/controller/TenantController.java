@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@PreAuthorize("hasRole('SUPER_ADMIN')")
 @RequestMapping("/api/tenants")
 
 public class TenantController {
@@ -24,7 +23,6 @@ public class TenantController {
     }
 
     @GetMapping
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
     public List<Tenant> listar() {
         return tenantService.listarTodos();
     }

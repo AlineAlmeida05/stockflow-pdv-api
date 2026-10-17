@@ -5,6 +5,7 @@ import br.dto.response.ClienteResponse;
 import br.entity.Cliente;
 import br.entity.Usuario;
 import br.exception.RecursoNaoEncontradoException;
+import br.exception.RegraNegocioException;
 import br.repository.ClienteRepository;
 import br.security.UsuarioAutenticadoService;
 import org.springframework.http.HttpStatus;
@@ -178,6 +179,49 @@ public class ClienteService {
                                 () ->
                                         new RecursoNaoEncontradoException(
                                                 "Cliente não encontrado."));
+
+        BigDecimal totalFiado =
+                fiadoRepository
+                        .findByClienteIdAndTenantId(
+                                cliente.getId(),
+                                usuarioLogado.getTenant().getId()
+                        )
+                        .stream()
+                        .map(Fiado::getValorTotal)
+                        .reduce(
+                                BigDecimal.ZERO,
+                                BigDecimal::add
+                        );
+
+        BigDecimal totalPago =
+                pagamentoRepository
+                        .findByClienteIdAndTenantId(
+                                cliente.getId(),
+                                usuarioLogado.getTenant().getId()
+                        )
+                        .stream()
+                        .map(Pagamento::getValorPago)
+                        .reduce(
+                                BigDecimal.ZERO,
+                                BigDecimal::add
+                        );
+
+        BigDecimal saldoDevedor =
+                totalFiado.subtract(
+                        totalPago
+                );
+
+        if (
+                saldoDevedor.compareTo(
+                        BigDecimal.ZERO
+                ) > 0
+        ) {
+
+            throw new RegraNegocioException(
+                    "Cliente possui débitos pendentes e não pode ser inativado."
+            );
+        }
+
 
         cliente.setAtivo(false);
 
