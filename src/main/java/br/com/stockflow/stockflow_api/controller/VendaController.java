@@ -63,4 +63,15 @@ public class VendaController {
         return vendaService.listar();
     }
 
+    @GetMapping("/relatorio")
+    @PreAuthorize(
+            "hasAnyRole('SUPER_ADMIN','PROPRIETARIO','SOCIO','GERENTE','OPERADOR_CAIXA','ESTOQUISTA')"
+    )
+    public List<VendaDetalhesResponse> listarRelatorio() {
+
+        return vendaService.listarRelatorio();
+
+    }
+
+
 }

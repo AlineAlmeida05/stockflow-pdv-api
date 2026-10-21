@@ -611,6 +611,58 @@ public class VendaService {
                 .toList();
     }
 
+    public List<VendaDetalhesResponse> listarRelatorio() {
+
+        Usuario usuarioLogado =
+                obterUsuarioLogado();
+
+        return vendaRepository
+                .findByTenantId(
+                        usuarioLogado
+                                .getTenant()
+                                .getId())
+                .stream()
+                .map(venda -> {
+
+                    List<ItemVendaResponse> itens =
+                            itemVendaRepository
+                                    .findByVendaId(
+                                            venda.getId()
+                                    )
+                                    .stream()
+                                    .map(item ->
+                                            new ItemVendaResponse(
+                                                    item.getProduto().getId(),
+                                                    item.getProdutoNome(),
+                                                    item.getQuantidade(),
+                                                    item.getSubtotal(),
+                                                    item.getPromocaoAplicada()
+                                            )
+                                    )
+                                    .toList();
+
+                    return new VendaDetalhesResponse(
+                            venda.getId(),
+                            venda.getDataVenda(),
+                            venda.getFormaPagamento(),
+                            venda.getValorTotal(),
+                            venda.getQuantidadeItens(),
+                            venda.getClienteNome(),
+                            venda.getStatus(),
+                            venda.getMotivoCancelamento(),
+                            venda.getDataCancelamento(),
+                            venda.getUsuarioCancelamento() != null
+                                    ? venda.getUsuarioCancelamento().getNome()
+                                    : null,
+                            venda.getUsuario() != null
+                                    ? venda.getUsuario().getNome()
+                                    : null,
+                            itens
+                    );
+                })
+                .toList();
+    }
+
     public VendaDetalhesResponse buscarPorId(
             UUID vendaId) {
 
