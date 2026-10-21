@@ -2,17 +2,13 @@ package br.com.stockflow.stockflow_api.service;
 
 import br.com.stockflow.stockflow_api.entity.Produto;
 import br.com.stockflow.stockflow_api.entity.Usuario;
-import br.com.stockflow.stockflow_api.exception.AcessoNegadoException;
 import br.com.stockflow.stockflow_api.repository.ProdutoRepository;
 import br.com.stockflow.stockflow_api.security.UsuarioAutenticadoService;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
-
 import br.com.stockflow.stockflow_api.exception.RecursoNaoEncontradoException;
 import br.com.stockflow.stockflow_api.exception.RegraNegocioException;
 import br.com.stockflow.stockflow_api.dto.request.ProdutoCreateRequest;
@@ -24,16 +20,17 @@ import org.springframework.web.server.ResponseStatusException;
 public class ProdutoService {
 
     private final ProdutoRepository produtoRepository;
-
     private final UsuarioAutenticadoService usuarioAutenticadoService;
+    private final AuditoriaService auditoriaService;
 
     public ProdutoService(
             ProdutoRepository produtoRepository,
-            UsuarioAutenticadoService usuarioAutenticadoService) {
+            UsuarioAutenticadoService usuarioAutenticadoService,
+            AuditoriaService auditoriaService) {
 
         this.produtoRepository = produtoRepository;
-
         this.usuarioAutenticadoService = usuarioAutenticadoService;
+        this.auditoriaService = auditoriaService;
 
     }
 
@@ -168,8 +165,24 @@ public class ProdutoService {
         produto.setDataAtualizacao(
                 LocalDateTime.now());
 
+        Produto produtoSalvo =
+                produtoRepository.save(produto);
+
+        auditoriaService.registrar(
+                usuarioLogado.getTenant().getId(),
+                usuarioLogado.getTenant().getNome(),
+                usuarioLogado.getId(),
+                usuarioLogado.getNome(),
+                "PRODUTO_EDITADO",
+                "Produto",
+                produtoSalvo.getId().toString(),
+                "Produto "
+                        + produtoSalvo.getNome()
+                        + " atualizado."
+        );
+
         return montarResponse(
-                produtoRepository.save(produto)
+                produtoSalvo
         );
 
     }

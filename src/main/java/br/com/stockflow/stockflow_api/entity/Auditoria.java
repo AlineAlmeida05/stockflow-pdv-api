@@ -16,6 +16,8 @@ public class Auditoria {
 
     private UUID tenantId;
 
+    private String tenantNome;
+
     private UUID usuarioId;
 
     private String usuarioNome;
