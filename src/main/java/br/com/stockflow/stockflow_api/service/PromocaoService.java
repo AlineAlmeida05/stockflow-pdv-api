@@ -21,10 +21,8 @@ import br.com.stockflow.stockflow_api.dto.response.ProdutoPromocaoResponse;
 import br.com.stockflow.stockflow_api.repository.MovimentacaoEstoqueRepository;
 import br.com.stockflow.stockflow_api.entity.MovimentacaoEstoque;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
-
 import br.com.stockflow.stockflow_api.dto.response.PromocaoPainelResponse;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -33,27 +31,23 @@ import org.springframework.web.server.ResponseStatusException;
 public class PromocaoService {
 
     private final PromocaoRepository promocaoRepository;
-
     private final UsuarioAutenticadoService usuarioAutenticadoService;
-
     private final ProdutoRepository produtoRepository;
-
     private final MovimentacaoEstoqueRepository movimentacaoEstoqueRepository;
+    private final AuditoriaService auditoriaService;
 
     public PromocaoService(
             PromocaoRepository promocaoRepository,
             ProdutoRepository produtoRepository,
             UsuarioAutenticadoService usuarioAutenticadoService,
-            MovimentacaoEstoqueRepository movimentacaoEstoqueRepository) {
+            MovimentacaoEstoqueRepository movimentacaoEstoqueRepository,
+            AuditoriaService auditoriaService) {
 
         this.promocaoRepository = promocaoRepository;
-
         this.produtoRepository = produtoRepository;
-
         this.usuarioAutenticadoService = usuarioAutenticadoService;
-
         this.movimentacaoEstoqueRepository = movimentacaoEstoqueRepository;
-
+        this.auditoriaService = auditoriaService;
     }
 
     public List<Promocao> listar() {
@@ -244,8 +238,25 @@ public class PromocaoService {
         produtoRepository.save(
                 produto);
 
-        return promocaoRepository
-                .save(promocao);
+        Promocao promocaoSalva =
+                promocaoRepository.save(promocao);
+
+        auditoriaService.registrar(
+                usuarioLogado.getTenant().getId(),
+                usuarioLogado.getTenant().getNome(),
+                usuarioLogado.getId(),
+                usuarioLogado.getNome(),
+                "PROMOCAO_CRIADA",
+                "Promocao",
+                promocaoSalva.getId().toString(),
+                "Promoção criada para o produto "
+                        + produto.getNome()
+                        + " com desconto de "
+                        + metrics.percentualDesconto()
+                        + "%"
+        );
+
+        return promocaoSalva;
 
 
     }
