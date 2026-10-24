@@ -1,0 +1,12 @@
+.git
+.gitignore
+.idea
+.vscode
+
+target/*.jar.original
+
+src/test
+
+README.md
+
+*.log
