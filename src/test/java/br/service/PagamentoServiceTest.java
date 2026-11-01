@@ -22,13 +22,12 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.verify;
 import br.entity.Cliente;
 import br.entity.Fiado;
 import br.entity.Pagamento;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.contains;
-import static org.mockito.ArgumentMatchers.eq;
+
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -55,8 +54,7 @@ class PagamentoServiceTest {
     @Test
     void deveLancarExcecaoQuandoUsuarioNaoAutenticado() {
 
-        when(usuarioAutenticadoService.usuarioLogado())
-                .thenReturn(null);
+        when(usuarioAutenticadoService.usuarioLogado()).thenReturn(null);
 
         assertThrows(
                 ResponseStatusException.class,
@@ -83,8 +81,7 @@ class PagamentoServiceTest {
                         "PIX"
                 );
 
-        when(usuarioAutenticadoService.usuarioLogado())
-                .thenReturn(usuario);
+        when(usuarioAutenticadoService.usuarioLogado()).thenReturn(usuario);
 
         when(clienteRepository.findByIdAndTenantId(
                 clienteId,
@@ -120,17 +117,17 @@ class PagamentoServiceTest {
                         "PIX"
                 );
 
-        when(usuarioAutenticadoService.usuarioLogado())
-                .thenReturn(usuario);
+        when(usuarioAutenticadoService.usuarioLogado()).thenReturn(usuario);
 
         when(clienteRepository.findByIdAndTenantId(
                 cliente.getId(),
                 tenant.getId()))
                 .thenReturn(Optional.of(cliente));
 
-        when(fiadoRepository.findByClienteIdAndTenantId(
+        when(fiadoRepository.findByClienteIdAndTenantIdAndStatus(
                 cliente.getId(),
-                tenant.getId()))
+                tenant.getId(),
+                "pendente"))
                 .thenReturn(List.of(fiado));
 
         when(pagamentoRepository.findByClienteIdAndTenantId(
@@ -174,17 +171,17 @@ class PagamentoServiceTest {
         pagamentoSalvo.setId(UUID.randomUUID());
         pagamentoSalvo.setValorPago(BigDecimal.valueOf(50));
 
-        when(usuarioAutenticadoService.usuarioLogado())
-                .thenReturn(usuario);
+        when(usuarioAutenticadoService.usuarioLogado()).thenReturn(usuario);
 
         when(clienteRepository.findByIdAndTenantId(
                 cliente.getId(),
                 tenant.getId()))
                 .thenReturn(Optional.of(cliente));
 
-        when(fiadoRepository.findByClienteIdAndTenantId(
+        when(fiadoRepository.findByClienteIdAndTenantIdAndStatus(
                 cliente.getId(),
-                tenant.getId()))
+                tenant.getId(),
+                "pendente"))
                 .thenReturn(List.of(fiado));
 
         when(pagamentoRepository.findByClienteIdAndTenantId(
@@ -192,16 +189,13 @@ class PagamentoServiceTest {
                 tenant.getId()))
                 .thenReturn(List.of());
 
-        when(pagamentoRepository.save(any(Pagamento.class)))
-                .thenReturn(pagamentoSalvo);
+        when(pagamentoRepository.save(any(Pagamento.class))).thenReturn(pagamentoSalvo);
 
-        Pagamento resultado =
-                pagamentoService.salvar(request);
+        Pagamento resultado = pagamentoService.salvar(request);
 
         assertNotNull(resultado);
 
-        verify(pagamentoRepository)
-                .save(any(Pagamento.class));
+        verify(pagamentoRepository).save(any(Pagamento.class));
     }
 
     @Test
@@ -234,17 +228,17 @@ class PagamentoServiceTest {
         pagamentoSalvo.setId(UUID.randomUUID());
         pagamentoSalvo.setValorPago(BigDecimal.valueOf(50));
 
-        when(usuarioAutenticadoService.usuarioLogado())
-                .thenReturn(usuario);
+        when(usuarioAutenticadoService.usuarioLogado()).thenReturn(usuario);
 
         when(clienteRepository.findByIdAndTenantId(
                 cliente.getId(),
                 tenant.getId()))
                 .thenReturn(Optional.of(cliente));
 
-        when(fiadoRepository.findByClienteIdAndTenantId(
+        when(fiadoRepository.findByClienteIdAndTenantIdAndStatus(
                 cliente.getId(),
-                tenant.getId()))
+                tenant.getId(),
+                "pendente"))
                 .thenReturn(List.of(fiado));
 
         when(pagamentoRepository.findByClienteIdAndTenantId(
@@ -252,14 +246,14 @@ class PagamentoServiceTest {
                 tenant.getId()))
                 .thenReturn(List.of());
 
-        when(pagamentoRepository.save(any(Pagamento.class)))
-                .thenReturn(pagamentoSalvo);
+        when(pagamentoRepository.save(any(Pagamento.class))).thenReturn(pagamentoSalvo);
 
         pagamentoService.salvar(request);
 
         verify(auditoriaService)
                 .registrar(
                         eq(tenant.getId()),
+                        isNull(),
                         eq(usuario.getId()),
                         eq(usuario.getNome()),
                         eq("PAGAMENTO_REALIZADO"),
@@ -278,15 +272,13 @@ class PagamentoServiceTest {
             Usuario usuario = new Usuario();
             usuario.setTenant(tenant);
 
-            when(usuarioAutenticadoService.usuarioLogado())
-                    .thenReturn(usuario);
+            when(usuarioAutenticadoService.usuarioLogado()).thenReturn(usuario);
 
             when(pagamentoRepository.findByTenantId(
                     tenant.getId()))
                     .thenReturn(List.of());
 
-            List<PagamentoResponse> resultado =
-                    pagamentoService .listar();
+            List<PagamentoResponse> resultado = pagamentoService .listar();
 
             assertNotNull(resultado);
             assertEquals(0, resultado.size());

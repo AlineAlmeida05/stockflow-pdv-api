@@ -19,11 +19,10 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import static org.mockito.ArgumentMatchers.any;
+
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.contains;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verify;
 
@@ -69,8 +68,7 @@ class VendaServiceTest {
     @Test
     void deveLancarExcecaoQuandoUsuarioNaoAutenticado() {
 
-        when(usuarioAutenticadoService.usuarioLogado())
-                .thenReturn(null);
+        when(usuarioAutenticadoService.usuarioLogado()).thenReturn(null);
 
         assertThrows(
                 ResponseStatusException.class,
@@ -103,8 +101,7 @@ class VendaServiceTest {
                         List.of(item)
                 );
 
-        when(usuarioAutenticadoService.usuarioLogado())
-                .thenReturn(usuario);
+        when(usuarioAutenticadoService.usuarioLogado()).thenReturn(usuario);
 
         when(produtoRepository.findByIdAndTenantId(
                 produtoId,
@@ -155,24 +152,20 @@ class VendaServiceTest {
             vendaSalva.setId(UUID.randomUUID());
             vendaSalva.setValorTotal(BigDecimal.valueOf(20));
 
-            when(usuarioAutenticadoService.usuarioLogado())
-                    .thenReturn(usuario);
+            when(usuarioAutenticadoService.usuarioLogado()).thenReturn(usuario);
 
             when(produtoRepository.findByIdAndTenantId(
                     produto.getId(),
                     tenant.getId()))
                     .thenReturn(Optional.of(produto));
 
-            when(vendaRepository.save(any(Venda.class)))
-                    .thenReturn(vendaSalva);
+            when(vendaRepository.save(any(Venda.class))).thenReturn(vendaSalva);
 
-            Venda resultado =
-                    vendaService.salvar(request);
+            Venda resultado = vendaService.salvar(request);
 
             assertNotNull(resultado);
 
-            verify(vendaRepository)
-                    .save(any(Venda.class));
+            verify(vendaRepository).save(any(Venda.class));
         }
 
     @Test
@@ -204,8 +197,7 @@ class VendaServiceTest {
                         List.of(item)
                 );
 
-        when(usuarioAutenticadoService.usuarioLogado())
-                .thenReturn(usuario);
+        when(usuarioAutenticadoService.usuarioLogado()).thenReturn(usuario);
 
         when(produtoRepository.findByIdAndTenantId(
                 produto.getId(),
@@ -235,8 +227,7 @@ class VendaServiceTest {
                         List.of()
                 );
 
-        when(usuarioAutenticadoService.usuarioLogado())
-                .thenReturn(usuario);
+        when(usuarioAutenticadoService.usuarioLogado()).thenReturn(usuario);
 
         assertThrows(
                 RegraNegocioException.class,
@@ -281,22 +272,21 @@ class VendaServiceTest {
         vendaSalva.setId(UUID.randomUUID());
         vendaSalva.setValorTotal(BigDecimal.TEN);
 
-        when(usuarioAutenticadoService.usuarioLogado())
-                .thenReturn(usuario);
+        when(usuarioAutenticadoService.usuarioLogado()).thenReturn(usuario);
 
         when(produtoRepository.findByIdAndTenantId(
                 produto.getId(),
                 tenant.getId()))
                 .thenReturn(Optional.of(produto));
 
-        when(vendaRepository.save(any(Venda.class)))
-                .thenReturn(vendaSalva);
+        when(vendaRepository.save(any(Venda.class))).thenReturn(vendaSalva);
 
         vendaService.salvar(request);
 
         verify(auditoriaService)
                 .registrar(
                         eq(tenant.getId()),
+                        isNull(),
                         eq(usuario.getId()),
                         eq(usuario.getNome()),
                         eq("VENDA_CRIADA"),
@@ -317,8 +307,7 @@ class VendaServiceTest {
 
         UUID vendaId = UUID.randomUUID();
 
-        when(usuarioAutenticadoService.usuarioLogado())
-                .thenReturn(usuario);
+        when(usuarioAutenticadoService.usuarioLogado()).thenReturn(usuario);
 
         when(vendaRepository.findByIdAndTenantId(
                 vendaId,
@@ -352,8 +341,7 @@ class VendaServiceTest {
         venda.setId(UUID.randomUUID());
         venda.setStatus("cancelada");
 
-        when(usuarioAutenticadoService.usuarioLogado())
-                .thenReturn(usuario);
+        when(usuarioAutenticadoService.usuarioLogado()).thenReturn(usuario);
 
         when(vendaRepository.findByIdAndTenantId(
                 venda.getId(),
@@ -401,8 +389,7 @@ class VendaServiceTest {
         item.setProduto(produto);
         item.setQuantidade(2);
 
-        when(usuarioAutenticadoService.usuarioLogado())
-                .thenReturn(usuario);
+        when(usuarioAutenticadoService.usuarioLogado()).thenReturn(usuario);
 
         when(vendaRepository.findByIdAndTenantId(
                 venda.getId(),
@@ -425,11 +412,9 @@ class VendaServiceTest {
 
         assertNotNull(venda.getDataCancelamento());
 
-        verify(vendaRepository)
-                .save(venda);
+        verify(vendaRepository).save(venda);
 
-        verify(produtoRepository)
-                .save(produto);
+        verify(produtoRepository).save(produto);
     }
 
     @Test
@@ -459,8 +444,7 @@ class VendaServiceTest {
         item.setProduto(produto);
         item.setQuantidade(2);
 
-        when(usuarioAutenticadoService.usuarioLogado())
-                .thenReturn(usuario);
+        when(usuarioAutenticadoService.usuarioLogado()).thenReturn(usuario);
 
         when(vendaRepository.findByIdAndTenantId(
                 venda.getId(),
@@ -484,6 +468,7 @@ class VendaServiceTest {
         verify(auditoriaService)
                 .registrar(
                         eq(tenant.getId()),
+                        isNull(),
                         eq(usuario.getId()),
                         eq(usuario.getNome()),
                         eq("VENDA_CANCELADA"),

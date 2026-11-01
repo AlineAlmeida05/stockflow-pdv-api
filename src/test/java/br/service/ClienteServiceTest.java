@@ -9,8 +9,6 @@ import br.repository.ClienteRepository;
 import br.repository.FiadoRepository;
 import br.repository.PagamentoRepository;
 import br.security.UsuarioAutenticadoService;
-import br.service.AuditoriaService;
-import br.service.ClienteService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -20,10 +18,9 @@ import org.springframework.web.server.ResponseStatusException;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.any;
+
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.contains;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import java.util.Optional;
@@ -53,8 +50,7 @@ class ClienteServiceTest {
     @Test
     void deveLancarExcecaoQuandoUsuarioNaoAutenticado() {
 
-        when(usuarioAutenticadoService.usuarioLogado())
-                .thenReturn(null);
+        when(usuarioAutenticadoService.usuarioLogado()).thenReturn(null);
 
         assertThrows(
                 ResponseStatusException.class,
@@ -71,15 +67,13 @@ class ClienteServiceTest {
         Usuario usuario = new Usuario();
         usuario.setTenant(tenant);
 
-        when(usuarioAutenticadoService.usuarioLogado())
-                .thenReturn(usuario);
+        when(usuarioAutenticadoService.usuarioLogado()).thenReturn(usuario);
 
         when(clienteRepository.findByTenantId(
                 tenant.getId()))
                 .thenReturn(List.of());
 
-        List<ClienteResponse> resultado =
-                clienteService.listar();
+        List<ClienteResponse> resultado = clienteService.listar();
 
         assertNotNull(resultado);
         assertEquals(0, resultado.size());
@@ -114,14 +108,11 @@ class ClienteServiceTest {
                 BigDecimal.valueOf(500)
         );
 
-        when(usuarioAutenticadoService.usuarioLogado())
-                .thenReturn(usuario);
+        when(usuarioAutenticadoService.usuarioLogado()).thenReturn(usuario);
 
-        when(clienteRepository.save(any(Cliente.class)))
-                .thenReturn(clienteSalvo);
+        when(clienteRepository.save(any(Cliente.class))).thenReturn(clienteSalvo);
 
-        ClienteResponse response =
-                clienteService.salvar(request);
+        ClienteResponse response = clienteService.salvar(request);
 
         assertNotNull(response);
     }
@@ -150,17 +141,16 @@ class ClienteServiceTest {
         clienteSalvo.setId(UUID.randomUUID());
         clienteSalvo.setNome("João");
 
-        when(usuarioAutenticadoService.usuarioLogado())
-                .thenReturn(usuario);
+        when(usuarioAutenticadoService.usuarioLogado()).thenReturn(usuario);
 
-        when(clienteRepository.save(any(Cliente.class)))
-                .thenReturn(clienteSalvo);
+        when(clienteRepository.save(any(Cliente.class))).thenReturn(clienteSalvo);
 
         clienteService.salvar(request);
 
         verify(auditoriaService)
                 .registrar(
                         eq(tenant.getId()),
+                        isNull(),
                         eq(usuario.getId()),
                         eq(usuario.getNome()),
                         eq("CLIENTE_CRIADO"),
@@ -181,8 +171,7 @@ class ClienteServiceTest {
 
         UUID clienteId = UUID.randomUUID();
 
-        when(usuarioAutenticadoService.usuarioLogado())
-                .thenReturn(usuario);
+        when(usuarioAutenticadoService.usuarioLogado()).thenReturn(usuario);
 
         when(clienteRepository.findByIdAndTenantId(
                 clienteId,
@@ -212,8 +201,7 @@ class ClienteServiceTest {
         cliente.setNome("João");
         cliente.setAtivo(true);
 
-        when(usuarioAutenticadoService.usuarioLogado())
-                .thenReturn(usuario);
+        when(usuarioAutenticadoService.usuarioLogado()).thenReturn(usuario);
 
         when(clienteRepository.findByIdAndTenantId(
                 cliente.getId(),
@@ -224,12 +212,12 @@ class ClienteServiceTest {
 
         assertFalse(cliente.getAtivo());
 
-        verify(clienteRepository)
-                .save(cliente);
+        verify(clienteRepository).save(cliente);
 
         verify(auditoriaService)
                 .registrar(
                         eq(tenant.getId()),
+                        isNull(),
                         eq(usuario.getId()),
                         eq(usuario.getNome()),
                         eq("CLIENTE_INATIVADO"),
@@ -256,8 +244,7 @@ class ClienteServiceTest {
         cliente.setNome("João");
         cliente.setAtivo(false);
 
-        when(usuarioAutenticadoService.usuarioLogado())
-                .thenReturn(usuario);
+        when(usuarioAutenticadoService.usuarioLogado()).thenReturn(usuario);
 
         when(clienteRepository.findByIdAndTenantId(
                 cliente.getId(),
@@ -268,8 +255,7 @@ class ClienteServiceTest {
 
         assertTrue(cliente.getAtivo());
 
-        verify(clienteRepository)
-                .save(cliente);
+        verify(clienteRepository).save(cliente);
     }
 
     @Test
@@ -297,16 +283,14 @@ class ClienteServiceTest {
                         "Atualizado"
                 );
 
-        when(usuarioAutenticadoService.usuarioLogado())
-                .thenReturn(usuario);
+        when(usuarioAutenticadoService.usuarioLogado()).thenReturn(usuario);
 
         when(clienteRepository.findByIdAndTenantId(
                 clienteId,
                 tenant.getId()))
                 .thenReturn(Optional.of(cliente));
 
-        when(clienteRepository.save(any(Cliente.class)))
-                .thenReturn(cliente);
+        when(clienteRepository.save(any(Cliente.class))).thenReturn(cliente);
 
         ClienteResponse response =
                 clienteService.atualizar(
@@ -316,12 +300,12 @@ class ClienteServiceTest {
 
         assertNotNull(response);
 
-        verify(clienteRepository)
-                .save(cliente);
+        verify(clienteRepository).save(cliente);
 
         verify(auditoriaService)
                 .registrar(
                         eq(tenant.getId()),
+                        isNull(),
                         eq(usuario.getId()),
                         eq(usuario.getNome()),
                         eq("CLIENTE_EDITADO"),

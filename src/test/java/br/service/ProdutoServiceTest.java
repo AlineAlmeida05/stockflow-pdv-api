@@ -43,8 +43,7 @@ class ProdutoServiceTest {
     @Test
     void deveLancarExcecaoQuandoUsuarioNaoAutenticado() {
 
-        when(usuarioAutenticadoService.usuarioLogado())
-                .thenReturn(null);
+        when(usuarioAutenticadoService.usuarioLogado()).thenReturn(null);
 
         assertThrows(
                 ResponseStatusException.class,
@@ -56,20 +55,20 @@ class ProdutoServiceTest {
     void deveListarProdutosComSucesso() {
 
         Tenant tenant = new Tenant();
+
         tenant.setId(UUID.randomUUID());
 
         Usuario usuario = new Usuario();
+
         usuario.setTenant(tenant);
 
-        when(usuarioAutenticadoService.usuarioLogado())
-                .thenReturn(usuario);
+        when(usuarioAutenticadoService.usuarioLogado()).thenReturn(usuario);
 
         when(produtoRepository.findByTenantId(
                 tenant.getId()))
                 .thenReturn(List.of());
 
-        List<ProdutoResponse> resultado =
-                produtoService.listar();
+        List<ProdutoResponse> resultado = produtoService.listar();
 
         assertNotNull(resultado);
         assertEquals(0, resultado.size());
@@ -102,20 +101,18 @@ class ProdutoServiceTest {
         produtoSalvo.setNome("Produto Teste");
         produtoSalvo.setCodigo("EMP000001");
 
-        when(usuarioAutenticadoService.usuarioLogado())
-                .thenReturn(usuario);
+        when(usuarioAutenticadoService.usuarioLogado()).thenReturn(usuario);
 
         when(produtoRepository.findTopByTenantIdOrderByCodigoDesc(
                 tenant.getId()))
                 .thenReturn(null);
 
-        when(produtoRepository.save(any(Produto.class)))
-                .thenReturn(produtoSalvo);
+        when(produtoRepository.save(any(Produto.class))).thenReturn(produtoSalvo);
 
-        ProdutoResponse response =
-                produtoService.salvar(request);
+        ProdutoResponse response = produtoService.salvar(request);
 
         assertNotNull(response);
+
         assertEquals("Produto Teste", response.nome());
     }
 
@@ -146,20 +143,19 @@ class ProdutoServiceTest {
         produtoSalvo.setNome("Produto Teste");
         produtoSalvo.setCodigo("EMP000001");
 
-        when(usuarioAutenticadoService.usuarioLogado())
-                .thenReturn(usuario);
+        when(usuarioAutenticadoService.usuarioLogado()).thenReturn(usuario);
 
         when(produtoRepository.findTopByTenantIdOrderByCodigoDesc(
                 tenant.getId()))
                 .thenReturn(null);
 
-        when(produtoRepository.save(any(Produto.class)))
-                .thenReturn(produtoSalvo);
+        when(produtoRepository.save(any(Produto.class))).thenReturn(produtoSalvo);
 
         produtoService.salvar(request);
 
         verify(auditoriaService).registrar(
                 eq(tenant.getId()),
+                isNull(),
                 eq(usuario.getId()),
                 eq(usuario.getNome()),
                 eq("PRODUTO_CRIADO"),
@@ -213,8 +209,7 @@ class ProdutoServiceTest {
         produto.setNome("Produto Teste");
         produto.setAtivo(true);
 
-        when(usuarioAutenticadoService.usuarioLogado())
-                .thenReturn(usuario);
+        when(usuarioAutenticadoService.usuarioLogado()).thenReturn(usuario);
 
         when(produtoRepository.findByIdAndTenantId(
                 produto.getId(),
@@ -225,14 +220,14 @@ class ProdutoServiceTest {
 
         assertFalse(produto.getAtivo());
 
-        verify(produtoRepository)
-                .save(produto);
+        verify(produtoRepository).save(produto);
 
         verify(auditoriaService)
                 .registrar(
                         eq(tenant.getId()),
+                        isNull(),
                         eq(usuario.getId()),
-                        anyString(),
+                        eq(usuario.getNome()),
                         eq("PRODUTO_INATIVADO"),
                         eq("Produto"),
                         eq(produto.getId().toString()),
@@ -256,8 +251,7 @@ class ProdutoServiceTest {
         produto.setNome("Produto Teste");
         produto.setAtivo(false);
 
-        when(usuarioAutenticadoService.usuarioLogado())
-                .thenReturn(usuario);
+        when(usuarioAutenticadoService.usuarioLogado()).thenReturn(usuario);
 
         when(produtoRepository.findByIdAndTenantId(
                 produto.getId(),
@@ -268,12 +262,12 @@ class ProdutoServiceTest {
 
         assertTrue(produto.getAtivo());
 
-        verify(produtoRepository)
-                .save(produto);
+        verify(produtoRepository).save(produto);
 
         verify(auditoriaService)
                 .registrar(
                         eq(tenant.getId()),
+                        isNull(),
                         eq(usuario.getId()),
                         eq(usuario.getNome()),
                         eq("PRODUTO_REATIVADO"),
@@ -312,16 +306,14 @@ class ProdutoServiceTest {
                         true
                 );
 
-        when(usuarioAutenticadoService.usuarioLogado())
-                .thenReturn(usuario);
+        when(usuarioAutenticadoService.usuarioLogado()).thenReturn(usuario);
 
         when(produtoRepository.findByIdAndTenantId(
                 produtoId,
                 tenant.getId()))
                 .thenReturn(Optional.of(produto));
 
-        when(produtoRepository.save(any(Produto.class)))
-                .thenReturn(produto);
+        when(produtoRepository.save(any(Produto.class))).thenReturn(produto);
 
         ProdutoResponse response =
                 produtoService.atualizar(
@@ -331,12 +323,12 @@ class ProdutoServiceTest {
 
         assertNotNull(response);
 
-        verify(produtoRepository)
-                .save(produto);
+        verify(produtoRepository).save(produto);
 
         verify(auditoriaService)
                 .registrar(
                         eq(tenant.getId()),
+                        isNull(),
                         eq(usuario.getId()),
                         eq(usuario.getNome()),
                         eq("PRODUTO_EDITADO"),
