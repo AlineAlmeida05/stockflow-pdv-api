@@ -53,8 +53,7 @@ class DashboardServiceTest {
     @Test
     void deveLancarExcecaoQuandoUsuarioNaoAutenticado() {
 
-        when(usuarioAutenticadoService.usuarioLogado())
-                .thenReturn(null);
+        when(usuarioAutenticadoService.usuarioLogado()).thenReturn(null);
 
         assertThrows(
                 ResponseStatusException.class,
@@ -71,8 +70,7 @@ class DashboardServiceTest {
         Usuario usuario = new Usuario();
         usuario.setTenant(tenant);
 
-        when(usuarioAutenticadoService.usuarioLogado())
-                .thenReturn(usuario);
+        when(usuarioAutenticadoService.usuarioLogado()).thenReturn(usuario);
 
         when(produtoRepository.findByTenantId(
                 tenant.getId()))
@@ -90,8 +88,7 @@ class DashboardServiceTest {
                 tenant.getId()))
                 .thenReturn(List.of());
 
-        DashboardResponse resultado =
-                dashboardService.obterDashboard("hoje");
+        DashboardResponse resultado = dashboardService.obterDashboard("hoje");
 
         assertNotNull(resultado);
 
@@ -113,24 +110,19 @@ class DashboardServiceTest {
         venda.setValorTotal(BigDecimal.valueOf(500));
         venda.setDataVenda(LocalDateTime.now());
 
-        when(usuarioAutenticadoService.usuarioLogado())
-                .thenReturn(usuario);
+        when(usuarioAutenticadoService.usuarioLogado()).thenReturn(usuario);
 
-        when(produtoRepository.findByTenantId(tenant.getId()))
-                .thenReturn(List.of());
+        when(produtoRepository.findByTenantId(tenant.getId())).thenReturn(List.of());
 
-        when(vendaRepository.findByTenantId(tenant.getId()))
-                .thenReturn(List.of(venda));
+        when(vendaRepository.findByTenantId(tenant.getId())).thenReturn(List.of(venda));
 
-        when(fiadoRepository.findByTenantId(tenant.getId()))
-                .thenReturn(List.of());
+        when(fiadoRepository.findByTenantId(tenant.getId())).thenReturn(List.of());
 
         when(movimentacaoEstoqueRepository.findByTenantId(
                 tenant.getId()))
                 .thenReturn(List.of());
 
-        DashboardResponse resultado =
-                dashboardService.obterDashboard("hoje");
+        DashboardResponse resultado = dashboardService.obterDashboard("hoje");
 
         assertEquals(
                 BigDecimal.ZERO,
@@ -151,24 +143,19 @@ class DashboardServiceTest {
         produto.setEstoqueAtual(0);
         produto.setEstoqueMinimo(5);
 
-        when(usuarioAutenticadoService.usuarioLogado())
-                .thenReturn(usuario);
+        when(usuarioAutenticadoService.usuarioLogado()).thenReturn(usuario);
 
-        when(produtoRepository.findByTenantId(tenant.getId()))
-                .thenReturn(List.of(produto));
+        when(produtoRepository.findByTenantId(tenant.getId())).thenReturn(List.of(produto));
 
-        when(vendaRepository.findByTenantId(tenant.getId()))
-                .thenReturn(List.of());
+        when(vendaRepository.findByTenantId(tenant.getId())).thenReturn(List.of());
 
-        when(fiadoRepository.findByTenantId(tenant.getId()))
-                .thenReturn(List.of());
+        when(fiadoRepository.findByTenantId(tenant.getId())).thenReturn(List.of());
 
         when(movimentacaoEstoqueRepository.findByTenantId(
                 tenant.getId()))
                 .thenReturn(List.of());
 
-        DashboardResponse resultado =
-                dashboardService.obterDashboard("hoje");
+        DashboardResponse resultado = dashboardService.obterDashboard("hoje");
 
         assertEquals(
                 1,
@@ -189,24 +176,19 @@ class DashboardServiceTest {
         produto.setEstoqueAtual(3);
         produto.setEstoqueMinimo(5);
 
-        when(usuarioAutenticadoService.usuarioLogado())
-                .thenReturn(usuario);
+        when(usuarioAutenticadoService.usuarioLogado()).thenReturn(usuario);
 
-        when(produtoRepository.findByTenantId(tenant.getId()))
-                .thenReturn(List.of(produto));
+        when(produtoRepository.findByTenantId(tenant.getId())).thenReturn(List.of(produto));
 
-        when(vendaRepository.findByTenantId(tenant.getId()))
-                .thenReturn(List.of());
+        when(vendaRepository.findByTenantId(tenant.getId())).thenReturn(List.of());
 
-        when(fiadoRepository.findByTenantId(tenant.getId()))
-                .thenReturn(List.of());
+        when(fiadoRepository.findByTenantId(tenant.getId())).thenReturn(List.of());
 
         when(movimentacaoEstoqueRepository.findByTenantId(
                 tenant.getId()))
                 .thenReturn(List.of());
 
-        DashboardResponse resultado =
-                dashboardService.obterDashboard("hoje");
+        DashboardResponse resultado = dashboardService.obterDashboard("hoje");
 
         assertEquals(
                 1,
@@ -228,24 +210,19 @@ class DashboardServiceTest {
         produto.setEstoqueAtual(10);
         produto.setEstoqueMinimo(5);
 
-        when(usuarioAutenticadoService.usuarioLogado())
-                .thenReturn(usuario);
+        when(usuarioAutenticadoService.usuarioLogado()).thenReturn(usuario);
 
-        when(produtoRepository.findByTenantId(tenant.getId()))
-                .thenReturn(List.of(produto));
+        when(produtoRepository.findByTenantId(tenant.getId())).thenReturn(List.of(produto));
 
-        when(vendaRepository.findByTenantId(tenant.getId()))
-                .thenReturn(List.of());
+        when(vendaRepository.findByTenantId(tenant.getId())).thenReturn(List.of());
 
-        when(fiadoRepository.findByTenantId(tenant.getId()))
-                .thenReturn(List.of());
+        when(fiadoRepository.findByTenantId(tenant.getId())).thenReturn(List.of());
 
         when(movimentacaoEstoqueRepository.findByTenantId(
                 tenant.getId()))
                 .thenReturn(List.of());
 
-        DashboardResponse resultado =
-                dashboardService.obterDashboard("hoje");
+        DashboardResponse resultado = dashboardService.obterDashboard("hoje");
 
         assertEquals(
                 1,

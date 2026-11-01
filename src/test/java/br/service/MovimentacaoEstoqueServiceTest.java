@@ -15,6 +15,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.server.ResponseStatusException;
 import java.math.BigDecimal;
 import java.util.Optional;
+
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import br.entity.Produto;
@@ -22,9 +24,6 @@ import br.entity.Tenant;
 import br.entity.Usuario;
 import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.contains;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
@@ -47,8 +46,7 @@ public class MovimentacaoEstoqueServiceTest {
     @Test
     void deveLancarExcecaoQuandoUsuarioNaoAutenticado() {
 
-        when(usuarioAutenticadoService.usuarioLogado())
-                .thenReturn(null);
+        when(usuarioAutenticadoService.usuarioLogado()).thenReturn(null);
 
         assertThrows(
                 ResponseStatusException.class,
@@ -76,8 +74,7 @@ public class MovimentacaoEstoqueServiceTest {
                         "Entrada teste"
                 );
 
-        when(usuarioAutenticadoService.usuarioLogado())
-                .thenReturn(usuario);
+        when(usuarioAutenticadoService.usuarioLogado()).thenReturn(usuario);
 
         when(produtoRepository.findByIdAndTenantId(
                 produtoId,
@@ -112,8 +109,7 @@ public class MovimentacaoEstoqueServiceTest {
                         "Entrada"
                 );
 
-        when(usuarioAutenticadoService.usuarioLogado())
-                .thenReturn(usuario);
+        when(usuarioAutenticadoService.usuarioLogado()).thenReturn(usuario);
 
         when(produtoRepository.findByIdAndTenantId(
                 produto.getId(),
@@ -148,8 +144,7 @@ public class MovimentacaoEstoqueServiceTest {
                         "Entrada"
                 );
 
-        when(usuarioAutenticadoService.usuarioLogado())
-                .thenReturn(usuario);
+        when(usuarioAutenticadoService.usuarioLogado()).thenReturn(usuario);
 
         when(produtoRepository.findByIdAndTenantId(
                 produto.getId(),
@@ -191,27 +186,22 @@ public class MovimentacaoEstoqueServiceTest {
                         "Entrada"
                 );
 
-        when(usuarioAutenticadoService.usuarioLogado())
-                .thenReturn(usuario);
+        when(usuarioAutenticadoService.usuarioLogado()).thenReturn(usuario);
 
         when(produtoRepository.findByIdAndTenantId(
                 produto.getId(),
                 tenant.getId()))
                 .thenReturn(Optional.of(produto));
 
-        when(repository.save(any(MovimentacaoEstoque.class)))
-                .thenReturn(movimentacao);
+        when(repository.save(any(MovimentacaoEstoque.class))).thenReturn(movimentacao);
 
-        MovimentacaoEstoque resultado =
-                service.salvar(request);
+        MovimentacaoEstoque resultado = service.salvar(request);
 
         assertNotNull(resultado);
 
-        verify(produtoRepository)
-                .save(produto);
+        verify(produtoRepository).save(produto);
 
-        verify(repository)
-                .save(any(MovimentacaoEstoque.class));
+        verify(repository).save(any(MovimentacaoEstoque.class));
     }
 
     @Test
@@ -242,22 +232,21 @@ public class MovimentacaoEstoqueServiceTest {
                         "Entrada"
                 );
 
-        when(usuarioAutenticadoService.usuarioLogado())
-                .thenReturn(usuario);
+        when(usuarioAutenticadoService.usuarioLogado()).thenReturn(usuario);
 
         when(produtoRepository.findByIdAndTenantId(
                 produto.getId(),
                 tenant.getId()))
                 .thenReturn(Optional.of(produto));
 
-        when(repository.save(any(MovimentacaoEstoque.class)))
-                .thenReturn(movimentacao);
+        when(repository.save(any(MovimentacaoEstoque.class))).thenReturn(movimentacao);
 
         service.salvar(request);
 
         verify(auditoriaService)
                 .registrar(
                         eq(tenant.getId()),
+                        isNull(),
                         eq(usuario.getId()),
                         eq(usuario.getNome()),
                         eq("ENTRADA_ESTOQUE"),
