@@ -26,7 +26,6 @@ import java.util.ArrayList;
 import br.com.stockflow.stockflow_api.dto.response.PromocaoPainelResponse;
 import org.springframework.web.server.ResponseStatusException;
 
-
 @Service
 public class PromocaoService {
 
@@ -52,8 +51,7 @@ public class PromocaoService {
 
     public List<Promocao> listar() {
 
-        Usuario usuarioLogado =
-                obterUsuarioLogado();
+        Usuario usuarioLogado = obterUsuarioLogado();
 
         return promocaoRepository
                 .findByTenantAndAtivaTrue(
@@ -63,8 +61,7 @@ public class PromocaoService {
 
     public List<Promocao> listarAtivas() {
 
-        Usuario usuarioLogado =
-                obterUsuarioLogado();
+        Usuario usuarioLogado = obterUsuarioLogado();
 
         return promocaoRepository
                 .findByTenantAndAtivaTrue(
@@ -75,8 +72,7 @@ public class PromocaoService {
     public Promocao buscarPorId(
             UUID id) {
 
-        Usuario usuarioLogado =
-                obterUsuarioLogado();
+        Usuario usuarioLogado = obterUsuarioLogado();
 
         Promocao promocao =
                 promocaoRepository
@@ -99,8 +95,7 @@ public class PromocaoService {
     public Promocao criarPromocao(
             PromocaoRequest request) {
 
-        Usuario usuarioLogado =
-                obterUsuarioLogado();
+        Usuario usuarioLogado = obterUsuarioLogado();
 
         Produto produto =
                 produtoRepository
@@ -165,81 +160,57 @@ public class PromocaoService {
         }
 
 
-        Promocao promocao =
-                new Promocao();
+        Promocao promocao = new Promocao();
 
-        Integer estoqueInicio =
-                produto.getEstoqueAtual();
+        Integer estoqueInicio = produto.getEstoqueAtual();
 
         Integer metaUnidades =
                 (int) Math.ceil(
                         estoqueInicio * 0.5
                 );
 
-        promocao.setEstoqueInicio(
-                estoqueInicio
-        );
+        promocao.setEstoqueInicio(estoqueInicio);
 
-        promocao.setMetaUnidades(
-                metaUnidades
-        );
+        promocao.setMetaUnidades(metaUnidades);
 
-        promocao.setUnidadesVendidas(
-                0
-        );
+        promocao.setUnidadesVendidas(0);
 
-        promocao.setReceitaGerada(
-                BigDecimal.ZERO
-        );
+        promocao.setReceitaGerada(BigDecimal.ZERO);
 
-        promocao.setProduto(
-                produto);
+        promocao.setProduto(produto);
 
-        promocao.setPrecoOriginal(
-                produto.getPrecoVenda());
+        promocao.setPrecoOriginal(produto.getPrecoVenda());
 
-        promocao.setPrecoPromocional(
-                precoPromocional);
+        promocao.setPrecoPromocional(precoPromocional);
 
         promocao.setPercentualDesconto(
                 BigDecimal.valueOf(
                         metrics.percentualDesconto()
                 ));
 
-        promocao.setMotivo(
-                metrics.motivo());
+        promocao.setMotivo(metrics.motivo());
 
-        promocao.setDataInicio(
-                LocalDateTime.now());
+        promocao.setDataInicio(LocalDateTime.now());
 
-        promocao.setDataCriacao(
-                LocalDateTime.now());
+        promocao.setDataCriacao(LocalDateTime.now());
 
         promocao.setAtiva(true);
 
-        promocao.setTenant(
-                usuarioLogado.getTenant());
+        promocao.setTenant(usuarioLogado.getTenant());
 
-        produto.setPromocaoAtiva(
-                true);
+        produto.setPromocaoAtiva(true);
 
-        produto.setPrecoPromocional(
-                precoPromocional);
+        produto.setPrecoPromocional(precoPromocional);
 
-        produto.setPromocaoMotivo(
-                metrics.motivo());
+        produto.setPromocaoMotivo(metrics.motivo());
 
-        produto.setDataInicioPromocao(
-                LocalDate.now());
+        produto.setDataInicioPromocao(LocalDate.now());
 
-        produto.setDataFimPromocao(
-                null);
+        produto.setDataFimPromocao(null);
 
-        produtoRepository.save(
-                produto);
+        produtoRepository.save(produto);
 
-        Promocao promocaoSalva =
-                promocaoRepository.save(promocao);
+        Promocao promocaoSalva = promocaoRepository.save(promocao);
 
         auditoriaService.registrar(
                 usuarioLogado.getTenant().getId(),
@@ -280,8 +251,7 @@ public class PromocaoService {
 
         produto.setDataFimPromocao(null);
 
-        produto.setPromocaoMotivo(
-                "Meta atingida");
+        produto.setPromocaoMotivo("Meta atingida");
 
         produtoRepository.save(produto);
 
@@ -292,40 +262,31 @@ public class PromocaoService {
     public Promocao encerrarPromocao(
             UUID id) {
 
-        Promocao promocao =
-                buscarPorId(id);
+        Promocao promocao = buscarPorId(id);
 
         promocao.setAtiva(false);
 
-        promocao.setDataFim(
-                LocalDateTime.now());
+        promocao.setDataFim(LocalDateTime.now());
 
-        Produto produto =
-                promocao.getProduto();
+        Produto produto = promocao.getProduto();
 
         produto.setPromocaoAtiva(false);
 
-        produto.setPrecoPromocional(
-                null);
+        produto.setPrecoPromocional(null);
 
-        produto.setPromocaoMotivo(
-                null);
+        produto.setPromocaoMotivo(null);
 
-        produto.setDataFimPromocao(
-                LocalDate.now());
+        produto.setDataFimPromocao(LocalDate.now());
 
-        produtoRepository.save(
-                produto);
+        produtoRepository.save(produto);
 
-        return promocaoRepository.save(
-                promocao);
+        return promocaoRepository.save(promocao);
     }
 
     public List<Promocao> listarPorProduto(
             UUID produtoId) {
 
-        Usuario usuarioLogado =
-                obterUsuarioLogado();
+        Usuario usuarioLogado = obterUsuarioLogado();
 
         Produto produto =
                 produtoRepository
@@ -360,8 +321,7 @@ public class PromocaoService {
     public List<ProdutoPromocaoResponse>
     listarCandidatos() {
 
-        Usuario usuarioLogado =
-                obterUsuarioLogado();
+        Usuario usuarioLogado = obterUsuarioLogado();
 
         List<Produto> produtos =
                 produtoRepository
@@ -379,8 +339,7 @@ public class PromocaoService {
                                         .getId()
                         );
 
-        List<ProdutoPromocaoResponse> candidatos =
-                new ArrayList<>();
+        List<ProdutoPromocaoResponse> candidatos = new ArrayList<>();
 
         for (Produto produto : produtos) {
 
@@ -431,8 +390,8 @@ public class PromocaoService {
 
     public PromocaoPainelResponse
     listarPainel() {
-        Usuario usuarioLogado =
-                obterUsuarioLogado();
+
+        Usuario usuarioLogado = obterUsuarioLogado();
 
         List<MovimentacaoEstoque> movimentacoes =
                 movimentacaoEstoqueRepository
@@ -442,13 +401,11 @@ public class PromocaoService {
                                         .getId()
                         );
 
-        List<ProdutoPromocaoResponse> ativas =
-                new ArrayList<>();
+        List<ProdutoPromocaoResponse> ativas = new ArrayList<>();
 
         for (Promocao promocao : listarAtivas()) {
 
-            Produto produto =
-                    promocao.getProduto();
+            Produto produto = promocao.getProduto();
 
             PromocaoMetrics metrics =
                     calcularMetricsBasicas(
@@ -481,8 +438,7 @@ public class PromocaoService {
 
         }
 
-        List<ProdutoPromocaoResponse> pendentes =
-                listarCandidatos();
+        List<ProdutoPromocaoResponse> pendentes = listarCandidatos();
 
         pendentes.removeIf(
                 candidato ->
@@ -722,8 +678,7 @@ public class PromocaoService {
                         valor.intValue()
                 );
 
-        BigDecimal decimal =
-                valor.subtract(inteiro);
+        BigDecimal decimal = valor.subtract(inteiro);
 
         if (
                 decimal.compareTo(
@@ -803,6 +758,12 @@ public class PromocaoService {
             int percentualGiro
     ) {
 
+        if ("Meta atingida".equals(
+                produto.getPromocaoMotivo()
+        )) {
+            return false;
+        }
+
         return Boolean.TRUE.equals(
                 produto.getAtivo()
         )
@@ -814,7 +775,6 @@ public class PromocaoService {
                 diasEstoque >= 30
                         || percentualGiro < 40
         );
-
     }
 
     private PromocaoMetrics calcularMetricsBasicas(

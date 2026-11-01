@@ -7,16 +7,13 @@ import br.com.stockflow.stockflow_api.entity.Usuario;
 import br.com.stockflow.stockflow_api.exception.RecursoNaoEncontradoException;
 import br.com.stockflow.stockflow_api.repository.ClienteRepository;
 import br.com.stockflow.stockflow_api.security.UsuarioAutenticadoService;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
-
 import br.com.stockflow.stockflow_api.dto.response.ClienteResumoResponse;
 import br.com.stockflow.stockflow_api.entity.Fiado;
 import br.com.stockflow.stockflow_api.entity.Pagamento;
@@ -27,11 +24,8 @@ import br.com.stockflow.stockflow_api.repository.PagamentoRepository;
 public class ClienteService {
 
     private final ClienteRepository clienteRepository;
-
     private final UsuarioAutenticadoService usuarioAutenticadoService;
-
     private final FiadoRepository fiadoRepository;
-
     private final PagamentoRepository pagamentoRepository;
 
     public ClienteService(
@@ -49,26 +43,21 @@ public class ClienteService {
     public ClienteResponse salvar(
             ClienteRequest request) {
 
-        Usuario usuarioLogado =
-                obterUsuarioLogado();
+        Usuario usuarioLogado = obterUsuarioLogado();
 
         Cliente cliente = new Cliente();
 
-        cliente.setNome(
-                request.nome());
+        cliente.setNome(request.nome());
 
-        cliente.setTelefone(
-                request.telefone());
+        cliente.setTelefone(request.telefone());
 
         cliente.setAtivo(true);
 
-        cliente.setDataCadastro(
-                LocalDateTime.now());
+        cliente.setDataCadastro(LocalDateTime.now());
 
         if (request.limiteCredito() == null) {
 
-            cliente.setLimiteCredito(
-                    BigDecimal.valueOf(300)
+            cliente.setLimiteCredito(BigDecimal.valueOf(300)
             );
 
         } else {
@@ -79,21 +68,17 @@ public class ClienteService {
 
         }
 
-        cliente.setObservacao(
-                request.observacao());
+        cliente.setObservacao(request.observacao());
 
-        cliente.setTenant(
-                usuarioLogado.getTenant());
+        cliente.setTenant(usuarioLogado.getTenant());
 
-        return montarResponse(
-                clienteRepository.save(cliente)
+        return montarResponse(clienteRepository.save(cliente)
         );
     }
 
     public List<ClienteResponse> listar() {
 
-        Usuario usuarioLogado =
-                obterUsuarioLogado();
+        Usuario usuarioLogado = obterUsuarioLogado();
 
         return clienteRepository
                 .findByTenantId(
@@ -109,8 +94,7 @@ public class ClienteService {
             UUID id,
             ClienteRequest request) {
 
-        Usuario usuarioLogado =
-                obterUsuarioLogado();
+        Usuario usuarioLogado = obterUsuarioLogado();
 
         Cliente cliente =
                 clienteRepository
@@ -124,28 +108,22 @@ public class ClienteService {
                                         new RecursoNaoEncontradoException(
                                                 "Cliente não encontrado."));
 
-        cliente.setNome(
-                request.nome());
+        cliente.setNome(request.nome());
 
-        cliente.setTelefone(
-                request.telefone());
+        cliente.setTelefone(request.telefone());
 
-        cliente.setLimiteCredito(
-                request.limiteCredito());
+        cliente.setLimiteCredito(request.limiteCredito());
 
-        cliente.setObservacao(
-                request.observacao());
+        cliente.setObservacao(request.observacao());
 
-        return montarResponse(
-                clienteRepository.save(cliente)
+        return montarResponse(clienteRepository.save(cliente)
         );
     }
 
     public void inativar(
             UUID id) {
 
-        Usuario usuarioLogado =
-                obterUsuarioLogado();
+        Usuario usuarioLogado = obterUsuarioLogado();
 
         Cliente cliente =
                 clienteRepository
@@ -161,15 +139,13 @@ public class ClienteService {
 
         cliente.setAtivo(false);
 
-        clienteRepository.save(
-                cliente);
+        clienteRepository.save(cliente);
     }
 
     public ClienteResumoResponse obterResumo(
             UUID clienteId) {
 
-        Usuario usuarioLogado =
-                obterUsuarioLogado();
+        Usuario usuarioLogado = obterUsuarioLogado();
 
         Cliente cliente =
                 clienteRepository
@@ -184,11 +160,13 @@ public class ClienteService {
                                                 "Cliente não encontrado."));
         List<Fiado> fiados =
                 fiadoRepository
-                        .findByClienteIdAndTenantId(
+                        .findByClienteIdAndTenantIdAndStatus(
                                 clienteId,
                                 usuarioLogado
                                         .getTenant()
-                                        .getId());
+                                        .getId(),
+                                "pendente"
+                        );
 
         BigDecimal totalFiado =
                 fiados.stream()
@@ -277,17 +255,11 @@ public class ClienteService {
         return new ClienteResponse(
 
                 cliente.getId(),
-
                 cliente.getNome(),
-
                 cliente.getTelefone(),
-
                 cliente.getAtivo(),
-
                 cliente.getDataCadastro(),
-
                 cliente.getLimiteCredito(),
-
                 cliente.getObservacao()
 
         );

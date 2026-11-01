@@ -2,33 +2,21 @@ package br.com.stockflow.stockflow_api.service;
 
 import br.com.stockflow.stockflow_api.dto.request.VendaRequest;
 import br.com.stockflow.stockflow_api.dto.response.VendaResponse;
-
 import br.com.stockflow.stockflow_api.entity.*;
-
 import br.com.stockflow.stockflow_api.exception.RecursoNaoEncontradoException;
 import br.com.stockflow.stockflow_api.exception.RegraNegocioException;
 import br.com.stockflow.stockflow_api.repository.*;
-
 import br.com.stockflow.stockflow_api.security.UsuarioAutenticadoService;
-
 import org.springframework.stereotype.Service;
-
 import java.util.List;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 import br.com.stockflow.stockflow_api.dto.request.ItemVendaRequest;
-
 import java.math.BigDecimal;
-
 import java.time.LocalDateTime;
-
 import org.springframework.transaction.annotation.Transactional;
-
 import br.com.stockflow.stockflow_api.dto.request.CancelarVendaRequest;
-
 import java.util.UUID;
-
 import br.com.stockflow.stockflow_api.dto.response.VendaDetalhesResponse;
 import br.com.stockflow.stockflow_api.dto.response.ItemVendaResponse;
 
@@ -76,8 +64,7 @@ public class VendaService {
     public Venda salvar(
             VendaRequest request) {
 
-        Usuario usuarioLogado =
-                obterUsuarioLogado();
+        Usuario usuarioLogado = obterUsuarioLogado();
 
         if (usuarioLogado == null) {
 
@@ -175,29 +162,21 @@ public class VendaService {
 
         Venda venda = new Venda();
 
-        venda.setDataVenda(
-                LocalDateTime.now());
+        venda.setDataVenda(LocalDateTime.now());
 
-        venda.setFormaPagamento(
-                request.formaPagamento());
+        venda.setFormaPagamento(request.formaPagamento());
 
-        venda.setValorTotal(
-                valorTotal);
+        venda.setValorTotal(valorTotal);
 
-        venda.setQuantidadeItens(
-                quantidadeItens);
+        venda.setQuantidadeItens(quantidadeItens);
 
-        venda.setStatus(
-                "finalizada");
+        venda.setStatus("finalizada");
 
-        venda.setUsuario(
-                usuarioLogado);
+        venda.setUsuario(usuarioLogado);
 
-        venda.setTenant(
-                usuarioLogado.getTenant());
+        venda.setTenant(usuarioLogado.getTenant());
 
-        venda.setClienteId(
-                request.clienteId());
+        venda.setClienteId(request.clienteId());
 
         if (request.clienteId() != null) {
 
@@ -238,11 +217,12 @@ public class VendaService {
 
             List<Fiado> fiadosCliente =
                     fiadoRepository
-                            .findByClienteIdAndTenantId(
+                            .findByClienteIdAndTenantIdAndStatus(
                                     cliente.getId(),
                                     usuarioLogado
                                             .getTenant()
-                                            .getId()
+                                            .getId(),
+                                    "pendente"
                             );
 
             BigDecimal totalFiado =
@@ -289,26 +269,19 @@ public class VendaService {
 
             Fiado fiado = new Fiado();
 
-            fiado.setCliente(
-                    cliente);
+            fiado.setCliente(cliente);
 
-            fiado.setVendaId(
-                    vendaSalva.getId());
+            fiado.setVendaId(vendaSalva.getId());
 
-            fiado.setValorTotal(
-                    valorTotal);
+            fiado.setValorTotal(valorTotal);
 
-            fiado.setDataLancamento(
-                    LocalDateTime.now());
+            fiado.setDataLancamento(LocalDateTime.now());
 
-            fiado.setStatus(
-                    "pendente");
+            fiado.setStatus("pendente");
 
-            fiado.setTenant(
-                    usuarioLogado.getTenant());
+            fiado.setTenant(usuarioLogado.getTenant());
 
-            fiadoRepository.save(
-                    fiado);
+            fiadoRepository.save(fiado);
         }
 
         for (ItemVendaRequest item : request.itens()) {
@@ -339,20 +312,15 @@ public class VendaService {
 
             ItemVenda itemVenda = new ItemVenda();
 
-            itemVenda.setVenda(
-                    vendaSalva);
+            itemVenda.setVenda(vendaSalva);
 
-            itemVenda.setProduto(
-                    produto);
+            itemVenda.setProduto(produto);
 
-            itemVenda.setProdutoNome(
-                    produto.getNome());
+            itemVenda.setProdutoNome(produto.getNome());
 
-            itemVenda.setQuantidade(
-                    item.quantidade());
+            itemVenda.setQuantidade(item.quantidade());
 
-            itemVenda.setValorUnitario(
-                    precoAplicado);
+            itemVenda.setValorUnitario(precoAplicado);
 
             itemVenda.setSubtotal(
                     precoAplicado.multiply(
@@ -363,8 +331,7 @@ public class VendaService {
                     Boolean.TRUE.equals(
                             produto.getPromocaoAtiva()));
 
-            itemVendaRepository.save(
-                    itemVenda);
+            itemVendaRepository.save(itemVenda);
 
             if (Boolean.TRUE.equals(
                     produto.getPromocaoAtiva())) {
@@ -378,8 +345,7 @@ public class VendaService {
 
                 promocaoOpt.ifPresent(promocao -> {
 
-                            Integer vendidas =
-                                    promocao.getUnidadesVendidas();
+                            Integer vendidas = promocao.getUnidadesVendidas();
 
                             if (vendidas == null) {
                                 vendidas = 0;
@@ -390,8 +356,7 @@ public class VendaService {
                                             item.quantidade()
                             );
 
-                            BigDecimal receitaAtual =
-                                    promocao.getReceitaGerada();
+                            BigDecimal receitaAtual = promocao.getReceitaGerada();
 
                             if (receitaAtual == null) {
                                 receitaAtual =
@@ -431,39 +396,29 @@ public class VendaService {
                     produto.getEstoqueAtual()
                             - item.quantidade());
 
-            produto.setDataAtualizacao(
-                    LocalDateTime.now());
+            produto.setDataAtualizacao(LocalDateTime.now());
 
-            produtoRepository.save(
-                    produto);
+            produtoRepository.save(produto);
+
             MovimentacaoEstoque movimentacao = new MovimentacaoEstoque();
 
-            movimentacao.setProduto(
-                    produto);
+            movimentacao.setProduto(produto);
 
-            movimentacao.setProdutoNome(
-                    produto.getNome());
+            movimentacao.setProdutoNome(produto.getNome());
 
-            movimentacao.setTipo(
-                    "saida");
+            movimentacao.setTipo("saida");
 
-            movimentacao.setQuantidade(
-                    item.quantidade());
+            movimentacao.setQuantidade(item.quantidade());
 
-            movimentacao.setPrecoCompra(
-                    BigDecimal.ZERO);
+            movimentacao.setPrecoCompra(BigDecimal.ZERO);
 
-            movimentacao.setUsuario(
-                    usuarioLogado);
+            movimentacao.setUsuario( usuarioLogado);
 
-            movimentacao.setTenant(
-                    usuarioLogado.getTenant());
+            movimentacao.setTenant( usuarioLogado.getTenant());
 
-            movimentacao.setDataMovimentacao(
-                    LocalDateTime.now());
+            movimentacao.setDataMovimentacao(LocalDateTime.now());
 
-            movimentacaoRepository.save(
-                    movimentacao);
+            movimentacaoRepository.save(movimentacao);
 
         }
 
@@ -475,8 +430,7 @@ public class VendaService {
             UUID vendaId,
             CancelarVendaRequest request) {
 
-        Usuario usuarioLogado =
-                obterUsuarioLogado();
+        Usuario usuarioLogado = obterUsuarioLogado();
 
         if (usuarioLogado == null) {
 
@@ -516,75 +470,136 @@ public class VendaService {
             );
         }
 
-        venda.setStatus(
-                "cancelada");
+        venda.setStatus("cancelada");
 
-        venda.setMotivoCancelamento(
-                request.motivo());
+        venda.setMotivoCancelamento(request.motivo());
 
-        venda.setDataCancelamento(
-                LocalDateTime.now());
+        venda.setDataCancelamento(LocalDateTime.now());
 
-        venda.setUsuarioCancelamento(
-                usuarioLogado);
+        venda.setUsuarioCancelamento(usuarioLogado);
+
+        fiadoRepository
+                .findByVendaIdAndTenantId(
+                        venda.getId(),
+                        usuarioLogado
+                                .getTenant()
+                                .getId()
+                )
+                .ifPresent(fiado -> {
+
+                    fiado.setStatus("cancelado");
+
+                    fiado.setObservacao(
+                            "Cancelado automaticamente devido ao cancelamento da venda."
+                    );
+
+                    fiadoRepository.save(fiado);
+
+                });
 
         List<ItemVenda> itensVenda = itemVendaRepository
                 .findByVendaId(
                         venda.getId());
+
         for (ItemVenda item : itensVenda) {
 
             Produto produto = item.getProduto();
+
+            var promocaoOpt =
+                    promocaoRepository
+                            .findByProdutoAndAtivaTrue(
+                                    produto
+                            );
+
+            System.out.println(
+                    "PROMOCAO ENCONTRADA: "
+                            + promocaoOpt.isPresent()
+            );
+
+            promocaoRepository
+                    .findByProdutoAndAtivaTrue(
+                            produto
+                    )
+                    .ifPresent(promocao -> {
+
+                        System.out.println(
+                                "ANTES = "
+                                        + promocao.getUnidadesVendidas()
+                        );
+
+                        Integer vendidas = promocao.getUnidadesVendidas();
+
+                        if (vendidas == null) {
+                            vendidas = 0;
+                        }
+
+                        promocao.setUnidadesVendidas(
+                                Math.max(
+                                        0,
+                                        vendidas - item.getQuantidade()
+                                )
+                        );
+
+                        System.out.println(
+                                "DEPOIS = "
+                                        + promocao.getUnidadesVendidas()
+                        );
+
+                        BigDecimal receitaAtual = promocao.getReceitaGerada();
+
+                        if (receitaAtual == null) {
+                            receitaAtual =
+                                    BigDecimal.ZERO;
+                        }
+
+                        promocao.setReceitaGerada(
+                                receitaAtual.subtract(
+                                        item.getSubtotal()
+                                ).max(
+                                        BigDecimal.ZERO
+                                )
+                        );
+
+                        promocaoRepository.save(promocao);
+
+                    });
 
             produto.setEstoqueAtual(
                     produto.getEstoqueAtual()
                             + item.getQuantidade());
 
-            produto.setDataAtualizacao(
-                    LocalDateTime.now());
+            produto.setDataAtualizacao(LocalDateTime.now());
 
-            produtoRepository.save(
-                    produto);
+            produtoRepository.save(produto);
 
             MovimentacaoEstoque movimentacao = new MovimentacaoEstoque();
 
-            movimentacao.setProduto(
-                    produto);
+            movimentacao.setProduto(produto);
 
-            movimentacao.setProdutoNome(
-                    produto.getNome());
+            movimentacao.setProdutoNome(produto.getNome());
 
-            movimentacao.setTipo(
-                    "ajuste");
+            movimentacao.setTipo("ajuste");
 
-            movimentacao.setQuantidade(
-                    item.getQuantidade());
+            movimentacao.setQuantidade(item.getQuantidade());
 
-            movimentacao.setPrecoCompra(
-                    BigDecimal.ZERO);
+            movimentacao.setPrecoCompra(BigDecimal.ZERO);
 
-            movimentacao.setObservacao(
-                    "Estorno de venda cancelada");
+            movimentacao.setObservacao("Estorno de venda cancelada");
 
-            movimentacao.setUsuario(
-                    usuarioLogado);
+            movimentacao.setUsuario(usuarioLogado);
 
-            movimentacao.setTenant(
-                    usuarioLogado.getTenant());
+            movimentacao.setTenant(usuarioLogado.getTenant());
 
-            movimentacao.setDataMovimentacao(
-                    LocalDateTime.now());
+            movimentacao.setDataMovimentacao(LocalDateTime.now());
 
-            movimentacaoRepository.save(
-                    movimentacao);
+            movimentacaoRepository.save(movimentacao);
         }
-        vendaRepository.save(
-                venda);
+        vendaRepository.save(venda);
     }
 
     public List<VendaResponse> listar() {
 
-        Usuario usuarioLogado =
-                obterUsuarioLogado();
+        Usuario usuarioLogado = obterUsuarioLogado();
 
         if (usuarioLogado == null) {
 
@@ -613,8 +628,7 @@ public class VendaService {
 
     public List<VendaDetalhesResponse> listarRelatorio() {
 
-        Usuario usuarioLogado =
-                obterUsuarioLogado();
+        Usuario usuarioLogado = obterUsuarioLogado();
 
         return vendaRepository
                 .findByTenantId(
@@ -666,8 +680,7 @@ public class VendaService {
     public VendaDetalhesResponse buscarPorId(
             UUID vendaId) {
 
-        Usuario usuarioLogado =
-                obterUsuarioLogado();
+        Usuario usuarioLogado = obterUsuarioLogado();
 
         if (usuarioLogado == null) {
 

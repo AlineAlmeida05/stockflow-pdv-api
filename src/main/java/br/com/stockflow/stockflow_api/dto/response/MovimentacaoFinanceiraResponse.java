@@ -15,7 +15,9 @@ public record MovimentacaoFinanceiraResponse(
 
         String usuarioNome,
 
-        String formaPagamento
+        String formaPagamento,
+
+        String status
 
 ) {
 }

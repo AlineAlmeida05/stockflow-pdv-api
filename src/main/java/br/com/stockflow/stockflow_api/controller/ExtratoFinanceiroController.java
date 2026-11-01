@@ -24,8 +24,7 @@ public class ExtratoFinanceiroController {
             ExtratoFinanceiroService
                     extratoFinanceiroService) {
 
-        this.extratoFinanceiroService =
-                extratoFinanceiroService;
+        this.extratoFinanceiroService = extratoFinanceiroService;
     }
 
     @GetMapping
@@ -35,8 +34,7 @@ public class ExtratoFinanceiroController {
     public List<MovimentacaoFinanceiraResponse>
     listarMovimentacoes() {
 
-        return extratoFinanceiroService
-                .listarMovimentacoes();
+        return extratoFinanceiroService.listarMovimentacoes();
     }
 
     @GetMapping("/indicadores")
@@ -46,8 +44,7 @@ public class ExtratoFinanceiroController {
     public IndicadoresExtratoResponse
     obterIndicadores() {
 
-        return extratoFinanceiroService
-                .obterIndicadores();
+        return extratoFinanceiroService.obterIndicadores();
 
     }
 }

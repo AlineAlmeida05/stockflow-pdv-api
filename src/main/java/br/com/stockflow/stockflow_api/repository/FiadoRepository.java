@@ -5,6 +5,7 @@ import br.com.stockflow.stockflow_api.entity.Fiado;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface FiadoRepository
@@ -23,5 +24,16 @@ public interface FiadoRepository
     List<Fiado> findByClienteIdAndTenantId(
             UUID clienteId,
             UUID tenantId);
+
+    Optional<Fiado> findByVendaIdAndTenantId(
+            UUID vendaId,
+            UUID tenantId
+    );
+
+    List<Fiado> findByClienteIdAndTenantIdAndStatus(
+            UUID clienteId,
+            UUID tenantId,
+            String status
+    );
 
 }

@@ -4,7 +4,6 @@ import br.com.stockflow.stockflow_api.dto.response.AuditoriaResponse;
 import br.com.stockflow.stockflow_api.service.AuditoriaService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 
 @RestController
@@ -17,8 +16,7 @@ public class AuditoriaController {
             AuditoriaService auditoriaService
     ) {
 
-        this.auditoriaService =
-                auditoriaService;
+        this.auditoriaService = auditoriaService;
 
     }
 

@@ -20,8 +20,7 @@ public class DashboardController {
             DashboardService dashboardService
     ) {
 
-        this.dashboardService =
-                dashboardService;
+        this.dashboardService = dashboardService;
 
     }
 

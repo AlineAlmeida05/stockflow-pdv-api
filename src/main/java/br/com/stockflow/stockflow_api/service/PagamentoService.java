@@ -9,17 +9,14 @@ import br.com.stockflow.stockflow_api.exception.RecursoNaoEncontradoException;
 import br.com.stockflow.stockflow_api.repository.ClienteRepository;
 import br.com.stockflow.stockflow_api.repository.PagamentoRepository;
 import br.com.stockflow.stockflow_api.security.UsuarioAutenticadoService;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
-
 import java.time.LocalDateTime;
 import java.util.List;
 import br.com.stockflow.stockflow_api.entity.Fiado;
 import br.com.stockflow.stockflow_api.exception.RegraNegocioException;
 import br.com.stockflow.stockflow_api.repository.FiadoRepository;
-
 import java.math.BigDecimal;
 
 @Service
@@ -45,8 +42,7 @@ public class PagamentoService {
     public Pagamento salvar(
             PagamentoRequest request) {
 
-        Usuario usuarioLogado =
-                obterUsuarioLogado();
+        Usuario usuarioLogado = obterUsuarioLogado();
 
         Cliente cliente =
                 clienteRepository
@@ -63,11 +59,12 @@ public class PagamentoService {
 
         BigDecimal totalFiado =
                 fiadoRepository
-                        .findByClienteIdAndTenantId(
+                        .findByClienteIdAndTenantIdAndStatus(
                                 cliente.getId(),
                                 usuarioLogado
                                         .getTenant()
-                                        .getId()
+                                        .getId(),
+                                "pendente"
                         )
                         .stream()
                         .map(Fiado::getValorTotal)
@@ -75,6 +72,7 @@ public class PagamentoService {
                                 BigDecimal.ZERO,
                                 BigDecimal::add
                         );
+
 
         BigDecimal totalPago =
                 pagamentoRepository
@@ -91,8 +89,7 @@ public class PagamentoService {
                                 BigDecimal::add
                         );
 
-        BigDecimal saldoDevedor =
-                totalFiado.subtract(totalPago);
+        BigDecimal saldoDevedor = totalFiado.subtract(totalPago);
 
         if (
                 request.valorPago()
@@ -105,38 +102,28 @@ public class PagamentoService {
             );
         }
 
-        Pagamento pagamento =
-                new Pagamento();
+        Pagamento pagamento = new Pagamento();
 
-        pagamento.setCliente(
-                cliente);
+        pagamento.setCliente(cliente);
 
-        pagamento.setValorPago(
-                request.valorPago());
+        pagamento.setValorPago(request.valorPago());
 
-        pagamento.setDataPagamento(
-                LocalDateTime.now());
+        pagamento.setDataPagamento(LocalDateTime.now());
 
-        pagamento.setObservacao(
-                request.observacao());
+        pagamento.setObservacao(request.observacao());
 
-        pagamento.setFormaPagamento(
-                request.formaPagamento());
+        pagamento.setFormaPagamento(request.formaPagamento());
 
-        pagamento.setTenant(
-                usuarioLogado.getTenant());
+        pagamento.setTenant(usuarioLogado.getTenant());
 
-        pagamento.setUsuario(
-                usuarioLogado);
+        pagamento.setUsuario(usuarioLogado);
 
-        return pagamentoRepository.save(
-                pagamento);
+        return pagamentoRepository.save(pagamento);
     }
 
     public List<PagamentoResponse> listar() {
 
-        Usuario usuarioLogado =
-                obterUsuarioLogado();
+        Usuario usuarioLogado = obterUsuarioLogado();
 
         return pagamentoRepository
                 .findByTenantId(

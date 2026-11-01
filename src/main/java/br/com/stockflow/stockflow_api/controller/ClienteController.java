@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.UUID;
 import jakarta.validation.Valid;
 
-
 @RestController
 @RequestMapping("/api/clientes")
 public class ClienteController {
@@ -76,8 +75,7 @@ public class ClienteController {
     public ClienteResumoResponse obterResumo(
             @PathVariable UUID id) {
 
-        return clienteService
-                .obterResumo(id);
+        return clienteService.obterResumo(id);
     }
 
     @PatchMapping("/{id}/reativar")

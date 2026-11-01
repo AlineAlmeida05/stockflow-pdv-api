@@ -20,11 +20,8 @@ import java.math.BigDecimal;
 public class ExtratoFinanceiroService {
 
     private final FiadoRepository fiadoRepository;
-
     private final PagamentoRepository pagamentoRepository;
-
     private final UsuarioAutenticadoService usuarioAutenticadoService;
-
     private final VendaRepository vendaRepository;
 
     public ExtratoFinanceiroService(
@@ -42,8 +39,7 @@ public class ExtratoFinanceiroService {
     public List<MovimentacaoFinanceiraResponse>
     listarMovimentacoes() {
 
-        Usuario usuarioLogado =
-                obterUsuarioLogado();
+        Usuario usuarioLogado = obterUsuarioLogado();
 
         List<MovimentacaoFinanceiraResponse>
                 movimentacoesVenda =
@@ -56,33 +52,18 @@ public class ExtratoFinanceiroService {
                         )
                         .stream()
 
-                        .filter(venda ->
-                                !"cancelada".equalsIgnoreCase(
-                                        venda.getStatus()
-                                )
-                        )
-
-                        .filter(venda ->
-                                !"fiado".equalsIgnoreCase(
-                                        venda.getFormaPagamento()
-                                )
-                        )
-
                         .map(venda ->
                                 new MovimentacaoFinanceiraResponse(
 
                                         "venda",
 
                                         venda.getClienteNome(),
-
                                         venda.getValorTotal(),
-
                                         venda.getDataVenda(),
-
                                         venda.getUsuario()
                                                 .getNome(),
-
-                                        venda.getFormaPagamento()
+                                        venda.getFormaPagamento(),
+                                        venda.getStatus()
 
                                 )
                         )
@@ -101,13 +82,18 @@ public class ExtratoFinanceiroService {
                         .stream()
                         .map(fiado ->
                                 new MovimentacaoFinanceiraResponse(
+
                                         "fiado",
+
                                         fiado.getCliente()
                                                 .getNome(),
+
                                         fiado.getValorTotal(),
                                         fiado.getDataLancamento(),
                                         null,
-                                        null
+                                        null,
+                                        fiado.getStatus()
+
                                 ))
                         .toList();
 
@@ -123,14 +109,18 @@ public class ExtratoFinanceiroService {
                         .stream()
                         .map(pagamento ->
                                 new MovimentacaoFinanceiraResponse(
+
                                         "pagamento",
+
                                         pagamento.getCliente()
                                                 .getNome(),
                                         pagamento.getValorPago(),
                                         pagamento.getDataPagamento(),
                                         pagamento.getUsuario()
                                                 .getNome(),
-                                        pagamento.getFormaPagamento()
+                                        pagamento.getFormaPagamento(),
+                                        "confirmado"
+
                                 ))
                         .toList();
 
