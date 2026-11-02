@@ -50,10 +50,15 @@ public class SecurityConfig {
                                 "/api/auth/login",
                                 "/api/auth/refresh",
                                 "/api/auth/logout",
+                                "/api/auth/forgot-password",
+                                "/api/auth/reset-password",
+                                "/api/auth/reset-password/validar",
+                                "/api/tenants/slug/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
                                 "/v3/api-docs/**"
-                        ).permitAll()
+                        )
+                        .permitAll()
 
                         .anyRequest()
                         .authenticated()
@@ -70,8 +75,7 @@ public class SecurityConfig {
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
 
-        CorsConfiguration configuration =
-                new CorsConfiguration();
+        CorsConfiguration configuration = new CorsConfiguration();
 
         configuration.setAllowedOriginPatterns(
                 List.of(
@@ -79,17 +83,13 @@ public class SecurityConfig {
                         "https://*.app.github.dev"
                 ));
 
-        configuration.setAllowedMethods(
-                List.of("*"));
+        configuration.setAllowedMethods(List.of("*"));
 
-        configuration.setAllowedHeaders(
-                List.of("*"));
+        configuration.setAllowedHeaders(List.of("*"));
 
-        configuration.setAllowCredentials(
-                true);
+        configuration.setAllowCredentials(true);
 
-        UrlBasedCorsConfigurationSource source =
-                new UrlBasedCorsConfigurationSource();
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
 
         source.registerCorsConfiguration(
                 "/**",

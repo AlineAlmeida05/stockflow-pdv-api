@@ -4,7 +4,6 @@ import br.entity.RefreshToken;
 import br.entity.Usuario;
 import br.repository.RefreshTokenRepository;
 import org.springframework.stereotype.Service;
-
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Optional;
@@ -18,21 +17,17 @@ public class RefreshTokenService {
     public RefreshTokenService(
             RefreshTokenRepository refreshTokenRepository) {
 
-        this.refreshTokenRepository =
-                refreshTokenRepository;
+        this.refreshTokenRepository = refreshTokenRepository;
     }
 
     public RefreshToken criarToken(
             Usuario usuario) {
 
-        RefreshToken refreshToken =
-                new RefreshToken();
+        RefreshToken refreshToken = new RefreshToken();
 
-        refreshToken.setToken(
-                UUID.randomUUID().toString());
+        refreshToken.setToken(UUID.randomUUID().toString());
 
-        refreshToken.setUsuario(
-                usuario);
+        refreshToken.setUsuario(usuario);
 
         refreshToken.setExpiracao(
                 Instant.now()
@@ -40,15 +35,13 @@ public class RefreshTokenService {
                                 7,
                                 ChronoUnit.DAYS));
 
-        return refreshTokenRepository.save(
-                refreshToken);
+        return refreshTokenRepository.save(refreshToken);
     }
 
     public Optional<RefreshToken> buscarPorToken(
             String token) {
 
-        return refreshTokenRepository
-                .findByToken(token);
+        return refreshTokenRepository.findByToken(token);
     }
 
     public boolean expirado(
@@ -63,8 +56,7 @@ public class RefreshTokenService {
     public void remover(
             RefreshToken refreshToken) {
 
-        refreshTokenRepository.delete(
-                refreshToken);
+        refreshTokenRepository.delete(refreshToken);
     }
 }
 

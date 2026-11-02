@@ -18,21 +18,21 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 import br.security.JwtService;
 import jakarta.servlet.http.HttpServletResponse;
+import br.dto.request.ForgotPasswordRequest;
+import br.dto.request.ResetPasswordRequest;
+import br.entity.PasswordResetToken;
+import br.dto.response.TokenValidoResponse;
 
 @Service
 public class AuthService {
 
     private final UsuarioRepository usuarioRepository;
-
     private final PasswordEncoder passwordEncoder;
-
     private final JwtService jwtService;
-
     private final TenantRepository tenantRepository;
-
     private final RefreshTokenService refreshTokenService;
-
     private final UsuarioAutenticadoService usuarioAutenticadoService;
+    private final PasswordResetTokenService passwordResetTokenService;
 
     public AuthService(
             UsuarioRepository usuarioRepository,
@@ -40,7 +40,8 @@ public class AuthService {
             JwtService jwtService,
             TenantRepository tenantRepository,
             RefreshTokenService refreshTokenService,
-            UsuarioAutenticadoService usuarioAutenticadoService) {
+            UsuarioAutenticadoService usuarioAutenticadoService,
+            PasswordResetTokenService passwordResetTokenService) {
 
         this.usuarioRepository = usuarioRepository;
         this.passwordEncoder = passwordEncoder;
@@ -48,6 +49,7 @@ public class AuthService {
         this.tenantRepository = tenantRepository;
         this.refreshTokenService = refreshTokenService;
         this.usuarioAutenticadoService = usuarioAutenticadoService;
+        this.passwordResetTokenService = passwordResetTokenService;
     }
 
     public LoginResponse login(
@@ -66,7 +68,6 @@ public class AuthService {
         boolean senhaValida = passwordEncoder.matches(
                 request.senha(),
                 usuario.getSenha());
-
 
         Tenant tenantLogin = tenantRepository
                 .findBySlug(request.slug())
@@ -116,13 +117,9 @@ public class AuthService {
 
         }
 
+        String token = jwtService.gerarToken(usuario);
 
-
-        String token = jwtService.gerarToken(
-                usuario);
-
-        RefreshToken refreshToken =
-                refreshTokenService.criarToken(
+        RefreshToken refreshToken = refreshTokenService.criarToken(
                         usuario);
 
         response.addHeader(
@@ -134,24 +131,14 @@ public class AuthService {
 
         return new LoginResponse(
 
-                usuario.getId()
-                        .toString(),
-
+                usuario.getId().toString(),
                 usuario.getNome(),
-
                 usuario.getEmail(),
-
-                usuario.getPerfil()
-                        .name(),
-
-                tenantLogin.getId()
-                        .toString(),
-
+                usuario.getPerfil().name(),
+                tenantLogin.getId().toString(),
                 tenantLogin.getNome(),
 
                 token
-
-
         );
 
     }
@@ -159,8 +146,7 @@ public class AuthService {
     public RefreshTokenResponse refreshToken(
             String refreshTokenValue) {
 
-        RefreshToken refreshToken =
-                refreshTokenService
+        RefreshToken refreshToken = refreshTokenService
                         .buscarPorToken(
                                 refreshTokenValue)
                         .orElseThrow(
@@ -179,8 +165,7 @@ public class AuthService {
             );
         }
 
-        String novoToken =
-                jwtService.gerarToken(
+        String novoToken = jwtService.gerarToken(
                         refreshToken.getUsuario());
 
         return new RefreshTokenResponse(
@@ -190,23 +175,17 @@ public class AuthService {
 
     public UsuarioAtualResponse usuarioAtual() {
 
-        Usuario usuarioLogado =
-                obterUsuarioLogado();
+        Usuario usuarioLogado = obterUsuarioLogado();
 
         return new UsuarioAtualResponse(
 
                 usuarioLogado.getId().toString(),
-
                 usuarioLogado.getNome(),
-
                 usuarioLogado.getEmail(),
-
                 usuarioLogado.getPerfil().name(),
-
                 usuarioLogado.getTenant()
                         .getId()
                         .toString(),
-
                 usuarioLogado.getTenant()
                         .getNome()
         );
@@ -236,8 +215,7 @@ public class AuthService {
 
     private Usuario obterUsuarioLogado() {
 
-        Usuario usuarioLogado =
-                usuarioAutenticadoService
+        Usuario usuarioLogado = usuarioAutenticadoService
                         .usuarioLogado();
 
         if (usuarioLogado == null) {
@@ -250,6 +228,105 @@ public class AuthService {
         }
 
         return usuarioLogado;
+
+    }
+
+    public void solicitarRecuperacaoSenha(
+            ForgotPasswordRequest request) {
+
+        Usuario usuario = usuarioRepository
+                        .findByEmail(
+                                request.email()
+                        )
+                        .orElseThrow(
+                                () -> new RecursoNaoEncontradoException(
+                                        "Usuário não encontrado."
+                                )
+                        );
+
+        passwordResetTokenService
+                .criarToken(
+                        usuario
+                );
+
+    }
+
+    public void redefinirSenha(
+            ResetPasswordRequest request) {
+
+        PasswordResetToken token = passwordResetTokenService
+                        .buscarPorToken(
+                                request.token()
+                        )
+                        .orElseThrow(
+                                () -> new ResponseStatusException(
+                                        HttpStatus.BAD_REQUEST,
+                                        "Token inválido."
+                                )
+                        );
+
+        if (
+                passwordResetTokenService.expirado(
+                        token
+                )
+        ) {
+
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Token expirado."
+            );
+
+        }
+
+        if (
+                passwordResetTokenService.utilizado(
+                        token
+                )
+        ) {
+
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Token já utilizado."
+            );
+
+        }
+
+        Usuario usuario = token.getUsuario();
+
+        usuario.setSenha(
+                passwordEncoder.encode(
+                        request.novaSenha()
+                )
+        );
+
+        usuarioRepository.save(usuario);
+
+        passwordResetTokenService
+                .marcarComoUtilizado(
+                        token
+                );
+    }
+
+    public TokenValidoResponse validarTokenRecuperacao(
+            String token) {
+
+        return passwordResetTokenService
+                .buscarPorToken(
+                        token
+                )
+                .map(passwordResetToken ->
+                        new TokenValidoResponse(
+                                passwordResetTokenService
+                                        .tokenValido(
+                                                passwordResetToken
+                                        )
+                        )
+                )
+                .orElse(
+                        new TokenValidoResponse(
+                                false
+                        )
+                );
 
     }
 

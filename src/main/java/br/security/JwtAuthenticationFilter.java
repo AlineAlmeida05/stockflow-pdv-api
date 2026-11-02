@@ -13,7 +13,6 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import java.io.IOException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 
-
 @Component
 public class JwtAuthenticationFilter
         extends OncePerRequestFilter {
@@ -38,8 +37,7 @@ public class JwtAuthenticationFilter
             FilterChain filterChain)
             throws ServletException, IOException {
 
-        String authorizationHeader = request.getHeader(
-                "Authorization");
+        String authorizationHeader = request.getHeader("Authorization");
 
         if (authorizationHeader != null &&
                 authorizationHeader.startsWith(
@@ -47,8 +45,7 @@ public class JwtAuthenticationFilter
 
             String token = authorizationHeader.substring(7);
 
-            boolean tokenValido = jwtService.validarToken(
-                    token);
+            boolean tokenValido = jwtService.validarToken(token);
 
             if (tokenValido) {
 

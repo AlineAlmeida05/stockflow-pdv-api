@@ -1,7 +1,6 @@
 package br.entity;
 
 import jakarta.persistence.*;
-
 import java.time.LocalDateTime;
 import java.util.UUID;
 import lombok.Data;
