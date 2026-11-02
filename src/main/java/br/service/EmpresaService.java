@@ -1,22 +1,18 @@
 package br.service;
 
-import br.dto.request.EmpresaCreateRequest;
 import br.entity.Empresa;
+import br.entity.Tenant;
 import br.exception.RecursoNaoEncontradoException;
 import br.repository.EmpresaRepository;
 import org.springframework.stereotype.Service;
-
 import java.util.List;
-
 import br.dto.response.EmpresaResponse;
-import br.dto.request.EmpresaUpdateRequest;
 import br.security.UsuarioAutenticadoService;
 import br.entity.Usuario;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
 import br.entity.Perfil;
 import br.exception.RegraNegocioException;
-
 
 @Service
 public class EmpresaService {
@@ -44,107 +40,14 @@ public class EmpresaService {
                 .toList();
     }
 
-    public EmpresaResponse salvar(
-            EmpresaCreateRequest request) {
-
-        validarSuperAdmin();
-
-        Empresa empresa = new Empresa();
-
-        empresa.setNomeFantasia(request.nomeFantasia());
-        empresa.setRazaoSocial(request.razaoSocial());
-        empresa.setCnpj(request.cnpj());
-        empresa.setTelefone(request.telefone());
-        empresa.setEmail(request.email());
-        empresa.setEndereco(request.endereco());
-        empresa.setCidade(request.cidade());
-        empresa.setUf(request.uf());
-        empresa.setProprietario(request.proprietario());
-        empresa.setLogoUrl(request.logoUrl());
-        empresa.setSlogan(request.slogan());
-        empresa.setCorPrimaria(request.corPrimaria());
-        empresa.setCorSecundaria(request.corSecundaria());
-
-        return montarResponse(
-                empresaRepository.save(
-                        empresa
-                )
-        );
-    }
-
     public EmpresaResponse obterEmpresa() {
 
-        Empresa empresa =
-                obterEmpresaDoUsuarioLogado();
+        Empresa empresa = obterEmpresaDoUsuarioLogado();
 
         return montarResponse(
                 empresa
         );
 
-    }
-
-    public EmpresaResponse atualizarEmpresa(
-            EmpresaUpdateRequest request
-    ) {
-
-        Empresa empresa =
-                obterEmpresaDoUsuarioLogado();
-
-        empresa.setNomeFantasia(
-                request.nomeFantasia()
-        );
-
-        empresa.setRazaoSocial(
-                request.razaoSocial()
-        );
-
-        empresa.setTelefone(
-                request.telefone()
-        );
-
-        empresa.setEmail(
-                request.email()
-        );
-
-        empresa.setEndereco(
-                request.endereco()
-        );
-
-        empresa.setCidade(
-                request.cidade()
-        );
-
-        empresa.setUf(
-                request.uf()
-        );
-
-        empresa.setProprietario(
-                request.proprietario()
-        );
-
-        empresa.setLogoUrl(
-                request.logoUrl()
-        );
-
-        empresa.setSlogan(
-                request.slogan()
-        );
-
-        empresa.setCorPrimaria(
-                request.corPrimaria()
-        );
-
-        empresa.setCorSecundaria(
-                request.corSecundaria()
-        );
-
-        empresaRepository.save(
-                empresa
-        );
-
-        return montarResponse(
-                empresa
-        );
     }
 
     public Empresa obterEntidadeEmpresa() {
@@ -155,8 +58,12 @@ public class EmpresaService {
 
     private Empresa obterEmpresaDoUsuarioLogado() {
 
-        Usuario usuarioLogado =
-                obterUsuarioLogado();
+        Usuario usuarioLogado = obterUsuarioLogado();
+
+        System.out.println(
+                "TENANT LOGADO: "
+                        + usuarioLogado.getTenant().getNome()
+        );
 
         return empresaRepository
                 .findByTenantId(
@@ -173,30 +80,31 @@ public class EmpresaService {
     private EmpresaResponse montarResponse(
             Empresa empresa
     ) {
+        Tenant tenant = empresa.getTenant();
 
         return new EmpresaResponse(
 
                 empresa.getId(),
 
-                empresa.getNomeFantasia(),
-                empresa.getRazaoSocial(),
-                empresa.getCnpj(),
+                tenant.getNome(),
+                tenant.getRazaoSocial(),
+                tenant.getCnpj(),
 
-                empresa.getTelefone(),
-                empresa.getEmail(),
+                tenant.getTelefone(),
+                tenant.getEmail(),
 
-                empresa.getEndereco(),
-                empresa.getCidade(),
-                empresa.getUf(),
+                tenant.getEndereco(),
+                tenant.getCidade(),
+                tenant.getUf(),
 
-                empresa.getProprietario(),
+                tenant.getResponsavel(),
 
-                empresa.getLogoUrl(),
+                tenant.getLogoUrl(),
 
                 empresa.getSlogan(),
 
-                empresa.getCorPrimaria(),
-                empresa.getCorSecundaria(),
+                tenant.getCorPrimaria(),
+                tenant.getCorSecundaria(),
 
                 empresa.getVersaoSistema(),
 
@@ -206,8 +114,7 @@ public class EmpresaService {
 
     private void validarSuperAdmin() {
 
-        Usuario usuarioLogado =
-                obterUsuarioLogado();
+        Usuario usuarioLogado = obterUsuarioLogado();
 
         if (usuarioLogado.getPerfil()
                 != Perfil.SUPER_ADMIN) {

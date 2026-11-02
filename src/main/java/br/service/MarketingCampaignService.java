@@ -15,7 +15,6 @@ import br.entity.Empresa;
 import br.dto.response.MarketingAiResultResponse;
 import br.entity.MarketingCampaign;
 import org.springframework.web.server.ResponseStatusException;
-
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -38,13 +37,9 @@ public class MarketingCampaignService {
     ) {
 
         this.marketingCampaignRepository = marketingCampaignRepository;
-
         this.marketingAiService = marketingAiService;
-
         this.produtoRepository = produtoRepository;
-
         this.empresaService = empresaService;
-
         this.usuarioAutenticadoService = usuarioAutenticadoService;
     }
 
@@ -52,8 +47,7 @@ public class MarketingCampaignService {
             MarketingCampaignCreateRequest request
     ) {
 
-        Usuario usuarioLogado =
-                obterUsuarioLogado();
+        Usuario usuarioLogado = obterUsuarioLogado();
 
         Produto produto =
                 produtoRepository
@@ -70,8 +64,7 @@ public class MarketingCampaignService {
                                         )
                         );
 
-        Tenant tenant =
-                usuarioLogado.getTenant();
+        Tenant tenant = usuarioLogado.getTenant();
 
         Empresa empresa =
                 empresaService
@@ -101,7 +94,7 @@ public class MarketingCampaignService {
                 marketingAiService
                         .gerarPrompt(
                                 produto.getNome(),
-                                empresa.getNomeFantasia(),
+                                tenant.getNome(),
                                 precoCampanha,
                                 request.tom(),
                                 request.tipoPromocao(),
@@ -110,47 +103,27 @@ public class MarketingCampaignService {
                                 request.observacoes()
                         );
 
-        MarketingCampaign campaign =
-                new MarketingCampaign();
+        MarketingCampaign campaign = new MarketingCampaign();
 
-        campaign.setTenant(
-                tenant
-        );
+        campaign.setTenant(tenant);
 
-        campaign.setProduto(
-                produto
-        );
+        campaign.setProduto(produto);
 
-        campaign.setTom(
-                request.tom()
-        );
+        campaign.setTom(request.tom());
 
-        campaign.setTipoPromocao(
-                request.tipoPromocao()
-        );
+        campaign.setTipoPromocao(request.tipoPromocao());
 
-        campaign.setElementoVisual(
-                request.elementoVisual()
-        );
+        campaign.setElementoVisual(request.elementoVisual());
 
-        campaign.setContextoProduto(
-                contextoProduto
-        );
+        campaign.setContextoProduto(contextoProduto);
 
-        campaign.setPrompt(
-                prompt
-        );
+        campaign.setPrompt(prompt);
 
-        campaign.setLegenda(
-                resultado.legenda()
-        );
+        campaign.setLegenda(resultado.legenda());
 
-        campaign.setTextoWhatsapp(
-                resultado.textoWhatsapp()
-        );
+        campaign.setTextoWhatsapp(resultado.textoWhatsapp());
 
-        campaign =
-                marketingCampaignRepository
+        campaign = marketingCampaignRepository
                         .save(
                                 campaign
                         );
@@ -161,7 +134,7 @@ public class MarketingCampaignService {
 
                 produto.getNome(),
 
-                empresa.getNomeFantasia(),
+                tenant.getNome(),
 
                 campaign.getTom(),
 
@@ -185,11 +158,9 @@ public class MarketingCampaignService {
 
     public List<MarketingCampaignResponse> listar() {
 
-        Usuario usuarioLogado =
-                obterUsuarioLogado();
+        Usuario usuarioLogado = obterUsuarioLogado();
 
-        Tenant tenant =
-                usuarioLogado.getTenant();
+        Tenant tenant = usuarioLogado.getTenant();
 
         return marketingCampaignRepository
                 .findByTenantOrderByCriadoEmDesc(
@@ -205,9 +176,8 @@ public class MarketingCampaignService {
                                         campaign.getProduto()
                                                 .getNome(),
 
-                                        empresaService
-                                                .obterEntidadeEmpresa()
-                                                .getNomeFantasia(),
+                                        campaign.getTenant()
+                                                .getNome(),
 
                                         campaign.getTom(),
 
