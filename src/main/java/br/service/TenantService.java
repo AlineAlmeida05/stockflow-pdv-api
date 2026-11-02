@@ -35,11 +35,14 @@ public class TenantService {
         this.empresaRepository = empresaRepository;
     }
 
-    public List<Tenant> listarTodos() {
+    public List<TenantResponse> listarTodos() {
 
         validarSuperAdmin();
 
-        return tenantRepository.findAll();
+        return tenantRepository.findAll()
+                .stream()
+                .map(this::montarResponse)
+                .toList();
 
     }
 
@@ -59,6 +62,13 @@ public class TenantService {
         tenant.setFaviconUrl(request.faviconUrl());
         tenant.setCorPrimaria(request.corPrimaria());
         tenant.setCorSecundaria(request.corSecundaria());
+        tenant.setRazaoSocial(request.razaoSocial());
+        tenant.setCnpj(request.cnpj());
+        tenant.setTelefone(request.telefone());
+        tenant.setEndereco(request.endereco());
+        tenant.setUf(request.uf());
+        tenant.setMarketingIaHabilitado( request.marketingIaHabilitado());
+        tenant.setDeliveryHabilitado(request.deliveryHabilitado());
 
         validarSuperAdmin();
 
@@ -251,6 +261,13 @@ public class TenantService {
         tenant.setFaviconUrl(request.faviconUrl());
         tenant.setCorPrimaria(request.corPrimaria());
         tenant.setCorSecundaria(request.corSecundaria());
+        tenant.setRazaoSocial(request.razaoSocial());
+        tenant.setCnpj(request.cnpj());
+        tenant.setTelefone(request.telefone());
+        tenant.setEndereco(request.endereco());
+        tenant.setUf(request.uf());
+        tenant.setMarketingIaHabilitado(request.marketingIaHabilitado());
+        tenant.setDeliveryHabilitado(request.deliveryHabilitado());
 
         return montarResponse(
                 tenantRepository.save(tenant)
@@ -275,12 +292,51 @@ public class TenantService {
     private TenantResponse montarResponse(
             Tenant tenant
     ) {
+
         return new TenantResponse(
+
                 tenant.getId(),
+
                 tenant.getNome(),
+
+                tenant.getRazaoSocial(),
+
+                tenant.getCnpj(),
+
+                tenant.getResponsavel(),
+
+                tenant.getEmail(),
+
+                tenant.getTelefone(),
+
+                tenant.getEndereco(),
+
+                tenant.getCidade(),
+
+                tenant.getUf(),
+
+                tenant.getAtivo(),
+
+                tenant.getSlug(),
+
                 tenant.getCodigoTenant(),
-                tenant.getAtivo()
+
+                tenant.getLogoUrl(),
+
+                tenant.getFaviconUrl(),
+
+                tenant.getCorPrimaria(),
+
+                tenant.getCorSecundaria(),
+
+                tenant.getMarketingIaHabilitado(),
+
+                tenant.getDeliveryHabilitado(),
+
+                tenant.getCriadoEm()
+
         );
+
     }
 
     private Usuario obterUsuarioLogado() {
@@ -299,6 +355,27 @@ public class TenantService {
         }
 
         return usuarioLogado;
+
+    }
+
+    public TenantResponse buscarPorId(
+            UUID id
+    ) {
+
+        validarSuperAdmin();
+
+        Tenant tenant =
+                tenantRepository
+                        .findById(id)
+                        .orElseThrow(
+                                () -> new RecursoNaoEncontradoException(
+                                        "Tenant não encontrado."
+                                )
+                        );
+
+        return montarResponse(
+                tenant
+        );
 
     }
 
