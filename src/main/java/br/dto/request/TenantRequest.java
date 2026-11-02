@@ -4,14 +4,23 @@ import jakarta.validation.constraints.NotBlank;
 
 public record TenantRequest(
 
-        @NotBlank
         String nome,
+
+        String razaoSocial,
+
+        String cnpj,
 
         String responsavel,
 
         String email,
 
+        String telefone,
+
+        String endereco,
+
         String cidade,
+
+        String uf,
 
         Boolean ativo,
 
@@ -25,7 +34,11 @@ public record TenantRequest(
 
         String corPrimaria,
 
-        String corSecundaria
+        String corSecundaria,
+
+        Boolean marketingIaHabilitado,
+
+        Boolean deliveryHabilitado
 
 ) {
 }

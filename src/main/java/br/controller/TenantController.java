@@ -23,7 +23,7 @@ public class TenantController {
     }
 
     @GetMapping
-    public List<Tenant> listar() {
+    public List<TenantResponse> listar() {
         return tenantService.listarTodos();
     }
 
@@ -59,6 +59,19 @@ public class TenantController {
 
         return tenantService.buscarPorSlug(
                 slug);
+
+    }
+
+    @GetMapping("/{id}")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    public TenantResponse buscarPorId(
+            @PathVariable UUID id
+    ) {
+
+        return tenantService
+                .buscarPorId(
+                        id
+                );
 
     }
 }
