@@ -13,11 +13,15 @@ import java.util.UUID;
 public class PasswordResetTokenService {
 
     private final PasswordResetTokenRepository passwordResetTokenRepository;
+    private final EmailService emailService;
+
 
     public PasswordResetTokenService(
-            PasswordResetTokenRepository passwordResetTokenRepository) {
+            PasswordResetTokenRepository passwordResetTokenRepository,
+            EmailService emailService) {
 
         this.passwordResetTokenRepository = passwordResetTokenRepository;
+        this.emailService = emailService;
     }
 
     public PasswordResetToken criarToken(

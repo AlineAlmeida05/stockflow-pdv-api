@@ -33,6 +33,7 @@ public class AuthService {
     private final RefreshTokenService refreshTokenService;
     private final UsuarioAutenticadoService usuarioAutenticadoService;
     private final PasswordResetTokenService passwordResetTokenService;
+    private final EmailService emailService;
 
     public AuthService(
             UsuarioRepository usuarioRepository,
@@ -41,7 +42,8 @@ public class AuthService {
             TenantRepository tenantRepository,
             RefreshTokenService refreshTokenService,
             UsuarioAutenticadoService usuarioAutenticadoService,
-            PasswordResetTokenService passwordResetTokenService) {
+            PasswordResetTokenService passwordResetTokenService,
+            EmailService emailService) {
 
         this.usuarioRepository = usuarioRepository;
         this.passwordEncoder = passwordEncoder;
@@ -50,6 +52,7 @@ public class AuthService {
         this.refreshTokenService = refreshTokenService;
         this.usuarioAutenticadoService = usuarioAutenticadoService;
         this.passwordResetTokenService = passwordResetTokenService;
+        this.emailService = emailService;
     }
 
     public LoginResponse login(
@@ -235,19 +238,64 @@ public class AuthService {
             ForgotPasswordRequest request) {
 
         Usuario usuario = usuarioRepository
-                        .findByEmail(
-                                request.email()
-                        )
-                        .orElseThrow(
-                                () -> new RecursoNaoEncontradoException(
-                                        "Usuário não encontrado."
-                                )
+                .findByEmail(
+                        request.email()
+                )
+                .orElse(null);
+
+        if (usuario == null) {
+
+            return;
+
+        }
+
+        PasswordResetToken token =
+                passwordResetTokenService
+                        .criarToken(
+                                usuario
                         );
 
-        passwordResetTokenService
-                .criarToken(
-                        usuario
-                );
+        String link =
+                "http://localhost:4200/reset-password"
+                        + "?token="
+                        + token.getToken()
+                        + "&slug="
+                        + request.slug();
+
+        Tenant tenant = tenantRepository
+                .findBySlug(
+                        request.slug()
+                )
+                .orElse(null);
+
+        String assunto =
+                tenant != null
+                        ? tenant.getNome() + " - Recuperação de senha"
+                        : "Recuperação de senha";
+
+        emailService.enviar(
+
+                usuario.getEmail(),
+
+                assunto,
+
+                """
+                Olá!
+        
+                Recebemos uma solicitação para redefinição de senha.
+        
+                Utilize o link abaixo para criar uma nova senha:
+        
+                %s
+        
+                Este link expira em 1 hora.
+        
+                Caso você não tenha solicitado esta alteração,
+                ignore esta mensagem.
+                """
+                        .formatted(link)
+
+        );
 
     }
 

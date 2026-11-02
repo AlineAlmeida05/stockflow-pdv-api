@@ -11,7 +11,8 @@ public record ForgotPasswordRequest(
         @NotBlank(
                 message = "E-mail é obrigatório."
         )
-        String email
+        String email,
+        String slug
 
 ) {
 }
