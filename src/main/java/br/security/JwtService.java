@@ -113,4 +113,35 @@ public class JwtService {
 
         }
 
+        public String gerarTokenImpersonacao(
+                Usuario usuario,
+                String tenantId
+        ) {
+
+                return Jwts.builder()
+                        .subject(usuario.getEmail())
+                        .claim(
+                                "perfil",
+                                usuario.getPerfil().name()
+                        )
+                        .claim(
+                                "tenantId",
+                                tenantId
+                        )
+                        .claim(
+                                "impersonando",
+                                true
+                        )
+                        .issuedAt(new Date())
+                        .expiration(
+                                new Date(
+                                        System.currentTimeMillis()
+                                                + 1000L * 60 * 60 * 24
+                                )
+                        )
+                        .signWith(getKey())
+                        .compact();
+
+        }
+
 }
