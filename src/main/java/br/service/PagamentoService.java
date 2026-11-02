@@ -15,10 +15,10 @@ import br.security.UsuarioAutenticadoService;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class PagamentoService {
@@ -48,13 +48,16 @@ public class PagamentoService {
 
         Usuario usuarioLogado = obterUsuarioLogado();
 
+        UUID tenantId =
+                usuarioAutenticadoService
+                        .tenantIdAtual();
+
+
         Cliente cliente =
                 clienteRepository
                         .findByIdAndTenantId(
                                 request.clienteId(),
-                                usuarioLogado
-                                        .getTenant()
-                                        .getId()
+                                tenantId
                         )
                         .orElseThrow(() ->
                                 new RecursoNaoEncontradoException(
@@ -65,9 +68,7 @@ public class PagamentoService {
                 fiadoRepository
                         .findByClienteIdAndTenantIdAndStatus(
                                 cliente.getId(),
-                                usuarioLogado
-                                        .getTenant()
-                                        .getId(),
+                                tenantId,
                                 "pendente"
                         )
                         .stream()
@@ -82,9 +83,7 @@ public class PagamentoService {
                 pagamentoRepository
                         .findByClienteIdAndTenantId(
                                 cliente.getId(),
-                                usuarioLogado
-                                        .getTenant()
-                                        .getId()
+                                tenantId
                         )
                         .stream()
                         .map(Pagamento::getValorPago)
@@ -145,13 +144,13 @@ public class PagamentoService {
 
     public List<PagamentoResponse> listar() {
 
-        Usuario usuarioLogado = obterUsuarioLogado();
+        UUID tenantId =
+                usuarioAutenticadoService
+                        .tenantIdAtual();
 
         return pagamentoRepository
                 .findByTenantId(
-                        usuarioLogado
-                                .getTenant()
-                                .getId())
+                        tenantId)
                 .stream()
                 .map(pagamento ->
                         new PagamentoResponse(

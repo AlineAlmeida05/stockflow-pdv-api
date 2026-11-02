@@ -78,4 +78,39 @@ public class JwtService {
 
         }
 
+        public String extrairTenantId(
+                String token) {
+
+                return Jwts.parser()
+                        .verifyWith(getKey())
+                        .build()
+                        .parseSignedClaims(token)
+                        .getPayload()
+                        .get(
+                                "tenantId",
+                                String.class
+                        );
+
+        }
+
+        public boolean extrairImpersonando(
+                String token) {
+
+                Boolean impersonando =
+                        Jwts.parser()
+                                .verifyWith(getKey())
+                                .build()
+                                .parseSignedClaims(token)
+                                .getPayload()
+                                .get(
+                                        "impersonando",
+                                        Boolean.class
+                                );
+
+                return Boolean.TRUE.equals(
+                        impersonando
+                );
+
+        }
+
 }

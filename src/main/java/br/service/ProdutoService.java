@@ -35,13 +35,13 @@ public class ProdutoService {
 
     public List<ProdutoResponse> listar() {
 
-        Usuario usuarioLogado = obterUsuarioLogado();
+        UUID tenantId =
+                usuarioAutenticadoService
+                        .tenantIdAtual();
 
         return produtoRepository
                 .findByTenantId(
-                        usuarioLogado
-                                .getTenant()
-                                .getId())
+                        tenantId)
                 .stream()
                 .map(this::montarResponse)
                 .toList();
@@ -52,15 +52,16 @@ public class ProdutoService {
     public ProdutoResponse buscarPorId(
             UUID id) {
 
-        Usuario usuarioLogado = obterUsuarioLogado();
+        UUID tenantId =
+                usuarioAutenticadoService
+                        .tenantIdAtual();
 
-        Produto produto = produtoRepository
-                .findByIdAndTenantId(
-                        id,
-                        usuarioLogado
-                                .getTenant()
-                                .getId()
-                )
+        Produto produto =
+                produtoRepository
+                        .findByIdAndTenantId(
+                                id,
+                                tenantId
+                        )
                 .orElseThrow(() ->
                         new RecursoNaoEncontradoException(
                                 "Produto não encontrado."
@@ -124,13 +125,16 @@ public class ProdutoService {
 
         Usuario usuarioLogado = obterUsuarioLogado();
 
-        Produto produto = produtoRepository
-                .findByIdAndTenantId(
-                        id,
-                        usuarioLogado
-                                .getTenant()
-                                .getId()
-                )
+        UUID tenantId =
+                usuarioAutenticadoService
+                        .tenantIdAtual();
+
+        Produto produto =
+                produtoRepository
+                        .findByIdAndTenantId(
+                                id,
+                                tenantId
+                        )
                 .orElseThrow(() ->
                         new RecursoNaoEncontradoException(
                                 "Produto não encontrado."
@@ -174,13 +178,16 @@ public class ProdutoService {
 
         Usuario usuarioLogado = obterUsuarioLogado();
 
-        Produto produto = produtoRepository
-                .findByIdAndTenantId(
-                        id,
-                        usuarioLogado
-                                .getTenant()
-                                .getId()
-                )
+        UUID tenantId =
+                usuarioAutenticadoService
+                        .tenantIdAtual();
+
+        Produto produto =
+                produtoRepository
+                        .findByIdAndTenantId(
+                                id,
+                                tenantId
+                        )
                 .orElseThrow(() ->
                         new RecursoNaoEncontradoException(
                                 "Produto não encontrado."
@@ -210,13 +217,16 @@ public class ProdutoService {
 
         Usuario usuarioLogado = obterUsuarioLogado();
 
-        Produto produto = produtoRepository
-                .findByIdAndTenantId(
-                        id,
-                        usuarioLogado
-                                .getTenant()
-                                .getId()
-                )
+        UUID tenantId =
+                usuarioAutenticadoService
+                        .tenantIdAtual();
+
+        Produto produto =
+                produtoRepository
+                        .findByIdAndTenantId(
+                                id,
+                                tenantId
+                        )
                 .orElseThrow(() ->
                         new RecursoNaoEncontradoException(
                                 "Produto não encontrado."
@@ -257,11 +267,15 @@ public class ProdutoService {
 
         }
 
-        Produto ultimoProduto = produtoRepository
-                .findTopByTenantIdOrderByCodigoDesc(
-                        usuarioLogado
-                                .getTenant()
-                                .getId());
+        UUID tenantId =
+                usuarioAutenticadoService
+                        .tenantIdAtual();
+
+        Produto ultimoProduto =
+                produtoRepository
+                        .findTopByTenantIdOrderByCodigoDesc(
+                                tenantId
+                        );
 
         int sequencia = 1;
 

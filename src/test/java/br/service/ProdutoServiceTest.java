@@ -24,6 +24,7 @@ import br.dto.request.ProdutoCreateRequest;
 import java.math.BigDecimal;
 import static org.mockito.Mockito.verify;
 import br.dto.request.ProdutoUpdateRequest;
+import org.springframework.http.HttpStatus;
 
 @ExtendWith(MockitoExtension.class)
 class ProdutoServiceTest {
@@ -43,7 +44,13 @@ class ProdutoServiceTest {
     @Test
     void deveLancarExcecaoQuandoUsuarioNaoAutenticado() {
 
-        when(usuarioAutenticadoService.usuarioLogado()).thenReturn(null);
+        when(usuarioAutenticadoService.tenantIdAtual())
+                .thenThrow(
+                        new ResponseStatusException(
+                                HttpStatus.UNAUTHORIZED,
+                                "Usuário não autenticado."
+                        )
+                );
 
         assertThrows(
                 ResponseStatusException.class,
@@ -62,7 +69,8 @@ class ProdutoServiceTest {
 
         usuario.setTenant(tenant);
 
-        when(usuarioAutenticadoService.usuarioLogado()).thenReturn(usuario);
+        when(usuarioAutenticadoService.tenantIdAtual())
+                .thenReturn(tenant.getId());
 
         when(produtoRepository.findByTenantId(
                 tenant.getId()))
@@ -100,6 +108,9 @@ class ProdutoServiceTest {
         produtoSalvo.setId(UUID.randomUUID());
         produtoSalvo.setNome("Produto Teste");
         produtoSalvo.setCodigo("EMP000001");
+
+        when(usuarioAutenticadoService.tenantIdAtual())
+                .thenReturn(tenant.getId());
 
         when(usuarioAutenticadoService.usuarioLogado()).thenReturn(usuario);
 
@@ -143,6 +154,9 @@ class ProdutoServiceTest {
         produtoSalvo.setNome("Produto Teste");
         produtoSalvo.setCodigo("EMP000001");
 
+        when(usuarioAutenticadoService.tenantIdAtual())
+                .thenReturn(tenant.getId());
+
         when(usuarioAutenticadoService.usuarioLogado()).thenReturn(usuario);
 
         when(produtoRepository.findTopByTenantIdOrderByCodigoDesc(
@@ -176,8 +190,8 @@ class ProdutoServiceTest {
 
         UUID produtoId = UUID.randomUUID();
 
-        when(usuarioAutenticadoService.usuarioLogado())
-                .thenReturn(usuario);
+        when(usuarioAutenticadoService.tenantIdAtual())
+                .thenReturn(tenant.getId());
 
         when(produtoRepository.findByIdAndTenantId(
                 produtoId,
@@ -208,6 +222,9 @@ class ProdutoServiceTest {
         produto.setId(UUID.randomUUID());
         produto.setNome("Produto Teste");
         produto.setAtivo(true);
+
+        when(usuarioAutenticadoService.tenantIdAtual())
+                .thenReturn(tenant.getId());
 
         when(usuarioAutenticadoService.usuarioLogado()).thenReturn(usuario);
 
@@ -250,6 +267,9 @@ class ProdutoServiceTest {
         produto.setId(UUID.randomUUID());
         produto.setNome("Produto Teste");
         produto.setAtivo(false);
+
+        when(usuarioAutenticadoService.tenantIdAtual())
+                .thenReturn(tenant.getId());
 
         when(usuarioAutenticadoService.usuarioLogado()).thenReturn(usuario);
 
@@ -305,6 +325,9 @@ class ProdutoServiceTest {
                         10,
                         true
                 );
+
+        when(usuarioAutenticadoService.tenantIdAtual())
+                .thenReturn(tenant.getId());
 
         when(usuarioAutenticadoService.usuarioLogado()).thenReturn(usuario);
 
