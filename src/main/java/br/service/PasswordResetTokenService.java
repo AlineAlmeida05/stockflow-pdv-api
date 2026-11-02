@@ -27,6 +27,22 @@ public class PasswordResetTokenService {
     public PasswordResetToken criarToken(
             Usuario usuario) {
 
+        passwordResetTokenRepository
+                .findByUsuarioAndUtilizadoFalse(
+                        usuario
+                )
+                .forEach(tokenExistente -> {
+
+                    tokenExistente.setUtilizado(
+                            true
+                    );
+
+                    passwordResetTokenRepository.save(
+                            tokenExistente
+                    );
+
+                });
+
         PasswordResetToken token = new PasswordResetToken();
 
         token.setToken(UUID.randomUUID().toString());

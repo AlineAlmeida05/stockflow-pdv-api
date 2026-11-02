@@ -6,6 +6,8 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.EntityGraph;
+import br.entity.Usuario;
+import java.util.List;
 
 @Repository
 public interface PasswordResetTokenRepository
@@ -16,6 +18,11 @@ public interface PasswordResetTokenRepository
     @EntityGraph(attributePaths = "usuario")
     Optional<PasswordResetToken> findByToken(
             String token
+    );
+
+    List<PasswordResetToken>
+    findByUsuarioAndUtilizadoFalse(
+            Usuario usuario
     );
 
 }
