@@ -12,6 +12,7 @@ import java.util.List;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import java.io.IOException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import java.util.UUID;
 
 @Component
 public class JwtAuthenticationFilter
@@ -58,20 +59,42 @@ public class JwtAuthenticationFilter
 
                             var authorities = List.of(
                                     new SimpleGrantedAuthority(
-                                            "ROLE_" + usuario.getPerfil().name()
+                                            "ROLE_" +
+                                                    usuario.getPerfil().name()
                                     )
                             );
 
+                            UUID tenantId =
+                                    UUID.fromString(
+                                            jwtService.extrairTenantId(
+                                                    token
+                                            )
+                                    );
+
+                            boolean impersonando =
+                                    jwtService.extrairImpersonando(
+                                            token
+                                    );
+
+                            UsuarioContexto contexto =
+                                    new UsuarioContexto(
+                                            usuario,
+                                            tenantId,
+                                            impersonando
+                                    );
+
                             UsernamePasswordAuthenticationToken authentication =
                                     new UsernamePasswordAuthenticationToken(
-                                            usuario,
+                                            contexto,
                                             null,
-                                            authorities);
+                                            authorities
+                                    );
 
                             SecurityContextHolder
                                     .getContext()
                                     .setAuthentication(
-                                            authentication);
+                                            authentication
+                                    );
 
                         });
 

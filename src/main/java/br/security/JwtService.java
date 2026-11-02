@@ -78,4 +78,70 @@ public class JwtService {
 
         }
 
+        public String extrairTenantId(
+                String token) {
+
+                return Jwts.parser()
+                        .verifyWith(getKey())
+                        .build()
+                        .parseSignedClaims(token)
+                        .getPayload()
+                        .get(
+                                "tenantId",
+                                String.class
+                        );
+
+        }
+
+        public boolean extrairImpersonando(
+                String token) {
+
+                Boolean impersonando =
+                        Jwts.parser()
+                                .verifyWith(getKey())
+                                .build()
+                                .parseSignedClaims(token)
+                                .getPayload()
+                                .get(
+                                        "impersonando",
+                                        Boolean.class
+                                );
+
+                return Boolean.TRUE.equals(
+                        impersonando
+                );
+
+        }
+
+        public String gerarTokenImpersonacao(
+                Usuario usuario,
+                String tenantId
+        ) {
+
+                return Jwts.builder()
+                        .subject(usuario.getEmail())
+                        .claim(
+                                "perfil",
+                                usuario.getPerfil().name()
+                        )
+                        .claim(
+                                "tenantId",
+                                tenantId
+                        )
+                        .claim(
+                                "impersonando",
+                                true
+                        )
+                        .issuedAt(new Date())
+                        .expiration(
+                                new Date(
+                                        System.currentTimeMillis()
+                                                + 1000L * 60 * 60 * 24
+                                )
+                        )
+                        .signWith(getKey())
+                        .compact();
+
+        }
+
 }

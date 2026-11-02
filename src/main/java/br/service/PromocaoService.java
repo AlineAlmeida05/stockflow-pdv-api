@@ -71,15 +71,15 @@ public class PromocaoService {
     public Promocao buscarPorId(
             UUID id) {
 
-        Usuario usuarioLogado = obterUsuarioLogado();
+        UUID tenantId =
+                usuarioAutenticadoService
+                        .tenantIdAtual();
 
         Promocao promocao =
                 promocaoRepository
                         .findByIdAndTenantId(
                                 id,
-                                usuarioLogado
-                                        .getTenant()
-                                        .getId()
+                                tenantId
                         )
                         .orElseThrow(
                                 () -> new RegraNegocioException(
@@ -96,13 +96,15 @@ public class PromocaoService {
 
         Usuario usuarioLogado = obterUsuarioLogado();
 
+        UUID tenantId =
+                usuarioAutenticadoService
+                        .tenantIdAtual();
+
         Produto produto =
                 produtoRepository
                         .findByIdAndTenantId(
                                 request.produtoId(),
-                                usuarioLogado
-                                        .getTenant()
-                                        .getId()
+                                tenantId
                         )
                         .orElseThrow(() ->
                                 new RegraNegocioException(
@@ -123,9 +125,7 @@ public class PromocaoService {
         List<MovimentacaoEstoque> movimentacoes =
                 movimentacaoEstoqueRepository
                         .findByTenantId(
-                                usuarioLogado
-                                        .getTenant()
-                                        .getId()
+                                tenantId
                         );
 
         long diasEstoque =
@@ -320,31 +320,21 @@ public class PromocaoService {
 
         Usuario usuarioLogado = obterUsuarioLogado();
 
+        UUID tenantId =
+                usuarioAutenticadoService
+                        .tenantIdAtual();
+
+
         Produto produto =
                 produtoRepository
                         .findByIdAndTenantId(
                                 produtoId,
-                                usuarioLogado
-                                        .getTenant()
-                                        .getId()
+                                tenantId
                         )
                         .orElseThrow(() ->
                                 new RegraNegocioException(
                                         "Produto não encontrado."
                                 ));
-
-        if (!produto.getTenant()
-                .getId()
-                .equals(
-                        usuarioLogado
-                                .getTenant()
-                                .getId()
-                )) {
-
-            throw new RegraNegocioException(
-                    "Você não possui acesso a este produto."
-            );
-        }
 
         return promocaoRepository
                 .findByProduto(produto);
@@ -355,20 +345,20 @@ public class PromocaoService {
 
         Usuario usuarioLogado = obterUsuarioLogado();
 
+        UUID tenantId =
+                usuarioAutenticadoService
+                        .tenantIdAtual();
+
         List<Produto> produtos =
                 produtoRepository
                         .findByTenantId(
-                                usuarioLogado
-                                        .getTenant()
-                                        .getId()
+                                tenantId
                         );
 
         List<MovimentacaoEstoque> movimentacoes =
                 movimentacaoEstoqueRepository
                         .findByTenantId(
-                                usuarioLogado
-                                        .getTenant()
-                                        .getId()
+                                tenantId
                         );
 
         List<ProdutoPromocaoResponse> candidatos = new ArrayList<>();
@@ -425,12 +415,14 @@ public class PromocaoService {
 
         Usuario usuarioLogado = obterUsuarioLogado();
 
+        UUID tenantId =
+                usuarioAutenticadoService
+                        .tenantIdAtual();
+
         List<MovimentacaoEstoque> movimentacoes =
                 movimentacaoEstoqueRepository
                         .findByTenantId(
-                                usuarioLogado
-                                        .getTenant()
-                                        .getId()
+                                tenantId
                         );
 
         List<ProdutoPromocaoResponse> ativas = new ArrayList<>();

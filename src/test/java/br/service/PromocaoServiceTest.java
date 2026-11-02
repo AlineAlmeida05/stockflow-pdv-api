@@ -72,6 +72,9 @@ class PromocaoServiceTest {
 
         PromocaoRequest request = new PromocaoRequest(produtoId);
 
+        when(usuarioAutenticadoService.tenantIdAtual())
+                .thenReturn(tenant.getId());
+
         when(usuarioAutenticadoService.usuarioLogado()).thenReturn(usuario);
 
         when(produtoRepository.findByIdAndTenantId(
@@ -102,6 +105,9 @@ class PromocaoServiceTest {
         produto.setPromocaoAtiva(false);
 
         PromocaoRequest request = new PromocaoRequest(produto.getId());
+
+        when(usuarioAutenticadoService.tenantIdAtual())
+                .thenReturn(tenant.getId());
 
         when(usuarioAutenticadoService.usuarioLogado()).thenReturn(usuario);
 
@@ -145,6 +151,9 @@ class PromocaoServiceTest {
         promocao.setId(UUID.randomUUID());
 
         PromocaoRequest request = new PromocaoRequest(produto.getId());
+
+        when(usuarioAutenticadoService.tenantIdAtual())
+                .thenReturn(tenant.getId());
 
         when(usuarioAutenticadoService.usuarioLogado()).thenReturn(usuario);
 
@@ -191,6 +200,9 @@ class PromocaoServiceTest {
         promocao.setPercentualDesconto(BigDecimal.TEN);
 
         PromocaoRequest request = new PromocaoRequest(produto.getId());
+
+        when(usuarioAutenticadoService.tenantIdAtual())
+                .thenReturn(tenant.getId());
 
         when(usuarioAutenticadoService.usuarioLogado()).thenReturn(usuario);
 
@@ -241,6 +253,9 @@ class PromocaoServiceTest {
 
         PromocaoRequest request = new PromocaoRequest(produto.getId());
 
+        when(usuarioAutenticadoService.tenantIdAtual())
+                .thenReturn(tenant.getId());
+
         when(usuarioAutenticadoService.usuarioLogado()).thenReturn(usuario);
 
         when(produtoRepository.findByIdAndTenantId(
@@ -269,7 +284,8 @@ class PromocaoServiceTest {
 
         UUID promocaoId = UUID.randomUUID();
 
-        when(usuarioAutenticadoService.usuarioLogado()).thenReturn(usuario);
+        when(usuarioAutenticadoService.tenantIdAtual())
+                .thenReturn(tenant.getId());
 
         when(promocaoRepository.findByIdAndTenantId(
                 promocaoId,
@@ -302,6 +318,9 @@ class PromocaoServiceTest {
         promocao.setId(UUID.randomUUID());
         promocao.setAtiva(true);
         promocao.setProduto(produto);
+
+        when(usuarioAutenticadoService.tenantIdAtual())
+                .thenReturn(tenant.getId());
 
         when(usuarioAutenticadoService.usuarioLogado()).thenReturn(usuario);
 
@@ -345,6 +364,9 @@ class PromocaoServiceTest {
         promocao.setAtiva(true);
         promocao.setProduto(produto);
 
+        when(usuarioAutenticadoService.tenantIdAtual())
+                .thenReturn(tenant.getId());
+
         when(usuarioAutenticadoService.usuarioLogado()).thenReturn(usuario);
 
         when(promocaoRepository.findByIdAndTenantId(
@@ -382,7 +404,8 @@ class PromocaoServiceTest {
 
         Promocao promocao = new Promocao();
 
-        when(usuarioAutenticadoService.usuarioLogado()).thenReturn(usuario);
+        when(usuarioAutenticadoService.usuarioLogado())
+                .thenReturn(usuario);
 
         when(promocaoRepository.findByTenantAndAtivaTrue(
                 tenant))

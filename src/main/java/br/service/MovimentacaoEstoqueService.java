@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import br.exception.RegraNegocioException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.UUID;
 
 @Service
 public class MovimentacaoEstoqueService {
@@ -45,12 +46,15 @@ public class MovimentacaoEstoqueService {
 
                 Usuario usuarioLogado = obterUsuarioLogado();
 
+                UUID tenantId =
+                        usuarioAutenticadoService
+                                .tenantIdAtual();
+
+
                 Produto produto = produtoRepository
                         .findByIdAndTenantId(
                                 request.produtoId(),
-                                usuarioLogado
-                                        .getTenant()
-                                        .getId()
+                                tenantId
                         )
                         .orElseThrow(() ->
                                 new RecursoNaoEncontradoException(
@@ -250,12 +254,12 @@ public class MovimentacaoEstoqueService {
 
         public List<MovimentacaoEstoqueResponse> listar() {
 
-                Usuario usuarioLogado = obterUsuarioLogado();
+                UUID tenantId =
+                        usuarioAutenticadoService
+                                .tenantIdAtual();
 
                 return repository.findByTenantId(
-                                usuarioLogado
-                                                .getTenant()
-                                                .getId())
+                                tenantId)
                                 .stream()
                                 .map(movimentacao -> new MovimentacaoEstoqueResponse(
 
