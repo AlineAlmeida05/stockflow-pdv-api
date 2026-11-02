@@ -54,7 +54,6 @@ public class TenantController {
     }
 
     @GetMapping("/slug/{slug}")
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
     public Tenant buscarPorSlug(
             @PathVariable String slug) {
 

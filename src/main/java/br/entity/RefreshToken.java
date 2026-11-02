@@ -1,7 +1,6 @@
 package br.entity;
 
 import jakarta.persistence.*;
-
 import java.time.Instant;
 import java.util.UUID;
 
@@ -21,6 +20,7 @@ public class RefreshToken {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "usuario_id")
+
     private Usuario usuario;
 
     public UUID getId() {

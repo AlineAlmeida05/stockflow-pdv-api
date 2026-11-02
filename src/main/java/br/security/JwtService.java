@@ -9,7 +9,6 @@ import java.util.Date;
 import io.jsonwebtoken.JwtException;
 import org.springframework.beans.factory.annotation.Value;
 
-
 @Service
 public class JwtService {
 

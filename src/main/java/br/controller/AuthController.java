@@ -9,6 +9,9 @@ import org.springframework.web.bind.annotation.*;
 import br.dto.request.LoginRequest;
 import br.dto.response.LoginResponse;
 import org.springframework.web.bind.annotation.CookieValue;
+import br.dto.request.ForgotPasswordRequest;
+import br.dto.request.ResetPasswordRequest;
+import br.dto.response.TokenValidoResponse;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -55,6 +58,38 @@ public class AuthController {
 
     }
 
+    @PostMapping("/forgot-password")
+    public void forgotPassword(
+
+            @Valid
+            @RequestBody
+            ForgotPasswordRequest request
+
+    ) {
+
+        authService
+                .solicitarRecuperacaoSenha(
+                        request
+                );
+
+    }
+
+    @PostMapping("/reset-password")
+    public void resetPassword(
+
+            @Valid
+            @RequestBody
+            ResetPasswordRequest request
+
+    ) {
+
+        authService
+                .redefinirSenha(
+                        request
+                );
+
+    }
+
     @PostMapping("/logout")
     public void logout(
             @CookieValue(value = "refreshToken",
@@ -66,6 +101,20 @@ public class AuthController {
                 refreshToken,
                 response
         );
+
+    }
+
+    @GetMapping("/reset-password/validar")
+    public TokenValidoResponse validarToken(
+
+            @RequestParam String token
+
+    ) {
+
+        return authService
+                .validarTokenRecuperacao(
+                        token
+                );
 
     }
 
