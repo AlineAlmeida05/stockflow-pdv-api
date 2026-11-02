@@ -11,6 +11,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
@@ -53,7 +54,13 @@ class DashboardServiceTest {
     @Test
     void deveLancarExcecaoQuandoUsuarioNaoAutenticado() {
 
-        when(usuarioAutenticadoService.usuarioLogado()).thenReturn(null);
+        when(usuarioAutenticadoService.tenantIdAtual())
+                .thenThrow(
+                        new ResponseStatusException(
+                                HttpStatus.UNAUTHORIZED,
+                                "Usuário não autenticado."
+                        )
+                );
 
         assertThrows(
                 ResponseStatusException.class,
@@ -70,7 +77,8 @@ class DashboardServiceTest {
         Usuario usuario = new Usuario();
         usuario.setTenant(tenant);
 
-        when(usuarioAutenticadoService.usuarioLogado()).thenReturn(usuario);
+        when(usuarioAutenticadoService.tenantIdAtual())
+                .thenReturn(tenant.getId());
 
         when(produtoRepository.findByTenantId(
                 tenant.getId()))
@@ -110,7 +118,8 @@ class DashboardServiceTest {
         venda.setValorTotal(BigDecimal.valueOf(500));
         venda.setDataVenda(LocalDateTime.now());
 
-        when(usuarioAutenticadoService.usuarioLogado()).thenReturn(usuario);
+        when(usuarioAutenticadoService.tenantIdAtual())
+                .thenReturn(tenant.getId());
 
         when(produtoRepository.findByTenantId(tenant.getId())).thenReturn(List.of());
 
@@ -143,7 +152,8 @@ class DashboardServiceTest {
         produto.setEstoqueAtual(0);
         produto.setEstoqueMinimo(5);
 
-        when(usuarioAutenticadoService.usuarioLogado()).thenReturn(usuario);
+        when(usuarioAutenticadoService.tenantIdAtual())
+                .thenReturn(tenant.getId());
 
         when(produtoRepository.findByTenantId(tenant.getId())).thenReturn(List.of(produto));
 
@@ -176,7 +186,8 @@ class DashboardServiceTest {
         produto.setEstoqueAtual(3);
         produto.setEstoqueMinimo(5);
 
-        when(usuarioAutenticadoService.usuarioLogado()).thenReturn(usuario);
+        when(usuarioAutenticadoService.tenantIdAtual())
+                .thenReturn(tenant.getId());
 
         when(produtoRepository.findByTenantId(tenant.getId())).thenReturn(List.of(produto));
 
@@ -210,7 +221,8 @@ class DashboardServiceTest {
         produto.setEstoqueAtual(10);
         produto.setEstoqueMinimo(5);
 
-        when(usuarioAutenticadoService.usuarioLogado()).thenReturn(usuario);
+        when(usuarioAutenticadoService.tenantIdAtual())
+                .thenReturn(tenant.getId());
 
         when(produtoRepository.findByTenantId(tenant.getId())).thenReturn(List.of(produto));
 

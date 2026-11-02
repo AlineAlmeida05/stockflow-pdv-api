@@ -14,6 +14,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 import java.math.BigDecimal;
 import java.util.List;
@@ -50,7 +51,13 @@ class ClienteServiceTest {
     @Test
     void deveLancarExcecaoQuandoUsuarioNaoAutenticado() {
 
-        when(usuarioAutenticadoService.usuarioLogado()).thenReturn(null);
+        when(usuarioAutenticadoService.tenantIdAtual())
+                .thenThrow(
+                        new ResponseStatusException(
+                                HttpStatus.UNAUTHORIZED,
+                                "Usuário não autenticado."
+                        )
+                );
 
         assertThrows(
                 ResponseStatusException.class,
@@ -67,7 +74,8 @@ class ClienteServiceTest {
         Usuario usuario = new Usuario();
         usuario.setTenant(tenant);
 
-        when(usuarioAutenticadoService.usuarioLogado()).thenReturn(usuario);
+        when(usuarioAutenticadoService.tenantIdAtual())
+                .thenReturn(tenant.getId());
 
         when(clienteRepository.findByTenantId(
                 tenant.getId()))
@@ -108,7 +116,8 @@ class ClienteServiceTest {
                 BigDecimal.valueOf(500)
         );
 
-        when(usuarioAutenticadoService.usuarioLogado()).thenReturn(usuario);
+        when(usuarioAutenticadoService.usuarioLogado())
+                .thenReturn(usuario);
 
         when(clienteRepository.save(any(Cliente.class))).thenReturn(clienteSalvo);
 
@@ -141,9 +150,11 @@ class ClienteServiceTest {
         clienteSalvo.setId(UUID.randomUUID());
         clienteSalvo.setNome("João");
 
-        when(usuarioAutenticadoService.usuarioLogado()).thenReturn(usuario);
+        when(usuarioAutenticadoService.usuarioLogado())
+                .thenReturn(usuario);
 
-        when(clienteRepository.save(any(Cliente.class))).thenReturn(clienteSalvo);
+        when(clienteRepository.save(any(Cliente.class)))
+                .thenReturn(clienteSalvo);
 
         clienteService.salvar(request);
 
@@ -171,7 +182,11 @@ class ClienteServiceTest {
 
         UUID clienteId = UUID.randomUUID();
 
-        when(usuarioAutenticadoService.usuarioLogado()).thenReturn(usuario);
+        when(usuarioAutenticadoService.tenantIdAtual())
+                .thenReturn(tenant.getId());
+
+        when(usuarioAutenticadoService.usuarioLogado())
+                .thenReturn(usuario);
 
         when(clienteRepository.findByIdAndTenantId(
                 clienteId,
@@ -201,7 +216,11 @@ class ClienteServiceTest {
         cliente.setNome("João");
         cliente.setAtivo(true);
 
-        when(usuarioAutenticadoService.usuarioLogado()).thenReturn(usuario);
+        when(usuarioAutenticadoService.tenantIdAtual())
+                .thenReturn(tenant.getId());
+
+        when(usuarioAutenticadoService.usuarioLogado())
+                .thenReturn(usuario);
 
         when(clienteRepository.findByIdAndTenantId(
                 cliente.getId(),
@@ -244,7 +263,11 @@ class ClienteServiceTest {
         cliente.setNome("João");
         cliente.setAtivo(false);
 
-        when(usuarioAutenticadoService.usuarioLogado()).thenReturn(usuario);
+        when(usuarioAutenticadoService.tenantIdAtual())
+                .thenReturn(tenant.getId());
+
+        when(usuarioAutenticadoService.usuarioLogado())
+                .thenReturn(usuario);
 
         when(clienteRepository.findByIdAndTenantId(
                 cliente.getId(),
@@ -283,7 +306,11 @@ class ClienteServiceTest {
                         "Atualizado"
                 );
 
-        when(usuarioAutenticadoService.usuarioLogado()).thenReturn(usuario);
+        when(usuarioAutenticadoService.tenantIdAtual())
+                .thenReturn(tenant.getId());
+
+        when(usuarioAutenticadoService.usuarioLogado())
+                .thenReturn(usuario);
 
         when(clienteRepository.findByIdAndTenantId(
                 clienteId,

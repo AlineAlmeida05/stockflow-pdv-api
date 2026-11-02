@@ -15,7 +15,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.server.ResponseStatusException;
 import java.math.BigDecimal;
 import java.util.Optional;
-
+import org.springframework.http.HttpStatus;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -46,7 +46,13 @@ public class MovimentacaoEstoqueServiceTest {
     @Test
     void deveLancarExcecaoQuandoUsuarioNaoAutenticado() {
 
-        when(usuarioAutenticadoService.usuarioLogado()).thenReturn(null);
+        when(usuarioAutenticadoService.tenantIdAtual())
+                .thenThrow(
+                        new ResponseStatusException(
+                                HttpStatus.UNAUTHORIZED,
+                                "Usuário não autenticado."
+                        )
+                );
 
         assertThrows(
                 ResponseStatusException.class,
@@ -73,6 +79,8 @@ public class MovimentacaoEstoqueServiceTest {
                         BigDecimal.TEN,
                         "Entrada teste"
                 );
+        when(usuarioAutenticadoService.tenantIdAtual())
+                .thenReturn(tenant.getId());
 
         when(usuarioAutenticadoService.usuarioLogado()).thenReturn(usuario);
 
@@ -109,6 +117,9 @@ public class MovimentacaoEstoqueServiceTest {
                         "Entrada"
                 );
 
+        when(usuarioAutenticadoService.tenantIdAtual())
+                .thenReturn(tenant.getId());
+
         when(usuarioAutenticadoService.usuarioLogado()).thenReturn(usuario);
 
         when(produtoRepository.findByIdAndTenantId(
@@ -143,6 +154,9 @@ public class MovimentacaoEstoqueServiceTest {
                         null,
                         "Entrada"
                 );
+
+        when(usuarioAutenticadoService.tenantIdAtual())
+                .thenReturn(tenant.getId());
 
         when(usuarioAutenticadoService.usuarioLogado()).thenReturn(usuario);
 
@@ -185,6 +199,9 @@ public class MovimentacaoEstoqueServiceTest {
                         BigDecimal.TEN,
                         "Entrada"
                 );
+
+        when(usuarioAutenticadoService.tenantIdAtual())
+                .thenReturn(tenant.getId());
 
         when(usuarioAutenticadoService.usuarioLogado()).thenReturn(usuario);
 
@@ -231,6 +248,9 @@ public class MovimentacaoEstoqueServiceTest {
                         BigDecimal.TEN,
                         "Entrada"
                 );
+
+        when(usuarioAutenticadoService.tenantIdAtual())
+                .thenReturn(tenant.getId());
 
         when(usuarioAutenticadoService.usuarioLogado()).thenReturn(usuario);
 

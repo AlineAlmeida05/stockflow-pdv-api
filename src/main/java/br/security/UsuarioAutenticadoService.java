@@ -23,8 +23,7 @@ public class UsuarioAutenticadoService {
             return null;
         }
 
-        Object principal =
-                authentication.getPrincipal();
+        Object principal = authentication.getPrincipal();
 
         if (principal instanceof UsuarioContexto contexto) {
             return contexto;
@@ -70,8 +69,7 @@ public class UsuarioAutenticadoService {
 
     public UsuarioContexto contextoObrigatorio() {
 
-        UsuarioContexto contexto =
-                contextoAtual();
+        UsuarioContexto contexto = contextoAtual();
 
         if (contexto == null) {
 

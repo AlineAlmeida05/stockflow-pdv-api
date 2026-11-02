@@ -16,7 +16,6 @@ import br.security.UsuarioAutenticadoService;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -95,13 +94,13 @@ public class ClienteService {
 
     public List<ClienteResponse> listar() {
 
-        Usuario usuarioLogado = obterUsuarioLogado();
+        UUID tenantId =
+                usuarioAutenticadoService
+                        .tenantIdAtual();
 
         return clienteRepository
                 .findByTenantId(
-                        usuarioLogado
-                                .getTenant()
-                                .getId())
+                        tenantId)
                 .stream()
                 .map(this::montarResponse)
                 .toList();
@@ -113,13 +112,15 @@ public class ClienteService {
 
         Usuario usuarioLogado = obterUsuarioLogado();
 
+        UUID tenantId =
+                usuarioAutenticadoService
+                        .tenantIdAtual();
+
         Cliente cliente =
                 clienteRepository
                         .findByIdAndTenantId(
                                 id,
-                                usuarioLogado
-                                        .getTenant()
-                                        .getId())
+                                tenantId)
                         .orElseThrow(
                                 () ->
                                         new RecursoNaoEncontradoException(
@@ -155,13 +156,15 @@ public class ClienteService {
 
         Usuario usuarioLogado = obterUsuarioLogado();
 
+        UUID tenantId =
+                usuarioAutenticadoService
+                        .tenantIdAtual();
+
         Cliente cliente =
                 clienteRepository
                         .findByIdAndTenantId(
                                 id,
-                                usuarioLogado
-                                        .getTenant()
-                                        .getId())
+                                tenantId)
                         .orElseThrow(
                                 () ->
                                         new RecursoNaoEncontradoException(
@@ -171,7 +174,7 @@ public class ClienteService {
                 fiadoRepository
                         .findByClienteIdAndTenantId(
                                 cliente.getId(),
-                                usuarioLogado.getTenant().getId()
+                                tenantId
                         )
                         .stream()
                         .map(Fiado::getValorTotal)
@@ -184,7 +187,7 @@ public class ClienteService {
                 pagamentoRepository
                         .findByClienteIdAndTenantId(
                                 cliente.getId(),
-                                usuarioLogado.getTenant().getId()
+                                tenantId
                         )
                         .stream()
                         .map(Pagamento::getValorPago)
@@ -232,13 +235,15 @@ public class ClienteService {
 
         Usuario usuarioLogado = obterUsuarioLogado();
 
+        UUID tenantId =
+                usuarioAutenticadoService
+                        .tenantIdAtual();
+
         Cliente cliente =
                 clienteRepository
                         .findByIdAndTenantId(
                                 clienteId,
-                                usuarioLogado
-                                        .getTenant()
-                                        .getId())
+                                tenantId)
                         .orElseThrow(
                                 () ->
                                         new RecursoNaoEncontradoException(
@@ -247,9 +252,7 @@ public class ClienteService {
                 fiadoRepository
                         .findByClienteIdAndTenantIdAndStatus(
                                 clienteId,
-                                usuarioLogado
-                                        .getTenant()
-                                        .getId(),
+                                tenantId,
                                 "pendente"
                         );
 
@@ -264,9 +267,7 @@ public class ClienteService {
                 pagamentoRepository
                         .findByClienteIdAndTenantId(
                                 clienteId,
-                                usuarioLogado
-                                        .getTenant()
-                                        .getId());
+                                tenantId);
 
         BigDecimal totalPago =
                 pagamentos.stream()
@@ -354,16 +355,17 @@ public class ClienteService {
     public void reativar(
             UUID id) {
 
-        Usuario usuarioLogado =
-                obterUsuarioLogado();
+        Usuario usuarioLogado = obterUsuarioLogado();
+
+        UUID tenantId =
+                usuarioAutenticadoService
+                        .tenantIdAtual();
 
         Cliente cliente =
                 clienteRepository
                         .findByIdAndTenantId(
                                 id,
-                                usuarioLogado
-                                        .getTenant()
-                                        .getId())
+                                tenantId)
                         .orElseThrow(
                                 () ->
                                         new RecursoNaoEncontradoException(

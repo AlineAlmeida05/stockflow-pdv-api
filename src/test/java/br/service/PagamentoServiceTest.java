@@ -14,6 +14,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 import java.math.BigDecimal;
 import java.util.List;
@@ -54,7 +55,13 @@ class PagamentoServiceTest {
     @Test
     void deveLancarExcecaoQuandoUsuarioNaoAutenticado() {
 
-        when(usuarioAutenticadoService.usuarioLogado()).thenReturn(null);
+        when(usuarioAutenticadoService.tenantIdAtual())
+                .thenThrow(
+                        new ResponseStatusException(
+                                HttpStatus.UNAUTHORIZED,
+                                "Usuário não autenticado."
+                        )
+                );
 
         assertThrows(
                 ResponseStatusException.class,
@@ -80,6 +87,9 @@ class PagamentoServiceTest {
                         "Pagamento teste",
                         "PIX"
                 );
+
+        when(usuarioAutenticadoService.tenantIdAtual())
+                .thenReturn(tenant.getId());
 
         when(usuarioAutenticadoService.usuarioLogado()).thenReturn(usuario);
 
@@ -116,6 +126,9 @@ class PagamentoServiceTest {
                         "Pagamento teste",
                         "PIX"
                 );
+
+        when(usuarioAutenticadoService.tenantIdAtual())
+                .thenReturn(tenant.getId());
 
         when(usuarioAutenticadoService.usuarioLogado()).thenReturn(usuario);
 
@@ -170,6 +183,9 @@ class PagamentoServiceTest {
         Pagamento pagamentoSalvo = new Pagamento();
         pagamentoSalvo.setId(UUID.randomUUID());
         pagamentoSalvo.setValorPago(BigDecimal.valueOf(50));
+
+        when(usuarioAutenticadoService.tenantIdAtual())
+                .thenReturn(tenant.getId());
 
         when(usuarioAutenticadoService.usuarioLogado()).thenReturn(usuario);
 
@@ -228,6 +244,9 @@ class PagamentoServiceTest {
         pagamentoSalvo.setId(UUID.randomUUID());
         pagamentoSalvo.setValorPago(BigDecimal.valueOf(50));
 
+        when(usuarioAutenticadoService.tenantIdAtual())
+                .thenReturn(tenant.getId());
+
         when(usuarioAutenticadoService.usuarioLogado()).thenReturn(usuario);
 
         when(clienteRepository.findByIdAndTenantId(
@@ -272,7 +291,8 @@ class PagamentoServiceTest {
             Usuario usuario = new Usuario();
             usuario.setTenant(tenant);
 
-            when(usuarioAutenticadoService.usuarioLogado()).thenReturn(usuario);
+            when(usuarioAutenticadoService.tenantIdAtual())
+                    .thenReturn(tenant.getId());
 
             when(pagamentoRepository.findByTenantId(
                     tenant.getId()))

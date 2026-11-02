@@ -126,6 +126,9 @@ class VendaServiceTest {
             usuario.setNome("Administrador");
             usuario.setTenant(tenant);
 
+        when(usuarioAutenticadoService.usuarioLogado())
+                .thenReturn(usuario);
+
             Produto produto = new Produto();
             produto.setId(UUID.randomUUID());
             produto.setNome("Coca-Cola");
@@ -151,8 +154,6 @@ class VendaServiceTest {
             Venda vendaSalva = new Venda();
             vendaSalva.setId(UUID.randomUUID());
             vendaSalva.setValorTotal(BigDecimal.valueOf(20));
-
-            when(usuarioAutenticadoService.usuarioLogado()).thenReturn(usuario);
 
             when(produtoRepository.findByIdAndTenantId(
                     produto.getId(),
@@ -197,7 +198,8 @@ class VendaServiceTest {
                         List.of(item)
                 );
 
-        when(usuarioAutenticadoService.usuarioLogado()).thenReturn(usuario);
+        when(usuarioAutenticadoService.usuarioLogado())
+                .thenReturn(usuario);
 
         when(produtoRepository.findByIdAndTenantId(
                 produto.getId(),
@@ -227,7 +229,8 @@ class VendaServiceTest {
                         List.of()
                 );
 
-        when(usuarioAutenticadoService.usuarioLogado()).thenReturn(usuario);
+        when(usuarioAutenticadoService.usuarioLogado())
+                .thenReturn(usuario);
 
         assertThrows(
                 RegraNegocioException.class,
@@ -245,6 +248,9 @@ class VendaServiceTest {
         usuario.setId(UUID.randomUUID());
         usuario.setNome("Administrador");
         usuario.setTenant(tenant);
+
+        when(usuarioAutenticadoService.usuarioLogado())
+                .thenReturn(usuario);
 
         Produto produto = new Produto();
         produto.setId(UUID.randomUUID());
@@ -271,8 +277,6 @@ class VendaServiceTest {
         Venda vendaSalva = new Venda();
         vendaSalva.setId(UUID.randomUUID());
         vendaSalva.setValorTotal(BigDecimal.TEN);
-
-        when(usuarioAutenticadoService.usuarioLogado()).thenReturn(usuario);
 
         when(produtoRepository.findByIdAndTenantId(
                 produto.getId(),
@@ -307,7 +311,8 @@ class VendaServiceTest {
 
         UUID vendaId = UUID.randomUUID();
 
-        when(usuarioAutenticadoService.usuarioLogado()).thenReturn(usuario);
+        when(usuarioAutenticadoService.usuarioLogado())
+                .thenReturn(usuario);
 
         when(vendaRepository.findByIdAndTenantId(
                 vendaId,
@@ -341,7 +346,8 @@ class VendaServiceTest {
         venda.setId(UUID.randomUUID());
         venda.setStatus("cancelada");
 
-        when(usuarioAutenticadoService.usuarioLogado()).thenReturn(usuario);
+        when(usuarioAutenticadoService.usuarioLogado())
+                .thenReturn(usuario);
 
         when(vendaRepository.findByIdAndTenantId(
                 venda.getId(),
@@ -373,6 +379,9 @@ class VendaServiceTest {
         usuario.setNome("Administrador");
         usuario.setTenant(tenant);
 
+        when(usuarioAutenticadoService.usuarioLogado())
+                .thenReturn(usuario);
+
         Produto produto = new Produto();
         produto.setId(UUID.randomUUID());
         produto.setNome("Produto");
@@ -388,8 +397,6 @@ class VendaServiceTest {
         ItemVenda item = new ItemVenda();
         item.setProduto(produto);
         item.setQuantidade(2);
-
-        when(usuarioAutenticadoService.usuarioLogado()).thenReturn(usuario);
 
         when(vendaRepository.findByIdAndTenantId(
                 venda.getId(),
@@ -428,6 +435,9 @@ class VendaServiceTest {
         usuario.setNome("Administrador");
         usuario.setTenant(tenant);
 
+        when(usuarioAutenticadoService.usuarioLogado())
+                .thenReturn(usuario);
+
         Produto produto = new Produto();
         produto.setId(UUID.randomUUID());
         produto.setNome("Produto");
@@ -443,8 +453,6 @@ class VendaServiceTest {
         ItemVenda item = new ItemVenda();
         item.setProduto(produto);
         item.setQuantidade(2);
-
-        when(usuarioAutenticadoService.usuarioLogado()).thenReturn(usuario);
 
         when(vendaRepository.findByIdAndTenantId(
                 venda.getId(),

@@ -15,6 +15,7 @@ import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import br.repository.MovimentacaoEstoqueRepository;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -39,14 +40,11 @@ public class DashboardService {
     ) {
 
         this.produtoRepository = produtoRepository;
-        this.usuarioAutenticadoService =
-                usuarioAutenticadoService;
+        this.usuarioAutenticadoService = usuarioAutenticadoService;
         this.fiadoRepository = fiadoRepository;
         this.vendaRepository = vendaRepository;
-        this.itemVendaRepository =
-                itemVendaRepository;
-        this.movimentacaoEstoqueRepository =
-                movimentacaoEstoqueRepository;
+        this.itemVendaRepository = itemVendaRepository;
+        this.movimentacaoEstoqueRepository = movimentacaoEstoqueRepository;
 
     }
 
@@ -93,34 +91,32 @@ public class DashboardService {
 
         final LocalDateTime dataFiltro = dataInicial;
 
-        Usuario usuarioLogado =
-                obterUsuarioLogado();
-
-        Tenant tenant =
-                usuarioLogado.getTenant();
+        UUID tenantId =
+                usuarioAutenticadoService
+                        .tenantIdAtual();
 
         final List<Produto> produtos =
                 produtoRepository
                         .findByTenantId(
-                                tenant.getId()
+                                tenantId
                         );
 
         List<Venda> vendas =
                 vendaRepository
                         .findByTenantId(
-                                tenant.getId()
+                                tenantId
                         );
 
         var fiados =
                 fiadoRepository
                         .findByTenantId(
-                                tenant.getId()
+                                tenantId
                         );
 
         List<MovimentacaoEstoque> movimentacoes =
                 movimentacaoEstoqueRepository
                         .findByTenantId(
-                                tenant.getId()
+                                tenantId
                         );
 
         if (dataInicial != null) {
@@ -254,10 +250,7 @@ public class DashboardService {
                                 BigDecimal::add
                         );
 
-
-        Integer totalVendas =
-                vendasFiltradas.size();
-
+        Integer totalVendas = vendasFiltradas.size();
 
         BigDecimal faturamento =
                 vendasFiltradas.stream()
@@ -277,8 +270,7 @@ public class DashboardService {
 
 
 
-        Map<String, BigDecimal> agrupado =
-                new LinkedHashMap<>();
+        Map<String, BigDecimal> agrupado = new LinkedHashMap<>();
 
         for (Venda venda : vendasFiltradas) {
 
@@ -310,8 +302,7 @@ public class DashboardService {
 
         }
 
-        List<EvolucaoVendaResponse>
-                evolucaoVendas =
+        List<EvolucaoVendaResponse> evolucaoVendas =
 
                 agrupado.entrySet()
                         .stream()
@@ -324,8 +315,7 @@ public class DashboardService {
                         )
                         .toList();
 
-        Map<String, BigDecimal> faturamentoAgrupado =
-                new LinkedHashMap<>();
+        Map<String, BigDecimal> faturamentoAgrupado = new LinkedHashMap<>();
 
         for (Venda venda : vendasFiltradas) {
 
@@ -337,8 +327,7 @@ public class DashboardService {
 
             }
 
-            String formaPagamento =
-                    venda.getFormaPagamento();
+            String formaPagamento = venda.getFormaPagamento();
 
             BigDecimal atual =
                     faturamentoAgrupado.getOrDefault(
@@ -355,8 +344,7 @@ public class DashboardService {
 
         }
 
-        List<PagamentoDashboardResponse>
-                faturamentoPorPagamento =
+        List<PagamentoDashboardResponse>faturamentoPorPagamento =
 
                 faturamentoAgrupado.entrySet()
                         .stream()
@@ -369,9 +357,7 @@ public class DashboardService {
                         )
                         .toList();
 
-        Map<String, Integer> produtosAgrupados =
-                new LinkedHashMap<>();
-
+        Map<String, Integer> produtosAgrupados = new LinkedHashMap<>();
 
         for (Venda venda : vendasFiltradas) {
 
@@ -454,8 +440,7 @@ public class DashboardService {
 
         }
 
-        List<EvolucaoFiadoResponse>
-                evolucaoFiados =
+        List<EvolucaoFiadoResponse>evolucaoFiados =
 
                 fiadosAgrupados.entrySet()
                         .stream()
@@ -468,16 +453,13 @@ public class DashboardService {
                         )
                         .toList();
 
-        Map<String, Integer> entradas =
-                new LinkedHashMap<>();
+        Map<String, Integer> entradas = new LinkedHashMap<>();
 
-        Map<String, Integer> saidas =
-                new LinkedHashMap<>();
+        Map<String, Integer> saidas = new LinkedHashMap<>();
 
         for (MovimentacaoEstoque mov : movimentacoesFiltradas) {
 
-            String produto =
-                    mov.getProdutoNome();
+            String produto = mov.getProdutoNome();
 
             if ("entrada".equals(
                     mov.getTipo()
@@ -509,18 +491,15 @@ public class DashboardService {
 
         }
 
-        List<GiroEstoqueResponse>
-                giroEstoque =
+        List<GiroEstoqueResponse>giroEstoque =
 
                 entradas.entrySet()
                         .stream()
                         .map(entry -> {
 
-                            String produto =
-                                    entry.getKey();
+                            String produto = entry.getKey();
 
-                            Integer comprado =
-                                    entry.getValue();
+                            Integer comprado = entry.getValue();
 
                             Integer vendido =
                                     saidas.getOrDefault(
@@ -529,7 +508,6 @@ public class DashboardService {
                                     );
 
                             Integer giro =
-
                                     comprado == 0
 
                                             ? 0
@@ -559,8 +537,7 @@ public class DashboardService {
                         .limit(5)
                         .toList();
 
-        List<PromocaoEficienteResponse>
-                promocoesEficientes =
+        List<PromocaoEficienteResponse>promocoesEficientes =
 
                 produtos.stream()
 
@@ -618,8 +595,7 @@ public class DashboardService {
 
                         .toList();
 
-        Map<String, Integer> produtosPromocionais =
-                new LinkedHashMap<>();
+        Map<String, Integer> produtosPromocionais = new LinkedHashMap<>();
 
         for (Venda venda : vendasFiltradas) {
 
@@ -664,8 +640,7 @@ public class DashboardService {
 
         }
 
-        List<ProdutoPromocionalResponse>
-                produtosPromocionaisMaisVendidos =
+        List<ProdutoPromocionalResponse>produtosPromocionaisMaisVendidos =
 
                 produtosPromocionais.entrySet()
                         .stream()
@@ -686,8 +661,7 @@ public class DashboardService {
                         )
                         .toList();
 
-        Integer totalVendasPromocionais =
-                0;
+        Integer totalVendasPromocionais = 0;
 
         for (Venda venda : vendasFiltradas) {
 
@@ -706,7 +680,6 @@ public class DashboardService {
                             );
 
             boolean possuiPromocao =
-
                     itens.stream()
                             .anyMatch(
                                     item ->
@@ -723,8 +696,7 @@ public class DashboardService {
 
         }
 
-        BigDecimal faturamentoPromocional =
-                BigDecimal.ZERO;
+        BigDecimal faturamentoPromocional = BigDecimal.ZERO;
 
         for (Venda venda : vendasFiltradas) {
 
@@ -761,11 +733,9 @@ public class DashboardService {
 
         }
 
-        Integer totalPromocoesEficientes =
-                promocoesEficientes.size();
+        Integer totalPromocoesEficientes = promocoesEficientes.size();
 
-        List<PromocaoBaixaEfetividadeResponse>
-                promocoesBaixaEfetividade =
+        List<PromocaoBaixaEfetividadeResponse>promocoesBaixaEfetividade =
 
                 produtos.stream()
 
@@ -791,7 +761,6 @@ public class DashboardService {
                                     );
 
                             Integer giro =
-
                                     comprado == 0
 
                                             ? 0
