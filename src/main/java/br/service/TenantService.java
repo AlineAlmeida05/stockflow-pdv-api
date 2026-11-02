@@ -1,14 +1,17 @@
 package br.service;
 
 import br.dto.response.TenantResponse;
+import br.entity.Empresa;
 import br.entity.Perfil;
 import br.entity.Tenant;
 import br.entity.Usuario;
 import br.exception.RecursoNaoEncontradoException;
+import br.repository.EmpresaRepository;
 import br.repository.TenantRepository;
 import br.security.UsuarioAutenticadoService;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 import br.exception.RegraNegocioException;
@@ -19,16 +22,17 @@ import org.springframework.web.server.ResponseStatusException;
 public class TenantService {
 
     private final TenantRepository tenantRepository;
-
     private final UsuarioAutenticadoService usuarioAutenticadoService;
+    private final EmpresaRepository empresaRepository;
 
     public TenantService(
             TenantRepository tenantRepository,
-            UsuarioAutenticadoService usuarioAutenticadoService) {
+            UsuarioAutenticadoService usuarioAutenticadoService,
+            EmpresaRepository empresaRepository) {
 
         this.tenantRepository = tenantRepository;
         this.usuarioAutenticadoService = usuarioAutenticadoService;
-
+        this.empresaRepository = empresaRepository;
     }
 
     public List<Tenant> listarTodos() {
@@ -92,8 +96,23 @@ public class TenantService {
 
                 });
 
+        Tenant tenantSalvo =
+                tenantRepository.save(
+                        tenant
+                );
+
+        Empresa empresa = new Empresa();
+
+        empresa.setTenant(tenantSalvo);
+
+        empresa.setVersaoSistema("1.0.0");
+
+        empresa.setDataImplantacao(LocalDate.now());
+
+        empresaRepository.save(empresa);
+
         return montarResponse(
-                tenantRepository.save(tenant)
+                tenantSalvo
         );
 
     }
@@ -142,11 +161,8 @@ public class TenantService {
         if (
 
                 tenant.getSlug() != null
-
                         &&
-
                         tenant.getSlug()
-
                                 .equalsIgnoreCase("stockflowpdv")
 
         ) {
@@ -243,8 +259,7 @@ public class TenantService {
 
     private void validarSuperAdmin() {
 
-        Usuario usuarioLogado =
-                obterUsuarioLogado();
+        Usuario usuarioLogado = obterUsuarioLogado();
 
         if (usuarioLogado.getPerfil()
                 != Perfil.SUPER_ADMIN) {
