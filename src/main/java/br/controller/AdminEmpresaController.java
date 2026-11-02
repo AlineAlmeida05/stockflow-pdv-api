@@ -1,13 +1,9 @@
 package br.controller;
 
-import br.dto.request.EmpresaCreateRequest;
 import br.dto.response.EmpresaResponse;
 import br.service.EmpresaService;
-import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
@@ -32,15 +28,4 @@ public class AdminEmpresaController {
 
     }
 
-    @PostMapping
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
-    public EmpresaResponse salvar(
-
-            @Valid
-            @RequestBody
-            EmpresaCreateRequest request
-
-    ) {
-        return empresaService.salvar(request);
-    }
 }
