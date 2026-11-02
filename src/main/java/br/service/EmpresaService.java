@@ -60,11 +60,6 @@ public class EmpresaService {
 
         Usuario usuarioLogado = obterUsuarioLogado();
 
-        System.out.println(
-                "TENANT LOGADO: "
-                        + usuarioLogado.getTenant().getNome()
-        );
-
         return empresaRepository
                 .findByTenantId(
                         usuarioLogado.getTenant().getId()
