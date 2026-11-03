@@ -20,7 +20,6 @@ import br.repository.TenantRepository;
 import br.dto.response.UsuarioResponse;
 import org.springframework.web.server.ResponseStatusException;
 
-
 @Service
 public class UsuarioService {
 
@@ -52,6 +51,9 @@ public class UsuarioService {
         if (
                 usuarioLogado.getPerfil()
                         == Perfil.SUPER_ADMIN
+                        &&
+                        !usuarioAutenticadoService
+                                .estaImpersonando()
         ) {
 
             return usuarioRepository
@@ -64,9 +66,8 @@ public class UsuarioService {
 
         return usuarioRepository
                 .findByTenantId(
-                        usuarioLogado
-                                .getTenant()
-                                .getId()
+                        usuarioAutenticadoService
+                                .tenantIdAtual()
                 )
                 .stream()
                 .map(this::montarResponse)
@@ -78,6 +79,12 @@ public class UsuarioService {
     public UsuarioResponse salvar(
             UsuarioCreateRequest request) {
 
+        Usuario usuarioLogado = obterUsuarioLogado();
+
+        UUID tenantAtual =
+                usuarioAutenticadoService
+                        .tenantIdAtual();
+
         Tenant tenant = tenantRepository
                 .findById(request.tenantId())
                 .orElseThrow(() ->
@@ -88,12 +95,11 @@ public class UsuarioService {
         Usuario usuario = new Usuario();
 
         usuario.setNome(request.nome());
+        usuario.setNome(request.nome());
         usuario.setEmail(request.email());
         usuario.setSenha(request.senha());
         usuario.setPerfil(request.perfil());
         usuario.setTenant(tenant);
-
-        Usuario usuarioLogado = obterUsuarioLogado();
 
         if (usuario.getTenant() == null) {
 
@@ -103,18 +109,23 @@ public class UsuarioService {
 
         }
 
-        if (usuarioLogado.getPerfil() != Perfil.SUPER_ADMIN
-                &&
-                !usuarioLogado.getTenant()
-                        .getId()
-                        .equals(
+        if (
+                usuarioLogado.getPerfil()
+                        != Perfil.SUPER_ADMIN
+                        &&
+                        !tenantAtual.equals(
                                 usuario.getTenant()
-                                        .getId())) {
+                                        .getId()
+                        )
+
+        ) {
 
             throw new AcessoNegadoException(
-                    "Você não pode criar usuários em outro tenant.");
+                    "Você não pode criar usuários em outro tenant."
+            );
 
         }
+
         if (!podeGerenciarPerfil(
                 usuarioLogado.getPerfil(),
                 usuario.getPerfil())) {
@@ -138,12 +149,13 @@ public class UsuarioService {
                 passwordEncoder.encode(
                         usuario.getSenha()));
 
-        Usuario usuarioSalvo =
-                usuarioRepository.save(usuario);
+        Usuario usuarioSalvo = usuarioRepository.save(usuario);
+
+        Tenant tenantAuditoria = obterTenantAtual();
 
         auditoriaService.registrar(
-                usuarioLogado.getTenant().getId(),
-                usuarioLogado.getTenant().getNome(),
+                tenantAuditoria.getId(),
+                tenantAuditoria.getNome(),
                 usuarioLogado.getId(),
                 usuarioLogado.getNome(),
                 "USUARIO_CRIADO",
@@ -171,19 +183,20 @@ public class UsuarioService {
 
         Usuario usuarioLogado = obterUsuarioLogado();
 
-        if (usuarioLogado.getPerfil() != Perfil.SUPER_ADMIN
-                &&
-                !pertenceAoMesmoTenant(
-                        usuarioLogado,
-                        usuarioAlvo)) {
+        Tenant tenantAtual = obterTenantAtual();
+
+        if (
+                usuarioLogado.getPerfil() != Perfil.SUPER_ADMIN
+                        &&
+                        !pertenceAoTenantAtual(usuarioAlvo)
+        ){
 
             throw new AcessoNegadoException(
                     "Você não possui permissão para excluir usuários de outro tenant.");
 
         }
 
-        if (usuarioLogado.getId()
-                .equals(usuarioAlvo.getId())) {
+        if (usuarioLogado.getId().equals(usuarioAlvo.getId())) {
 
             throw new RegraNegocioException(
                     "Você não pode excluir seu próprio usuário.");
@@ -206,8 +219,8 @@ public class UsuarioService {
         );
 
         auditoriaService.registrar(
-                usuarioLogado.getTenant().getId(),
-                usuarioLogado.getTenant().getNome(),
+                tenantAtual.getId(),
+                tenantAtual.getNome(),
                 usuarioLogado.getId(),
                 usuarioLogado.getNome(),
                 "USUARIO_INATIVADO",
@@ -234,13 +247,13 @@ public class UsuarioService {
 
         Usuario usuarioLogado = obterUsuarioLogado();
 
-        if (usuarioLogado.getPerfil() != Perfil.SUPER_ADMIN
+        Tenant tenantAtual = obterTenantAtual();
+
+        if (
+                usuarioLogado.getPerfil() != Perfil.SUPER_ADMIN
                         &&
-                        !pertenceAoMesmoTenant(
-                                usuarioLogado,
-                                usuario
-                        )
-        ) {
+                        !pertenceAoTenantAtual(usuario)
+        ){
 
             throw new AcessoNegadoException(
                     "Você não possui permissão para editar usuários de outro tenant."
@@ -321,8 +334,8 @@ public class UsuarioService {
         Usuario usuarioAtualizado = usuarioRepository.save(usuario);
 
         auditoriaService.registrar(
-                usuarioLogado.getTenant().getId(),
-                usuarioLogado.getTenant().getNome(),
+                tenantAtual.getId(),
+                tenantAtual.getNome(),
                 usuarioLogado.getId(),
                 usuarioLogado.getNome(),
                 "USUARIO_EDITADO",
@@ -343,14 +356,20 @@ public class UsuarioService {
 
         Usuario usuarioLogado = obterUsuarioLogado();
 
-        if (usuarioLogado.getPerfil() != Perfil.SUPER_ADMIN
-                &&
-                !usuarioLogado.getTenant()
-                        .getId()
-                        .equals(tenantId)) {
+        UUID tenantAtual =
+                usuarioAutenticadoService
+                        .tenantIdAtual();
+
+        if (
+                usuarioLogado.getPerfil()
+                        != Perfil.SUPER_ADMIN
+                        &&
+                        !tenantAtual.equals(tenantId)
+        ) {
 
             throw new AcessoNegadoException(
-                    "Você não possui acesso a este tenant.");
+                    "Você não possui acesso a este tenant."
+            );
 
         }
 
@@ -364,19 +383,22 @@ public class UsuarioService {
 
     }
 
+    private boolean pertenceAoTenantAtual(
+            Usuario usuario
+    ) {
 
-    private boolean pertenceAoMesmoTenant(
-            Usuario usuario1,
-            Usuario usuario2) {
+        UUID tenantAtual =
+                usuarioAutenticadoService
+                        .tenantIdAtual();
 
-        return usuario1.getTenant()
-                .getId()
-                .equals(
-                        usuario2.getTenant()
-                                .getId());
+        return usuario.getTenant() != null
+                &&
+                tenantAtual.equals(
+                        usuario.getTenant()
+                                .getId()
+                );
 
     }
-
 
     private boolean podeGerenciarPerfil(
             Perfil perfilLogado,
@@ -390,8 +412,9 @@ public class UsuarioService {
     public void alterarSenha(
             AlterarSenhaRequest request) {
 
-        Usuario usuarioLogado =
-                obterUsuarioLogado();
+        Usuario usuarioLogado = obterUsuarioLogado();
+
+        Tenant tenantAtual = obterTenantAtual();
 
         boolean senhaCorreta = passwordEncoder.matches(
                 request.senhaAtual(),
@@ -416,12 +439,11 @@ public class UsuarioService {
                 passwordEncoder.encode(
                         request.novaSenha()));
 
-        usuarioRepository.save(
-                usuarioLogado);
+        usuarioRepository.save(usuarioLogado);
 
         auditoriaService.registrar(
-                usuarioLogado.getTenant().getId(),
-                usuarioLogado.getTenant().getNome(),
+                tenantAtual.getId(),
+                tenantAtual.getNome(),
                 usuarioLogado.getId(),
                 usuarioLogado.getNome(),
                 "SENHA_ALTERADA",
@@ -467,6 +489,21 @@ public class UsuarioService {
         }
 
         return usuarioLogado;
+
+    }
+
+    private Tenant obterTenantAtual() {
+
+        UUID tenantId =
+                usuarioAutenticadoService
+                        .tenantIdAtual();
+
+        return tenantRepository
+                .findById(tenantId)
+                .orElseThrow(() ->
+                        new RecursoNaoEncontradoException(
+                                "Tenant não encontrado."
+                        ));
 
     }
 
