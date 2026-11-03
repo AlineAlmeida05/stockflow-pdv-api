@@ -3,10 +3,7 @@ package br.service;
 import br.dto.request.ClienteRequest;
 import br.dto.response.ClienteResponse;
 import br.dto.response.ClienteResumoResponse;
-import br.entity.Cliente;
-import br.entity.Fiado;
-import br.entity.Pagamento;
-import br.entity.Usuario;
+import br.entity.*;
 import br.exception.RecursoNaoEncontradoException;
 import br.exception.RegraNegocioException;
 import br.repository.ClienteRepository;
@@ -47,6 +44,10 @@ public class ClienteService {
     public ClienteResponse salvar(
             ClienteRequest request) {
 
+        Tenant tenantAtual =
+                usuarioAutenticadoService
+                        .tenantAtual();
+
         Usuario usuarioLogado = obterUsuarioLogado();
 
         Cliente cliente = new Cliente();
@@ -74,13 +75,15 @@ public class ClienteService {
 
         cliente.setObservacao(request.observacao());
 
-        cliente.setTenant(usuarioLogado.getTenant());
+        cliente.setTenant(
+                usuarioAutenticadoService.tenantAtual()
+        );
 
         Cliente clienteSalvo = clienteRepository.save(cliente);
 
         auditoriaService.registrar(
-                usuarioLogado.getTenant().getId(),
-                usuarioLogado.getTenant().getNome(),
+                tenantAtual.getId(),
+                tenantAtual.getNome(),
                 usuarioLogado.getId(),
                 usuarioLogado.getNome(),
                 "CLIENTE_CRIADO",
@@ -110,6 +113,10 @@ public class ClienteService {
             UUID id,
             ClienteRequest request) {
 
+        Tenant tenantAtual =
+                usuarioAutenticadoService
+                        .tenantAtual();
+
         Usuario usuarioLogado = obterUsuarioLogado();
 
         UUID tenantId =
@@ -126,19 +133,23 @@ public class ClienteService {
                                         new RecursoNaoEncontradoException(
                                                 "Cliente não encontrado."));
 
-        cliente.setNome(request.nome());
+        cliente.setNome(
+                request.nome());
 
-        cliente.setTelefone(request.telefone());
+        cliente.setTelefone(
+                request.telefone());
 
-        cliente.setLimiteCredito(request.limiteCredito());
+        cliente.setLimiteCredito(
+                request.limiteCredito());
 
-        cliente.setObservacao(request.observacao());
+        cliente.setObservacao(
+                request.observacao());
 
         Cliente clienteAtualizado = clienteRepository.save(cliente);
 
         auditoriaService.registrar(
-                usuarioLogado.getTenant().getId(),
-                usuarioLogado.getTenant().getNome(),
+                tenantAtual.getId(),
+                tenantAtual.getNome(),
                 usuarioLogado.getId(),
                 usuarioLogado.getNome(),
                 "CLIENTE_EDITADO",
@@ -153,6 +164,10 @@ public class ClienteService {
 
     public void inativar(
             UUID id) {
+
+        Tenant tenantAtual =
+                usuarioAutenticadoService
+                        .tenantAtual();
 
         Usuario usuarioLogado = obterUsuarioLogado();
 
@@ -212,14 +227,22 @@ public class ClienteService {
             );
         }
 
+        if (Boolean.FALSE.equals(
+                cliente.getAtivo())) {
+
+            throw new RegraNegocioException(
+                    "Cliente já está inativo."
+            );
+
+        }
 
         cliente.setAtivo(false);
 
         clienteRepository.save(cliente);
 
         auditoriaService.registrar(
-                usuarioLogado.getTenant().getId(),
-                usuarioLogado.getTenant().getNome(),
+                tenantAtual.getId(),
+                tenantAtual.getNome(),
                 usuarioLogado.getId(),
                 usuarioLogado.getNome(),
                 "CLIENTE_INATIVADO",
@@ -232,8 +255,6 @@ public class ClienteService {
 
     public ClienteResumoResponse obterResumo(
             UUID clienteId) {
-
-        Usuario usuarioLogado = obterUsuarioLogado();
 
         UUID tenantId =
                 usuarioAutenticadoService
@@ -248,6 +269,7 @@ public class ClienteService {
                                 () ->
                                         new RecursoNaoEncontradoException(
                                                 "Cliente não encontrado."));
+
         List<Fiado> fiados =
                 fiadoRepository
                         .findByClienteIdAndTenantIdAndStatus(
@@ -355,6 +377,10 @@ public class ClienteService {
     public void reativar(
             UUID id) {
 
+        Tenant tenantAtual =
+                usuarioAutenticadoService
+                        .tenantAtual();
+
         Usuario usuarioLogado = obterUsuarioLogado();
 
         UUID tenantId =
@@ -371,13 +397,22 @@ public class ClienteService {
                                         new RecursoNaoEncontradoException(
                                                 "Cliente não encontrado."));
 
+        if (Boolean.TRUE.equals(
+                cliente.getAtivo())) {
+
+            throw new RegraNegocioException(
+                    "Cliente já está ativo."
+            );
+
+        }
+
         cliente.setAtivo(true);
 
         clienteRepository.save(cliente);
 
         auditoriaService.registrar(
-                usuarioLogado.getTenant().getId(),
-                usuarioLogado.getTenant().getNome(),
+                tenantAtual.getId(),
+                tenantAtual.getNome(),
                 usuarioLogado.getId(),
                 usuarioLogado.getNome(),
                 "CLIENTE_REATIVADO",

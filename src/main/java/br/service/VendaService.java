@@ -197,6 +197,15 @@ public class VendaService {
                                             "Cliente não encontrado."
                                     ));
 
+            if (Boolean.FALSE.equals(
+                    cliente.getAtivo())) {
+
+                throw new RegraNegocioException(
+                        "Cliente inativo."
+                );
+
+            }
+
             venda.setClienteNome(
                     cliente.getNome()
             );
@@ -219,6 +228,15 @@ public class VendaService {
                                             new RecursoNaoEncontradoException(
                                                     "Cliente não encontrado."
                                             ));
+
+            if (Boolean.FALSE.equals(
+                    cliente.getAtivo())) {
+
+                throw new RegraNegocioException(
+                        "Cliente inativo."
+                );
+
+            }
 
             List<Fiado> fiadosCliente =
                     fiadoRepository
