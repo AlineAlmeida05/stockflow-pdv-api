@@ -58,14 +58,13 @@ public class EmpresaService {
 
     private Empresa obterEmpresaDoUsuarioLogado() {
 
-        Usuario usuarioLogado = obterUsuarioLogado();
-
         return empresaRepository
                 .findByTenantId(
-                        usuarioLogado.getTenant().getId()
+                        usuarioAutenticadoService
+                                .tenantIdAtual()
                 )
-                .orElseThrow(() ->
-                        new RecursoNaoEncontradoException(
+                .orElseThrow(
+                        () -> new RecursoNaoEncontradoException(
                                 "Empresa não encontrada."
                         )
                 );
