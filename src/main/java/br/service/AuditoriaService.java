@@ -27,7 +27,6 @@ public class AuditoriaService {
     ) {
 
         this.auditoriaRepository = auditoriaRepository;
-
         this.usuarioAutenticadoService = usuarioAutenticadoService;
 
     }
@@ -66,8 +65,9 @@ public class AuditoriaService {
         List<Auditoria> auditorias;
 
         if (
-                usuarioLogado.getPerfil()
-                        == Perfil.SUPER_ADMIN
+                usuarioLogado.getPerfil() == Perfil.SUPER_ADMIN
+                        &&
+                        !usuarioAutenticadoService.estaImpersonando()
         ) {
 
             auditorias =
@@ -79,9 +79,8 @@ public class AuditoriaService {
             auditorias =
                     auditoriaRepository
                             .findTop100ByTenantIdOrderByDataHoraDesc(
-                                    usuarioLogado
-                                            .getTenant()
-                                            .getId()
+                                    usuarioAutenticadoService
+                                            .tenantIdAtual()
                             );
 
         }
