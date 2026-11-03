@@ -1,6 +1,7 @@
 package br.service;
 
 import br.entity.MovimentacaoEstoque;
+import br.entity.Tenant;
 import br.exception.RecursoNaoEncontradoException;
 import br.repository.MovimentacaoEstoqueRepository;
 import org.springframework.stereotype.Service;
@@ -199,11 +200,15 @@ public class MovimentacaoEstoqueService {
                         repository.save(
                                 movimentacao);
 
+                Tenant tenantAtual =
+                        usuarioAutenticadoService
+                                .tenantAtual();
+
                 if ("entrada".equals(request.tipo())) {
 
                         auditoriaService.registrar(
-                                usuarioLogado.getTenant().getId(),
-                                usuarioLogado.getTenant().getNome(),
+                                tenantAtual.getId(),
+                                tenantAtual.getNome(),
                                 usuarioLogado.getId(),
                                 usuarioLogado.getNome(),
                                 "ENTRADA_ESTOQUE",

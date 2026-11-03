@@ -1,6 +1,8 @@
 package br.security;
 
+import br.entity.Tenant;
 import br.entity.Usuario;
+import br.repository.TenantRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -81,6 +83,35 @@ public class UsuarioAutenticadoService {
         }
 
         return contexto;
+    }
+
+    private final TenantRepository tenantRepository;
+
+    public UsuarioAutenticadoService(
+            TenantRepository tenantRepository
+    ) {
+        this.tenantRepository = tenantRepository;
+    }
+
+    public Tenant tenantAtual() {
+
+        UUID tenantId = tenantIdAtual();
+
+        if (tenantId == null) {
+
+            return null;
+
+        }
+
+        return tenantRepository
+                .findById(tenantId)
+                .orElseThrow(() ->
+                        new ResponseStatusException(
+                                HttpStatus.NOT_FOUND,
+                                "Tenant não encontrado."
+                        )
+                );
+
     }
 
 }

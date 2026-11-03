@@ -4,6 +4,7 @@ import br.dto.request.ProdutoCreateRequest;
 import br.dto.request.ProdutoUpdateRequest;
 import br.dto.response.ProdutoResponse;
 import br.entity.Produto;
+import br.entity.Tenant;
 import br.entity.Usuario;
 import br.exception.RecursoNaoEncontradoException;
 import br.exception.RegraNegocioException;
@@ -76,6 +77,10 @@ public class ProdutoService {
     public ProdutoResponse salvar(
             ProdutoCreateRequest request) {
 
+        Tenant tenantAtual =
+                usuarioAutenticadoService
+                        .tenantAtual();
+
         Produto produto = new Produto();
 
         produto.setNome(request.nome());
@@ -94,7 +99,7 @@ public class ProdutoService {
 
         Usuario usuarioLogado = obterUsuarioLogado();
 
-        produto.setTenant(usuarioLogado.getTenant());
+        produto.setTenant(usuarioAutenticadoService.tenantAtual());
 
         produto.setCodigo(gerarCodigoProduto(usuarioLogado));
 
@@ -105,8 +110,8 @@ public class ProdutoService {
         Produto produtoSalvo = produtoRepository.save(produto);
 
         auditoriaService.registrar(
-                usuarioLogado.getTenant().getId(),
-                usuarioLogado.getTenant().getNome(),
+                tenantAtual.getId(),
+                tenantAtual.getNome(),
                 usuarioLogado.getId(),
                 usuarioLogado.getNome(),
                 "PRODUTO_CRIADO",
@@ -122,6 +127,10 @@ public class ProdutoService {
     public ProdutoResponse atualizar(
             UUID id,
             ProdutoUpdateRequest request) {
+
+        Tenant tenantAtual =
+                usuarioAutenticadoService
+                        .tenantAtual();
 
         Usuario usuarioLogado = obterUsuarioLogado();
 
@@ -159,8 +168,8 @@ public class ProdutoService {
         Produto produtoAtualizado = produtoRepository.save(produto);
 
         auditoriaService.registrar(
-                usuarioLogado.getTenant().getId(),
-                usuarioLogado.getTenant().getNome(),
+                tenantAtual.getId(),
+                tenantAtual.getNome(),
                 usuarioLogado.getId(),
                 usuarioLogado.getNome(),
                 "PRODUTO_EDITADO",
@@ -175,6 +184,10 @@ public class ProdutoService {
 
     public void excluir(
             UUID id) {
+
+        Tenant tenantAtual =
+                usuarioAutenticadoService
+                        .tenantAtual();
 
         Usuario usuarioLogado = obterUsuarioLogado();
 
@@ -200,8 +213,8 @@ public class ProdutoService {
         produtoRepository.save(produto);
 
         auditoriaService.registrar(
-                usuarioLogado.getTenant().getId(),
-                usuarioLogado.getTenant().getNome(),
+                tenantAtual.getId(),
+                tenantAtual.getNome(),
                 usuarioLogado.getId(),
                 usuarioLogado.getNome(),
                 "PRODUTO_INATIVADO",
@@ -214,6 +227,10 @@ public class ProdutoService {
 
     public void reativar(
             UUID id) {
+
+        Tenant tenantAtual =
+                usuarioAutenticadoService
+                        .tenantAtual();
 
         Usuario usuarioLogado = obterUsuarioLogado();
 
@@ -239,8 +256,8 @@ public class ProdutoService {
         produtoRepository.save(produto);
 
         auditoriaService.registrar(
-                usuarioLogado.getTenant().getId(),
-                usuarioLogado.getTenant().getNome(),
+                tenantAtual.getId(),
+                tenantAtual.getNome(),
                 usuarioLogado.getId(),
                 usuarioLogado.getNome(),
                 "PRODUTO_REATIVADO",
@@ -255,9 +272,10 @@ public class ProdutoService {
     private String gerarCodigoProduto(
             Usuario usuarioLogado) {
 
-        String prefixo = usuarioLogado
-                .getTenant()
-                .getCodigoTenant();
+        String prefixo =
+                usuarioAutenticadoService
+                        .tenantAtual()
+                        .getCodigoTenant();
 
         if (prefixo == null
                 || prefixo.isBlank()) {

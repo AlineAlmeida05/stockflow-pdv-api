@@ -20,7 +20,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
-
 @Service
 public class VendaService {
 
@@ -67,6 +66,10 @@ public class VendaService {
     public Venda salvar(
             VendaRequest request) {
 
+        Tenant tenantAtual =
+                usuarioAutenticadoService
+                        .tenantAtual();
+
         Usuario usuarioLogado = obterUsuarioLogado();
 
         if (usuarioLogado == null) {
@@ -94,9 +97,7 @@ public class VendaService {
             Produto produto = produtoRepository
                     .findByIdAndTenantId(
                             item.produtoId(),
-                            usuarioLogado
-                                    .getTenant()
-                                    .getId()
+                            obterTenantIdAtual()
                     )
                     .orElseThrow(() ->
                             new RecursoNaoEncontradoException(
@@ -177,7 +178,9 @@ public class VendaService {
 
         venda.setUsuario(usuarioLogado);
 
-        venda.setTenant(usuarioLogado.getTenant());
+        venda.setTenant(
+                usuarioAutenticadoService.tenantAtual()
+        );
 
         venda.setClienteId(request.clienteId());
 
@@ -187,9 +190,7 @@ public class VendaService {
                     clienteRepository
                             .findByIdAndTenantId(
                                     request.clienteId(),
-                                    usuarioLogado
-                                            .getTenant()
-                                            .getId()
+                                    obterTenantIdAtual()
                             )
                             .orElseThrow(() ->
                                     new RecursoNaoEncontradoException(
@@ -211,7 +212,7 @@ public class VendaService {
                     clienteRepository
                             .findByIdAndTenantId(
                                     request.clienteId(),
-                                    usuarioLogado.getTenant().getId()
+                                    obterTenantIdAtual()
                             )
                             .orElseThrow(
                                     () ->
@@ -223,9 +224,7 @@ public class VendaService {
                     fiadoRepository
                             .findByClienteIdAndTenantIdAndStatus(
                                     cliente.getId(),
-                                    usuarioLogado
-                                            .getTenant()
-                                            .getId(),
+                                    obterTenantIdAtual(),
                                     "pendente"
                             );
 
@@ -241,9 +240,7 @@ public class VendaService {
                     pagamentoRepository
                             .findByClienteIdAndTenantId(
                                     cliente.getId(),
-                                    usuarioLogado
-                                            .getTenant()
-                                            .getId()
+                                    obterTenantIdAtual()
                             )
                             .stream()
                             .map(Pagamento::getValorPago)
@@ -275,21 +272,26 @@ public class VendaService {
 
             fiado.setCliente(cliente);
 
-            fiado.setVendaId(vendaSalva.getId());
+            fiado.setVendaId(
+                    vendaSalva.getId());
 
-            fiado.setValorTotal(valorTotal);
+            fiado.setValorTotal(
+                    valorTotal);
 
-            fiado.setDataLancamento(LocalDateTime.now());
+            fiado.setDataLancamento(
+                    LocalDateTime.now());
 
             fiado.setStatus("pendente");
 
-            fiado.setTenant(usuarioLogado.getTenant());
+            fiado.setTenant(
+                    usuarioAutenticadoService.tenantAtual()
+            );
 
             fiadoRepository.save(fiado);
 
             auditoriaService.registrar(
-                    usuarioLogado.getTenant().getId(),
-                    usuarioLogado.getTenant().getNome(),
+                    tenantAtual.getId(),
+                    tenantAtual.getNome(),
                     usuarioLogado.getId(),
                     usuarioLogado.getNome(),
                     "FIADO_CRIADO",
@@ -307,7 +309,7 @@ public class VendaService {
             Produto produto = produtoRepository
                     .findByIdAndTenantId(
                             item.produtoId(),
-                            usuarioLogado.getTenant().getId()
+                            obterTenantIdAtual()
                     )
                     .orElseThrow(() ->
                             new RecursoNaoEncontradoException(
@@ -432,7 +434,9 @@ public class VendaService {
 
             movimentacao.setUsuario( usuarioLogado);
 
-            movimentacao.setTenant( usuarioLogado.getTenant());
+            movimentacao.setTenant(
+                    usuarioAutenticadoService.tenantAtual()
+            );
 
             movimentacao.setDataMovimentacao(LocalDateTime.now());
 
@@ -441,8 +445,8 @@ public class VendaService {
         }
 
         auditoriaService.registrar(
-                usuarioLogado.getTenant().getId(),
-                usuarioLogado.getTenant().getNome(),
+                tenantAtual.getId(),
+                tenantAtual.getNome(),
                 usuarioLogado.getId(),
                 usuarioLogado.getNome(),
                 "VENDA_CRIADA",
@@ -460,6 +464,10 @@ public class VendaService {
             UUID vendaId,
             CancelarVendaRequest request) {
 
+        Tenant tenantAtual =
+                usuarioAutenticadoService
+                        .tenantAtual();
+
         Usuario usuarioLogado = obterUsuarioLogado();
 
         if (usuarioLogado == null) {
@@ -472,9 +480,7 @@ public class VendaService {
         Venda venda = vendaRepository
                 .findByIdAndTenantId(
                         vendaId,
-                        usuarioLogado
-                                .getTenant()
-                                .getId()
+                        obterTenantIdAtual()
                 )
                 .orElseThrow(() ->
                         new RecursoNaoEncontradoException(
@@ -511,9 +517,7 @@ public class VendaService {
         fiadoRepository
                 .findByVendaIdAndTenantId(
                         venda.getId(),
-                        usuarioLogado
-                                .getTenant()
-                                .getId()
+                        obterTenantIdAtual()
                 )
                 .ifPresent(fiado -> {
 
@@ -591,21 +595,28 @@ public class VendaService {
 
             movimentacao.setProduto(produto);
 
-            movimentacao.setProdutoNome(produto.getNome());
+            movimentacao.setProdutoNome(
+                    produto.getNome());
 
             movimentacao.setTipo("ajuste");
 
-            movimentacao.setQuantidade(item.getQuantidade());
+            movimentacao.setQuantidade(
+                    item.getQuantidade());
 
-            movimentacao.setPrecoCompra(BigDecimal.ZERO);
+            movimentacao.setPrecoCompra(
+                    BigDecimal.ZERO);
 
             movimentacao.setObservacao("Estorno de venda cancelada");
 
-            movimentacao.setUsuario(usuarioLogado);
+            movimentacao.setUsuario(
+                    usuarioLogado);
 
-            movimentacao.setTenant(usuarioLogado.getTenant());
+            movimentacao.setTenant(
+                    usuarioAutenticadoService.tenantAtual()
+            );
 
-            movimentacao.setDataMovimentacao(LocalDateTime.now());
+            movimentacao.setDataMovimentacao(
+                    LocalDateTime.now());
 
             movimentacaoRepository.save(movimentacao);
         }
@@ -613,8 +624,8 @@ public class VendaService {
         vendaRepository.save(venda);
 
         auditoriaService.registrar(
-                usuarioLogado.getTenant().getId(),
-                usuarioLogado.getTenant().getNome(),
+                tenantAtual.getId(),
+                tenantAtual.getNome(),
                 usuarioLogado.getId(),
                 usuarioLogado.getNome(),
                 "VENDA_CANCELADA",
@@ -638,9 +649,7 @@ public class VendaService {
 
         return vendaRepository
                 .findByTenantId(
-                        usuarioLogado
-                                .getTenant()
-                                .getId())
+                        obterTenantIdAtual())
                 .stream()
                 .map(venda -> new VendaResponse(
                         venda.getId(),
@@ -660,9 +669,7 @@ public class VendaService {
 
         return vendaRepository
                 .findByTenantId(
-                        usuarioLogado
-                                .getTenant()
-                                .getId())
+                        obterTenantIdAtual())
                 .stream()
                 .map(venda -> {
 
@@ -721,9 +728,7 @@ public class VendaService {
                 vendaRepository
                         .findByIdAndTenantId(
                                 vendaId,
-                                usuarioLogado
-                                        .getTenant()
-                                        .getId()
+                                obterTenantIdAtual()
                         )
                         .orElseThrow(() ->
                                 new RecursoNaoEncontradoException(
@@ -780,6 +785,12 @@ public class VendaService {
         }
 
         return usuarioLogado;
+
+    }
+
+    private UUID obterTenantIdAtual() {
+
+        return usuarioAutenticadoService.tenantIdAtual();
 
     }
 
