@@ -272,10 +272,9 @@ public class ClienteService {
 
         List<Fiado> fiados =
                 fiadoRepository
-                        .findByClienteIdAndTenantIdAndStatus(
+                        .findByClienteIdAndTenantId(
                                 clienteId,
-                                tenantId,
-                                "pendente"
+                                tenantId
                         );
 
         BigDecimal totalFiado =

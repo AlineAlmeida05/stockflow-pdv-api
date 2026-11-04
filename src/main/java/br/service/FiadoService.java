@@ -9,11 +9,9 @@ import br.exception.RecursoNaoEncontradoException;
 import br.repository.ClienteRepository;
 import br.repository.FiadoRepository;
 import br.security.UsuarioAutenticadoService;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
-
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -40,16 +38,11 @@ public class FiadoService {
     public Fiado salvar(
             FiadoRequest request) {
 
-        Usuario usuarioLogado =
-                obterUsuarioLogado();
-
         Cliente cliente =
                 clienteRepository
                         .findByIdAndTenantId(
                                 request.clienteId(),
-                                usuarioLogado
-                                        .getTenant()
-                                        .getId()
+                                usuarioAutenticadoService.tenantIdAtual()
                         )
                         .orElseThrow(() ->
                                 new RecursoNaoEncontradoException(
@@ -77,22 +70,18 @@ public class FiadoService {
                 request.observacao());
 
         fiado.setTenant(
-                usuarioLogado.getTenant());
+                usuarioAutenticadoService.tenantAtual()
+        );
 
-        return fiadoRepository.save(
-                fiado);
+        return fiadoRepository
+                .save(fiado);
     }
 
     public List<FiadoResponse> listar() {
 
-        Usuario usuarioLogado =
-                obterUsuarioLogado();
-
-        return fiadoRepository
-                .findByTenantId(
-                        usuarioLogado
-                                .getTenant()
-                                .getId())
+        return fiadoRepository.findByTenantId(
+                usuarioAutenticadoService.tenantIdAtual()
+        )
                 .stream()
                 .map(fiado ->
                         new FiadoResponse(

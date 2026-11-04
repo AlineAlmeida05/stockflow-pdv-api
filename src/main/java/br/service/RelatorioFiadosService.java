@@ -10,48 +10,31 @@ import br.dto.response.relatorio.DashboardFiados;
 import br.dto.response.relatorio.ResumoFiados;
 import br.entity.Fiado;
 import br.entity.Pagamento;
-import br.entity.Usuario;
 import java.math.BigDecimal;
-import java.util.List;
 import java.util.UUID;
 
 @Service
 public class RelatorioFiadosService {
 
     private final FiadoRepository fiadoRepository;
-
     private final PagamentoRepository pagamentoRepository;
-
-    private final UsuarioAutenticadoService
-            usuarioAutenticadoService;
+    private final UsuarioAutenticadoService usuarioAutenticadoService;
 
     public RelatorioFiadosService(
-
             FiadoRepository fiadoRepository,
-
             PagamentoRepository pagamentoRepository,
-
             UsuarioAutenticadoService usuarioAutenticadoService) {
 
-        this.fiadoRepository =
-                fiadoRepository;
-
-        this.pagamentoRepository =
-                pagamentoRepository;
-
-        this.usuarioAutenticadoService =
-                usuarioAutenticadoService;
+        this.fiadoRepository = fiadoRepository;
+        this.pagamentoRepository = pagamentoRepository;
+        this.usuarioAutenticadoService = usuarioAutenticadoService;
     }
 
     public DashboardFiados gerarDashboard() {
 
-        Usuario usuario =
-                usuarioAutenticadoService
-                        .usuarioLogado();
-
         UUID tenantId =
-                usuario.getTenant()
-                        .getId();
+                usuarioAutenticadoService
+                        .tenantIdAtual();
 
         var fiados =
                 fiadoRepository
