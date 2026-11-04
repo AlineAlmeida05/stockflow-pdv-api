@@ -48,6 +48,10 @@ public class PagamentoService {
 
         Usuario usuarioLogado = obterUsuarioLogado();
 
+        var tenantAtual =
+                usuarioAutenticadoService
+                        .tenantAtual();
+
         UUID tenantId =
                 usuarioAutenticadoService
                         .tenantIdAtual();
@@ -117,7 +121,9 @@ public class PagamentoService {
 
         pagamento.setFormaPagamento(request.formaPagamento());
 
-        pagamento.setTenant(usuarioLogado.getTenant());
+        pagamento.setTenant(
+                usuarioAutenticadoService.tenantAtual()
+        );
 
         pagamento.setUsuario(usuarioLogado);
 
@@ -125,9 +131,39 @@ public class PagamentoService {
                 pagamentoRepository.save(
                         pagamento);
 
+        BigDecimal novoSaldo =
+                saldoDevedor.subtract(
+                        request.valorPago()
+                );
+
+        if (
+                novoSaldo.compareTo(
+                        BigDecimal.ZERO
+                ) == 0
+        ) {
+
+            List<Fiado> fiadosPendentes =
+                    fiadoRepository
+                            .findByClienteIdAndTenantIdAndStatus(
+                                    cliente.getId(),
+                                    tenantId,
+                                    "pendente"
+                            );
+
+            fiadosPendentes.forEach(
+                    fiado -> fiado.setStatus(
+                            "quitado"
+                    )
+            );
+
+            fiadoRepository.saveAll(
+                    fiadosPendentes
+            );
+        }
+
         auditoriaService.registrar(
-                usuarioLogado.getTenant().getId(),
-                usuarioLogado.getTenant().getNome(),
+                tenantAtual.getId(),
+                tenantAtual.getNome(),
                 usuarioLogado.getId(),
                 usuarioLogado.getNome(),
                 "PAGAMENTO_REALIZADO",
