@@ -11,16 +11,15 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.UUID;
-import br.entity.Usuario;
 import br.security.UsuarioAutenticadoService;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class RelatorioService {
 
     private final RelatorioVendasRepository relatorioRepository;
     private final UsuarioAutenticadoService usuarioAutenticadoService;
+    private static final int
+            LIMITE_HISTORICO = 10;
 
     public RelatorioService(
             RelatorioVendasRepository relatorioRepository,
@@ -35,9 +34,9 @@ public class RelatorioService {
             LocalDate fim,
             String formaPagamento) {
 
-        Usuario usuarioLogado = obterUsuarioLogado();
-
-        UUID tenantId = usuarioLogado.getTenant().getId();
+        UUID tenantId =
+                usuarioAutenticadoService
+                        .tenantIdAtual();
 
         LocalDateTime inicioDia = inicio.atStartOfDay();
 
@@ -55,7 +54,7 @@ public class RelatorioService {
         );
 
         // "forma mais utilizada" não vem pronto do banco — é o primeiro item já ordenado por valor
-        String formaMaisUtilizada = receitaPorPagamento.isEmpty() ? "-"
+        String formaComMaiorFaturamento = receitaPorPagamento.isEmpty() ? "-"
                 : receitaPorPagamento
                   .getFirst()
                   .formaPagamento();
@@ -64,7 +63,7 @@ public class RelatorioService {
                 resumoBase.totalVendas(),
                 resumoBase.faturamento(),
                 resumoBase.ticketMedio(),
-                formaMaisUtilizada
+                formaComMaiorFaturamento
         );
 
         var melhoresDias = relatorioRepository.findBestDays(
@@ -99,7 +98,10 @@ public class RelatorioService {
                         inicioDia,
                         fimDia,
                         formaPagamento,
-                        PageRequest.of(0, 9))
+                        PageRequest.of(
+                                0,
+                                LIMITE_HISTORICO
+                        ))
                 .getContent();
 
         return new DashboardVendas(
@@ -110,22 +112,5 @@ public class RelatorioService {
                 topProdutos,
                 historico
         );
-    }
-
-    private Usuario obterUsuarioLogado() {
-
-        Usuario usuarioLogado =
-                usuarioAutenticadoService
-                        .usuarioLogado();
-
-        if (usuarioLogado == null) {
-
-            throw new ResponseStatusException(
-                    HttpStatus.UNAUTHORIZED,
-                    "Usuário não autenticado."
-            );
-        }
-
-        return usuarioLogado;
     }
 }

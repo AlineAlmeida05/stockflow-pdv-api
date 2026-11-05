@@ -30,4 +30,12 @@ public interface PromocaoRepository
             UUID id,
             UUID tenantId
     );
+
+    List<Promocao> findByTenantId(
+            UUID tenantId
+    );
+
+    List<Promocao> findByTenantIdAndAtivaTrue(
+            UUID tenantId
+    );
 }

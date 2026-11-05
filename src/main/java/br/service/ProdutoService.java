@@ -47,7 +47,6 @@ public class ProdutoService {
                 .map(this::montarResponse)
                 .toList();
 
-
     }
 
     public ProdutoResponse buscarPorId(
@@ -83,29 +82,43 @@ public class ProdutoService {
 
         Produto produto = new Produto();
 
-        produto.setNome(request.nome());
+        produto.setNome(
+                request.nome());
 
-        produto.setCategoria(request.categoria());
+        produto.setCategoria(
+                request.categoria());
 
-        produto.setCodigoBarras(request.codigoBarras());
+        produto.setCodigoBarras(
+                request.codigoBarras());
 
-        produto.setPrecoVenda(request.precoVenda());
+        produto.setPrecoVenda(
+                request.precoVenda());
 
-        produto.setEstoqueAtual(request.estoqueAtual());
+        produto.setEstoqueAtual(
+                request.estoqueAtual());
 
-        produto.setEstoqueMinimo(request.estoqueMinimo());
+        produto.setEstoqueMinimo(
+                request.estoqueMinimo());
 
         produto.setAtivo(true);
 
         Usuario usuarioLogado = obterUsuarioLogado();
 
-        produto.setTenant(usuarioAutenticadoService.tenantAtual());
+        produto.setTenant(
+                usuarioAutenticadoService
+                        .tenantAtual());
 
-        produto.setCodigo(gerarCodigoProduto(usuarioLogado));
+        produto.setCodigo(
+                gerarCodigoProduto(
+                        usuarioLogado
+                ));
 
-        produto.setDataCadastro(LocalDateTime.now());
+        produto.setDataCadastro(
+                LocalDateTime.now());
 
-        produto.setCustoMedio(java.math.BigDecimal.ZERO);
+        produto.setCustoMedio(
+                request.custoMedio()
+        );
 
         Produto produtoSalvo = produtoRepository.save(produto);
 
@@ -149,21 +162,39 @@ public class ProdutoService {
                                 "Produto não encontrado."
                         ));
 
-        produto.setNome(request.nome());
+        produto.setNome(
+                request
+                        .nome());
 
-        produto.setCategoria(request.categoria());
+        produto.setCategoria(
+                request
+                        .categoria());
 
-        produto.setCodigoBarras(request.codigoBarras());
+        produto.setCodigoBarras(
+                request
+                        .codigoBarras());
 
-        produto.setPrecoVenda(request.precoVenda());
+        produto.setPrecoVenda(
+                request
+                        .precoVenda());
 
-        produto.setEstoqueAtual(request.estoqueAtual());
+        produto.setCustoMedio(
+                request.custoMedio()
+        );
 
-        produto.setEstoqueMinimo(request.estoqueMinimo());
+        produto.setEstoqueAtual(
+                request
+                        .estoqueAtual());
 
-        produto.setAtivo(request.ativo());
+        produto.setEstoqueMinimo(
+                request
+                        .estoqueMinimo());
 
-        produto.setDataAtualizacao(LocalDateTime.now());
+        produto.setAtivo(
+                request.ativo());
+
+        produto.setDataAtualizacao(
+                LocalDateTime.now());
 
         Produto produtoAtualizado = produtoRepository.save(produto);
 
@@ -343,6 +374,7 @@ public class ProdutoService {
                 produto.getNome(),
                 produto.getCategoria(),
                 produto.getCodigoBarras(),
+                produto.getCustoMedio(),
                 produto.getPrecoVenda(),
                 produto.getEstoqueAtual(),
                 produto.getEstoqueMinimo(),

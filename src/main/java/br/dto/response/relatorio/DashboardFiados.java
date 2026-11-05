@@ -8,7 +8,8 @@ public record DashboardFiados(
 
         List<DevedorDTO> maioresDevedores,
 
-        List<FiadoResumoDTO> ultimosLancamentos
+        List<FiadoResumoDTO> ultimosLancamentos,
 
-) {
-}
+        List<EvolucaoFiados> evolucaoFiados
+
+) {}

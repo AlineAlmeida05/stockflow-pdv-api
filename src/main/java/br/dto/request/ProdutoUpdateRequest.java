@@ -4,7 +4,6 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
-
 import java.math.BigDecimal;
 
 public record ProdutoUpdateRequest(
@@ -45,7 +44,14 @@ public record ProdutoUpdateRequest(
         @NotNull(
                 message = "Status é obrigatório."
         )
-        Boolean ativo
+        Boolean ativo,
+        @NotNull(
+                message = "Custo médio é obrigatório."
+        )
+        @PositiveOrZero(
+                message = "Custo médio deve ser maior ou igual a zero."
+        )
+        BigDecimal custoMedio
 
 ) {
 }

@@ -15,6 +15,8 @@ public record ProdutoResponse(
 
         String codigoBarras,
 
+        BigDecimal custoMedio,
+
         BigDecimal precoVenda,
 
         Integer estoqueAtual,

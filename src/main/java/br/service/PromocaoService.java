@@ -50,21 +50,25 @@ public class PromocaoService {
 
     public List<Promocao> listar() {
 
-        Usuario usuarioLogado = obterUsuarioLogado();
+        UUID tenantId =
+                usuarioAutenticadoService
+                        .tenantIdAtual();
 
         return promocaoRepository
-                .findByTenantAndAtivaTrue(
-                        usuarioLogado.getTenant()
+                .findByTenantId(
+                        tenantId
                 );
     }
 
     public List<Promocao> listarAtivas() {
 
-        Usuario usuarioLogado = obterUsuarioLogado();
+        UUID tenantId =
+                usuarioAutenticadoService
+                        .tenantIdAtual();
 
         return promocaoRepository
-                .findByTenantAndAtivaTrue(
-                        usuarioLogado.getTenant()
+                .findByTenantIdAndAtivaTrue(
+                        tenantId
                 );
     }
 
@@ -99,6 +103,10 @@ public class PromocaoService {
         UUID tenantId =
                 usuarioAutenticadoService
                         .tenantIdAtual();
+
+        var tenantAtual =
+                usuarioAutenticadoService
+                        .tenantAtual();
 
         Produto produto =
                 produtoRepository
@@ -166,42 +174,56 @@ public class PromocaoService {
                         estoqueInicio * 0.5
                 );
 
-        promocao.setEstoqueInicio(estoqueInicio);
+        promocao.setEstoqueInicio(
+                estoqueInicio);
 
-        promocao.setMetaUnidades(metaUnidades);
+        promocao.setMetaUnidades(
+                metaUnidades);
 
         promocao.setUnidadesVendidas(0);
 
-        promocao.setReceitaGerada(BigDecimal.ZERO);
+        promocao.setReceitaGerada(
+                BigDecimal.ZERO);
 
-        promocao.setProduto(produto);
+        promocao.setProduto(
+                produto);
 
-        promocao.setPrecoOriginal(produto.getPrecoVenda());
+        promocao.setPrecoOriginal(
+                produto.getPrecoVenda());
 
-        promocao.setPrecoPromocional(precoPromocional);
+        promocao.setPrecoPromocional(
+                precoPromocional);
 
         promocao.setPercentualDesconto(
                 BigDecimal.valueOf(
                         metrics.percentualDesconto()
                 ));
 
-        promocao.setMotivo(metrics.motivo());
+        promocao.setMotivo(
+                metrics.motivo());
 
-        promocao.setDataInicio(LocalDateTime.now());
+        promocao.setDataInicio(
+                LocalDateTime.now());
 
-        promocao.setDataCriacao(LocalDateTime.now());
+        promocao.setDataCriacao(
+                LocalDateTime.now());
 
         promocao.setAtiva(true);
 
-        promocao.setTenant(usuarioLogado.getTenant());
+        promocao.setTenant(
+                tenantAtual
+        );
 
         produto.setPromocaoAtiva(true);
 
-        produto.setPrecoPromocional(precoPromocional);
+        produto.setPrecoPromocional(
+                precoPromocional);
 
-        produto.setPromocaoMotivo(metrics.motivo());
+        produto.setPromocaoMotivo(
+                metrics.motivo());
 
-        produto.setDataInicioPromocao(LocalDate.now());
+        produto.setDataInicioPromocao(
+                LocalDate.now());
 
         produto.setDataFimPromocao(null);
 
@@ -210,8 +232,8 @@ public class PromocaoService {
         Promocao promocaoSalva = promocaoRepository.save(promocao);
 
         auditoriaService.registrar(
-                usuarioLogado.getTenant().getId(),
-                usuarioLogado.getTenant().getNome(),
+                tenantAtual.getId(),
+                tenantAtual.getNome(),
                 usuarioLogado.getId(),
                 usuarioLogado.getNome(),
                 "PROMOCAO_CRIADA",
@@ -225,14 +247,16 @@ public class PromocaoService {
         );
 
         return promocaoSalva;
-
-
     }
 
     @Transactional
     public void finalizarMetaAtingida(
             Promocao promocao,
             Produto produto) {
+
+        var tenantAtual =
+                usuarioAutenticadoService
+                        .tenantAtual();
 
         promocao.setAtiva(false);
 
@@ -257,8 +281,8 @@ public class PromocaoService {
         Usuario usuarioLogado = obterUsuarioLogado();
 
         auditoriaService.registrar(
-                usuarioLogado.getTenant().getId(),
-                usuarioLogado.getTenant().getNome(),
+                tenantAtual.getId(),
+                tenantAtual.getNome(),
                 usuarioLogado.getId(),
                 usuarioLogado.getNome(),
                 "PROMOCAO_FINALIZADA_META",
@@ -275,6 +299,10 @@ public class PromocaoService {
             UUID id) {
 
         Promocao promocao = buscarPorId(id);
+
+        var tenantAtual =
+                usuarioAutenticadoService
+                        .tenantAtual();
 
         promocao.setAtiva(false);
 
@@ -300,8 +328,8 @@ public class PromocaoService {
         Usuario usuarioLogado = obterUsuarioLogado();
 
         auditoriaService.registrar(
-                usuarioLogado.getTenant().getId(),
-                usuarioLogado.getTenant().getNome(),
+                tenantAtual.getId(),
+                tenantAtual.getNome(),
                 usuarioLogado.getId(),
                 usuarioLogado.getNome(),
                 "PROMOCAO_ENCERRADA",
@@ -317,8 +345,6 @@ public class PromocaoService {
 
     public List<Promocao> listarPorProduto(
             UUID produtoId) {
-
-        Usuario usuarioLogado = obterUsuarioLogado();
 
         UUID tenantId =
                 usuarioAutenticadoService
@@ -342,8 +368,6 @@ public class PromocaoService {
 
     public List<ProdutoPromocaoResponse>
     listarCandidatos() {
-
-        Usuario usuarioLogado = obterUsuarioLogado();
 
         UUID tenantId =
                 usuarioAutenticadoService
@@ -412,8 +436,6 @@ public class PromocaoService {
 
     public PromocaoPainelResponse
     listarPainel() {
-
-        Usuario usuarioLogado = obterUsuarioLogado();
 
         UUID tenantId =
                 usuarioAutenticadoService
@@ -991,6 +1013,15 @@ public class PromocaoService {
         }
 
         return usuarioLogado;
+
+    }
+
+    public boolean existePromocaoDisponivel() {
+
+        PromocaoPainelResponse painel = listarPainel();
+
+        return !listarCandidatos().isEmpty()
+                || !listarAtivas().isEmpty();
 
     }
 

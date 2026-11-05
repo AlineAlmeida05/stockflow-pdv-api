@@ -32,7 +32,12 @@ public class Produto {
 
     private String categoria;
 
-    @Column(name = "custo_medio", precision = 10, scale = 2)
+    @Column(
+            name = "custo_medio",
+            nullable = false,
+            precision = 10,
+            scale = 2
+    )
     private BigDecimal custoMedio;
 
     @Column(precision = 10, scale = 2)

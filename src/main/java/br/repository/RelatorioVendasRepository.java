@@ -6,7 +6,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.Repository;
-
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -24,7 +23,11 @@ public interface RelatorioVendasRepository extends Repository<Venda, UUID> {
           AND v.tenant.id = :tenantId
           AND v.dataVenda BETWEEN :inicio AND :fim
     """)
-    ResumoVendas findSummary(UUID tenantId, LocalDateTime inicio, LocalDateTime fim);
+
+    ResumoVendas findSummary(
+            UUID tenantId,
+            LocalDateTime inicio,
+            LocalDateTime fim);
 
     @Query("""
         SELECT new br.dto.response.relatorio.MelhorDia(
@@ -35,7 +38,12 @@ public interface RelatorioVendasRepository extends Repository<Venda, UUID> {
         GROUP BY CAST(v.dataVenda AS LocalDate)
         ORDER BY SUM(v.valorTotal) DESC
     """)
-    List<MelhorDia> findBestDays(UUID tenantId, LocalDateTime inicio, LocalDateTime fim, Pageable pageable);
+
+    List<MelhorDia> findBestDays(
+            UUID tenantId,
+            LocalDateTime inicio,
+            LocalDateTime fim,
+            Pageable pageable);
 
     @Query("""
         SELECT new br.dto.response.relatorio.ReceitaPorFormaPagamento(
@@ -61,7 +69,9 @@ public interface RelatorioVendasRepository extends Repository<Venda, UUID> {
 
     @Query("""
         SELECT new br.dto.response.relatorio.TopProduto(
-            iv.produtoNome, SUM(iv.quantidade))
+            iv.produtoNome,
+            SUM(iv.quantidade),
+            SUM(iv.subtotal))
         FROM ItemVenda iv JOIN iv.venda v
         WHERE v.status <> 'cancelada' AND v.tenant.id = :tenantId
           AND v.dataVenda BETWEEN :inicio AND :fim
@@ -71,14 +81,19 @@ public interface RelatorioVendasRepository extends Repository<Venda, UUID> {
     List<TopProduto> findTopProducts(UUID tenantId, LocalDateTime inicio, LocalDateTime fim, Pageable pageable);
 
     @Query("""
-        SELECT new br.dto.response.relatorio.VendaHistorico(
-            v.dataVenda, v.formaPagamento, v.quantidadeItens, v.valorTotal)
-        FROM Venda v
-        WHERE v.tenant.id = :tenantId
-          AND v.dataVenda BETWEEN :inicio AND :fim
-          AND (:formaPagamento IS NULL OR v.formaPagamento = :formaPagamento)
-        ORDER BY v.dataVenda DESC
-    """)
+    SELECT new br.dto.response.relatorio.VendaHistorico(
+        v.dataVenda,
+        v.formaPagamento,
+        v.quantidadeItens,
+        v.valorTotal)
+    FROM Venda v
+    WHERE v.tenant.id = :tenantId
+      AND v.status <> 'cancelada'
+      AND v.dataVenda BETWEEN :inicio AND :fim
+      AND (:formaPagamento IS NULL
+           OR v.formaPagamento = :formaPagamento)
+    ORDER BY v.dataVenda DESC
+""")
     Page<VendaHistorico> findHistory(UUID tenantId, LocalDateTime inicio, LocalDateTime fim,
                                      String formaPagamento, Pageable pageable);
 }

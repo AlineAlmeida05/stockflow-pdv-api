@@ -68,6 +68,15 @@ public class PagamentoService {
                                         "Cliente não encontrado."
                                 ));
 
+        List<Fiado> fiadosPendentes =
+                fiadoRepository
+                        .findByClienteIdAndTenantIdAndStatus(
+                                cliente.getId(),
+                                tenantId,
+                                "pendente"
+                        );
+
+
         BigDecimal totalFiado =
                 fiadoRepository
                         .findByClienteIdAndTenantIdAndStatus(
@@ -113,16 +122,25 @@ public class PagamentoService {
 
         pagamento.setCliente(cliente);
 
-        pagamento.setValorPago(request.valorPago());
+        pagamento.setValorPago(
+                request
+                        .valorPago());
 
-        pagamento.setDataPagamento(LocalDateTime.now());
+        pagamento.setDataPagamento(
+                LocalDateTime
+                        .now());
 
-        pagamento.setObservacao(request.observacao());
+        pagamento.setObservacao(
+                request
+                        .observacao());
 
-        pagamento.setFormaPagamento(request.formaPagamento());
+        pagamento.setFormaPagamento(
+                request
+                        .formaPagamento());
 
         pagamento.setTenant(
-                usuarioAutenticadoService.tenantAtual()
+                usuarioAutenticadoService
+                        .tenantAtual()
         );
 
         pagamento.setUsuario(usuarioLogado);
@@ -141,14 +159,6 @@ public class PagamentoService {
                         BigDecimal.ZERO
                 ) == 0
         ) {
-
-            List<Fiado> fiadosPendentes =
-                    fiadoRepository
-                            .findByClienteIdAndTenantIdAndStatus(
-                                    cliente.getId(),
-                                    tenantId,
-                                    "pendente"
-                            );
 
             fiadosPendentes.forEach(
                     fiado -> fiado.setStatus(
