@@ -1,6 +1,8 @@
 package br.service;
 
 import br.dto.response.*;
+import br.dto.response.relatorio.FiadoDashboardResponse;
+import br.dto.response.relatorio.VendaDashboardResponse;
 import br.entity.*;
 import br.repository.FiadoRepository;
 import br.repository.ProdutoRepository;
@@ -113,6 +115,17 @@ public class DashboardService {
                                 tenantId
                         );
 
+        var fiadosPendentes =
+                fiados.stream()
+                        .filter(
+                                fiado ->
+                                        "pendente"
+                                                .equalsIgnoreCase(
+                                                        fiado.getStatus()
+                                                )
+                        )
+                        .toList();
+
         List<MovimentacaoEstoque> movimentacoes =
                 movimentacaoEstoqueRepository
                         .findByTenantId(
@@ -162,17 +175,24 @@ public class DashboardService {
 
         }
 
-        final List<Venda> vendasFiltradas =
-                vendas;
+        final List<Venda> vendasFiltradas = vendas;
 
-        final var fiadosFiltrados =
-                fiados;
+        List<UUID> vendaIds =
+                vendasFiltradas.stream()
+                        .map(Venda::getId)
+                        .toList();
 
-        final List<MovimentacaoEstoque> movimentacoesFiltradas =
-                movimentacoes;
+        List<ItemVenda> itensVendas =
+                vendaIds.isEmpty()
+                        ? List.of()
+                        : itemVendaRepository
+                          .findByVendaIdIn(
+                                  vendaIds
+                          );
 
-        Integer totalProdutos =
-                produtos.size();
+        final List<MovimentacaoEstoque> movimentacoesFiltradas = movimentacoes;
+
+        Integer totalProdutos = produtos.size();
 
         Integer produtosComEstoqueBaixo =
                 (int) produtos.stream()
@@ -230,7 +250,7 @@ public class DashboardService {
 
 
         Integer clientesDevedores =
-                (int) fiadosFiltrados.stream()
+                (int) fiadosPendentes.stream()
                         .map(
                                 fiado ->
                                         fiado.getCliente()
@@ -240,7 +260,7 @@ public class DashboardService {
                         .count();
 
         BigDecimal fiadosEmAberto =
-                fiadosFiltrados.stream()
+                fiadosPendentes.stream()
                         .map(
                                 fiado ->
                                         fiado.getValorTotal()
@@ -359,38 +379,28 @@ public class DashboardService {
 
         Map<String, Integer> produtosAgrupados = new LinkedHashMap<>();
 
-        for (Venda venda : vendasFiltradas) {
+        for (ItemVenda item : itensVendas) {
 
             if ("cancelada".equals(
-                    venda.getStatus()
+                    item.getVenda()
+                            .getStatus()
             )) {
 
                 continue;
 
             }
 
-            List<ItemVenda> itens =
-                    itemVendaRepository
-                            .findByVendaId(
-                                    venda.getId()
+            Integer atual =
+                    produtosAgrupados
+                            .getOrDefault(
+                                    item.getProdutoNome(),
+                                    0
                             );
 
-            for (ItemVenda item : itens) {
-
-                Integer atual =
-                        produtosAgrupados
-                                .getOrDefault(
-                                        item.getProdutoNome(),
-                                        0
-                                );
-
-                produtosAgrupados.put(
-                        item.getProdutoNome(),
-                        atual +
-                                item.getQuantidade()
-                );
-
-            }
+            produtosAgrupados.put(
+                    item.getProdutoNome(),
+                    atual + item.getQuantidade()
+            );
 
         }
 
@@ -418,7 +428,7 @@ public class DashboardService {
         Map<String, BigDecimal> fiadosAgrupados =
                 new LinkedHashMap<>();
 
-        for (var fiado : fiadosFiltrados) {
+        for (var fiado : fiadosPendentes) {
 
             String data =
                     fiado.getDataLancamento()
@@ -595,48 +605,39 @@ public class DashboardService {
 
                         .toList();
 
-        Map<String, Integer> produtosPromocionais = new LinkedHashMap<>();
+        Map<String, Integer> produtosPromocionais =
+                new LinkedHashMap<>();
 
-        for (Venda venda : vendasFiltradas) {
+        for (ItemVenda item : itensVendas) {
 
             if ("cancelada".equals(
-                    venda.getStatus()
+                    item.getVenda()
+                            .getStatus()
             )) {
 
                 continue;
 
             }
 
-            List<ItemVenda> itens =
-                    itemVendaRepository
-                            .findByVendaId(
-                                    venda.getId()
-                            );
+            if (!Boolean.TRUE.equals(
+                    item.getPromocaoAplicada()
+            )) {
 
-            for (ItemVenda item : itens) {
-
-                if (!Boolean.TRUE.equals(
-                        item.getPromocaoAplicada()
-                )) {
-
-                    continue;
-
-                }
-
-                Integer atual =
-                        produtosPromocionais
-                                .getOrDefault(
-                                        item.getProdutoNome(),
-                                        0
-                                );
-
-                produtosPromocionais.put(
-                        item.getProdutoNome(),
-                        atual +
-                                item.getQuantidade()
-                );
+                continue;
 
             }
+
+            Integer atual =
+                    produtosPromocionais
+                            .getOrDefault(
+                                    item.getProdutoNome(),
+                                    0
+                            );
+
+            produtosPromocionais.put(
+                    item.getProdutoNome(),
+                    atual + item.getQuantidade()
+            );
 
         }
 
@@ -661,77 +662,54 @@ public class DashboardService {
                         )
                         .toList();
 
-        Integer totalVendasPromocionais = 0;
+        Integer totalVendasPromocionais =
+                (int) itensVendas.stream()
 
-        for (Venda venda : vendasFiltradas) {
-
-            if ("cancelada".equals(
-                    venda.getStatus()
-            )) {
-
-                continue;
-
-            }
-
-            List<ItemVenda> itens =
-                    itemVendaRepository
-                            .findByVendaId(
-                                    venda.getId()
-                            );
-
-            boolean possuiPromocao =
-                    itens.stream()
-                            .anyMatch(
-                                    item ->
-                                            Boolean.TRUE.equals(
-                                                    item.getPromocaoAplicada()
-                                            )
-                            );
-
-            if (possuiPromocao) {
-
-                totalVendasPromocionais++;
-
-            }
-
-        }
-
-        BigDecimal faturamentoPromocional = BigDecimal.ZERO;
-
-        for (Venda venda : vendasFiltradas) {
-
-            if ("cancelada".equals(
-                    venda.getStatus()
-            )) {
-
-                continue;
-
-            }
-
-            List<ItemVenda> itens =
-                    itemVendaRepository
-                            .findByVendaId(
-                                    venda.getId()
-                            );
-
-            for (ItemVenda item : itens) {
-
-                if (
-                        Boolean.TRUE.equals(
-                                item.getPromocaoAplicada()
+                        .filter(item ->
+                                !"cancelada".equals(
+                                        item.getVenda()
+                                                .getStatus()
+                                )
                         )
-                ) {
 
-                    faturamentoPromocional =
-                            faturamentoPromocional.add(
-                                    item.getSubtotal()
-                            );
+                        .filter(item ->
+                                Boolean.TRUE.equals(
+                                        item.getPromocaoAplicada()
+                                )
+                        )
 
-                }
+                        .map(item ->
+                                item.getVenda()
+                                        .getId()
+                        )
 
-            }
+                        .distinct()
 
-        }
+                        .count();
+
+        BigDecimal faturamentoPromocional =
+
+                itensVendas.stream()
+
+                        .filter(item ->
+                                !"cancelada".equals(
+                                        item.getVenda()
+                                                .getStatus()
+                                )
+                        )
+
+                        .filter(item ->
+                                Boolean.TRUE.equals(
+                                        item.getPromocaoAplicada()
+                                )
+                        )
+
+                        .map(ItemVenda::getSubtotal)
+
+                        .reduce(
+                                BigDecimal.ZERO,
+                                BigDecimal::add
+                        );
 
         Integer totalPromocoesEficientes = promocoesEficientes.size();
 
@@ -792,6 +770,55 @@ public class DashboardService {
 
                         .toList();
 
+        List<VendaDashboardResponse> vendasRecentes =
+
+                vendasFiltradas.stream()
+
+                        .filter(venda ->
+                                !"cancelada".equals(
+                                        venda.getStatus()
+                                )
+                        )
+
+                        .map(venda ->
+                                new VendaDashboardResponse(
+
+                                        venda.getId(),
+
+                                        venda.getDataVenda(),
+
+                                        venda.getFormaPagamento(),
+
+                                        venda.getQuantidadeItens(),
+
+                                        venda.getValorTotal()
+
+                                )
+                        )
+
+                        .toList();
+
+        List<FiadoDashboardResponse> fiadosPendentesResponse =
+
+                fiadosPendentes.stream()
+
+                        .map(fiado ->
+                                new FiadoDashboardResponse(
+
+                                        fiado.getId(),
+
+                                        fiado.getCliente()
+                                                .getNome(),
+
+                                        fiado.getValorTotal(),
+
+                                        fiado.getDataLancamento()
+
+                                )
+                        )
+
+                        .toList();
+
         return new DashboardResponse(
 
                 totalProdutos,
@@ -832,28 +859,13 @@ public class DashboardService {
 
                 totalPromocoesEficientes,
 
-                promocoesBaixaEfetividade
+                promocoesBaixaEfetividade,
+
+                vendasRecentes,
+
+                fiadosPendentesResponse
 
         );
-
-    }
-
-    private Usuario obterUsuarioLogado() {
-
-        Usuario usuarioLogado =
-                usuarioAutenticadoService
-                        .usuarioLogado();
-
-        if (usuarioLogado == null) {
-
-            throw new ResponseStatusException(
-                    HttpStatus.UNAUTHORIZED,
-                    "Usuário não autenticado."
-            );
-
-        }
-
-        return usuarioLogado;
 
     }
 
