@@ -186,13 +186,16 @@ public class ClienteService {
                                         new RecursoNaoEncontradoException(
                                                 "Cliente não encontrado."));
 
-        BigDecimal totalFiado =
+        List<Fiado> fiadosPendentes =
                 fiadoRepository
-                        .findByClienteIdAndTenantId(
+                        .findByClienteIdAndTenantIdAndStatus(
                                 cliente.getId(),
-                                tenantId
-                        )
-                        .stream()
+                                tenantId,
+                                "pendente"
+                        );
+
+        BigDecimal totalFiado =
+                fiadosPendentes.stream()
                         .map(Fiado::getValorTotal)
                         .reduce(
                                 BigDecimal.ZERO,
@@ -303,17 +306,6 @@ public class ClienteService {
                 totalFiado.subtract(
                         totalPago);
 
-        int diasSemPagamento = 0;
-
-        if (
-                saldoDevedor.compareTo(
-                        BigDecimal.ZERO
-                ) <= 0
-        ) {
-
-            diasSemPagamento = 0;
-
-        }
 
         BigDecimal creditoDisponivel =
                 cliente.getLimiteCredito()
@@ -321,38 +313,59 @@ public class ClienteService {
                                 saldoDevedor);
 
 
+        int diasSemPagamento = 0;
 
-        if (!pagamentos.isEmpty()) {
+        if (
+                saldoDevedor.compareTo(
+                        BigDecimal.ZERO
+                ) > 0
+        ) {
 
-            LocalDateTime ultimoPagamento =
-                    pagamentos.stream()
-                            .map(Pagamento::getDataPagamento)
-                            .max(LocalDateTime::compareTo)
-                            .orElse(LocalDateTime.now());
+            if (!pagamentos.isEmpty()) {
 
-            diasSemPagamento =
-                    (int) Duration
-                            .between(
-                                    ultimoPagamento,
-                                    LocalDateTime.now()
-                            )
-                            .toDays();
+                LocalDateTime ultimoPagamento =
+                        pagamentos.stream()
+                                .map(
+                                        Pagamento::getDataPagamento
+                                )
+                                .max(
+                                        LocalDateTime::compareTo
+                                )
+                                .orElse(
+                                        LocalDateTime.now()
+                                );
 
-        } else if (!fiados.isEmpty()) {
+                diasSemPagamento =
+                        (int) Duration
+                                .between(
+                                        ultimoPagamento,
+                                        LocalDateTime.now()
+                                )
+                                .toDays();
 
-            LocalDateTime fiadoMaisAntigo =
-                    fiados.stream()
-                            .map(Fiado::getDataLancamento)
-                            .min(LocalDateTime::compareTo)
-                            .orElse(LocalDateTime.now());
+            } else if (!fiados.isEmpty()) {
 
-            diasSemPagamento =
-                    (int) Duration
-                            .between(
-                                    fiadoMaisAntigo,
-                                    LocalDateTime.now()
-                            )
-                            .toDays();
+                LocalDateTime fiadoMaisAntigo =
+                        fiados.stream()
+                                .map(
+                                        Fiado::getDataLancamento
+                                )
+                                .min(
+                                        LocalDateTime::compareTo
+                                )
+                                .orElse(
+                                        LocalDateTime.now()
+                                );
+
+                diasSemPagamento =
+                        (int) Duration
+                                .between(
+                                        fiadoMaisAntigo,
+                                        LocalDateTime.now()
+                                )
+                                .toDays();
+            }
+
         }
 
         String status;

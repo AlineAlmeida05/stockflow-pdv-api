@@ -1,5 +1,8 @@
 package br.dto.response;
 
+import br.dto.response.relatorio.FiadoDashboardResponse;
+import br.dto.response.relatorio.VendaDashboardResponse;
+
 import java.math.BigDecimal;
 import java.util.List;
 
@@ -47,8 +50,12 @@ public record DashboardResponse(
         Integer totalPromocoesEficientes,
 
         List<PromocaoBaixaEfetividadeResponse>
-        promocoesBaixaEfetividade
+        promocoesBaixaEfetividade,
 
+        List<VendaDashboardResponse>
+        vendasRecentes,
 
+        List<FiadoDashboardResponse>
+        fiadosPendentes
 ) {
 }

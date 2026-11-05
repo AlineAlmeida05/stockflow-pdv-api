@@ -17,7 +17,7 @@ public record ClienteRequest(
         )
         String telefone,
 
-        @Positive(
+        @PositiveOrZero(
                 message = "Limite de crédito deve ser maior que zero."
         )
         BigDecimal limiteCredito,
