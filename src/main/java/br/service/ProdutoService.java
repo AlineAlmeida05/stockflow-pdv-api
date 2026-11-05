@@ -109,9 +109,8 @@ public class ProdutoService {
                         .tenantAtual());
 
         produto.setCodigo(
-                gerarCodigoProduto(
-                        usuarioLogado
-                ));
+                gerarCodigoProduto()
+        );
 
         produto.setDataCadastro(
                 LocalDateTime.now());
@@ -300,8 +299,7 @@ public class ProdutoService {
 
     }
 
-    private String gerarCodigoProduto(
-            Usuario usuarioLogado) {
+    private String gerarCodigoProduto() {
 
         String prefixo =
                 usuarioAutenticadoService
@@ -347,19 +345,6 @@ public class ProdutoService {
                 "%s%06d",
                 prefixo,
                 sequencia);
-
-    }
-
-    private void validarProdutoAtivo(
-            Produto produto) {
-
-        if (Boolean.FALSE.equals(
-                produto.getAtivo())) {
-
-            throw new RegraNegocioException(
-                    "Produto inativo.");
-
-        }
 
     }
 
