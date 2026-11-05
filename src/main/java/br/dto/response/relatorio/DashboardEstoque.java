@@ -6,9 +6,27 @@ public record DashboardEstoque(
 
         ResumoEstoque resumo,
 
-        List<ProdutoSemMovimentacao> produtosSemMovimentacao,
+        List<ProdutoSemMovimentacao>
+        produtosSemMovimentacao,
 
-        List<SugestaoReposicao> sugestoesReposicao
+        List<SugestaoReposicao>
+        sugestoesReposicao,
+
+        List<GiroProduto>
+        giroEstoque,
+
+        List<GiroProduto>
+        produtosMaiorGiro,
+
+        List<GiroProduto>
+        produtosMenorGiro,
+
+        List<ProdutoSemEstoque>
+        produtosSemEstoque,
+
+        List<ProdutoEstoqueBaixo>
+        produtosEstoqueBaixo
 
 ) {
 }
+

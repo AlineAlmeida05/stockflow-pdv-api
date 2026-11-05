@@ -1,5 +1,6 @@
 package br.controller;
 
+import br.dto.response.PromocaoDisponivelResponse;
 import br.dto.response.PromocaoPainelResponse;
 import br.dto.request.PromocaoRequest;
 import br.entity.Promocao;
@@ -117,6 +118,14 @@ public class PromocaoController {
 
     }
 
+    @GetMapping("/existe")
+    public PromocaoDisponivelResponse existePromocao() {
 
+        return new PromocaoDisponivelResponse(
+                promocaoService
+                        .existePromocaoDisponivel()
+        );
+
+    }
 
 }

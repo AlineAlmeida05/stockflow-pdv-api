@@ -97,11 +97,12 @@ class ProdutoServiceTest {
         ProdutoCreateRequest request =
                 new ProdutoCreateRequest(
                         "Produto Teste",
-                        "Categoria Teste",
-                        "123456789",
-                        BigDecimal.valueOf(10.0),
-                        50,
-                        10
+                        "Categoria",
+                        "123",
+                        new BigDecimal("10.00"),
+                        10,
+                        5,
+                        new BigDecimal("7.50")
                 );
 
         Produto produtoSalvo = new Produto();
@@ -146,7 +147,8 @@ class ProdutoServiceTest {
                         "123456789",
                         BigDecimal.valueOf(10.0),
                         50,
-                        10
+                        10,
+                        new BigDecimal("7.50")
                 );
 
         Produto produtoSalvo = new Produto();
@@ -317,13 +319,14 @@ class ProdutoServiceTest {
 
         ProdutoUpdateRequest request =
                 new ProdutoUpdateRequest(
-                        "Produto Novo",
-                        "Bebidas",
-                        "123456",
-                        BigDecimal.valueOf(25.00),
-                        100,
-                        10,
-                        true
+                        "Produto Atualizado",
+                        "Categoria",
+                        "123",
+                        new BigDecimal("15.00"),
+                        20,
+                        5,
+                        true,
+                        new BigDecimal("8.00")
                 );
 
         when(usuarioAutenticadoService.tenantIdAtual())

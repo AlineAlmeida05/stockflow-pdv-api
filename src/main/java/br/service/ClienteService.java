@@ -14,6 +14,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import java.math.BigDecimal;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -272,9 +273,10 @@ public class ClienteService {
 
         List<Fiado> fiados =
                 fiadoRepository
-                        .findByClienteIdAndTenantId(
+                        .findByClienteIdAndTenantIdAndStatus(
                                 clienteId,
-                                tenantId
+                                tenantId,
+                                "pendente"
                         );
 
         BigDecimal totalFiado =
@@ -301,13 +303,42 @@ public class ClienteService {
                 totalFiado.subtract(
                         totalPago);
 
+        int diasSemPagamento = 0;
+
+        if (
+                saldoDevedor.compareTo(
+                        BigDecimal.ZERO
+                ) <= 0
+        ) {
+
+            diasSemPagamento = 0;
+
+        }
+
         BigDecimal creditoDisponivel =
                 cliente.getLimiteCredito()
                         .subtract(
                                 saldoDevedor);
 
-        int diasSemPagamento = 0;
-        if (!fiados.isEmpty()) {
+
+
+        if (!pagamentos.isEmpty()) {
+
+            LocalDateTime ultimoPagamento =
+                    pagamentos.stream()
+                            .map(Pagamento::getDataPagamento)
+                            .max(LocalDateTime::compareTo)
+                            .orElse(LocalDateTime.now());
+
+            diasSemPagamento =
+                    (int) Duration
+                            .between(
+                                    ultimoPagamento,
+                                    LocalDateTime.now()
+                            )
+                            .toDays();
+
+        } else if (!fiados.isEmpty()) {
 
             LocalDateTime fiadoMaisAntigo =
                     fiados.stream()
@@ -316,10 +347,11 @@ public class ClienteService {
                             .orElse(LocalDateTime.now());
 
             diasSemPagamento =
-                    (int) java.time.Duration
+                    (int) Duration
                             .between(
                                     fiadoMaisAntigo,
-                                    LocalDateTime.now())
+                                    LocalDateTime.now()
+                            )
                             .toDays();
         }
 

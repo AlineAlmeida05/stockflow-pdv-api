@@ -4,6 +4,8 @@ import java.math.BigDecimal;
 
 public record ResumoFiados(
 
+        BigDecimal valorTotalFiados,
+
         BigDecimal valorEmAberto,
 
         BigDecimal valorRecebido,
@@ -14,5 +16,4 @@ public record ResumoFiados(
 
         long clientesDevedores
 
-) {
-}
+) {}

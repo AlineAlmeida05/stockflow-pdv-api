@@ -4,7 +4,6 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
-
 import java.math.BigDecimal;
 
 public record ProdutoCreateRequest(
@@ -40,7 +39,15 @@ public record ProdutoCreateRequest(
         @PositiveOrZero(
                 message = "Estoque mínimo deve ser maior ou igual a zero."
         )
-        Integer estoqueMinimo
+        Integer estoqueMinimo,
+
+        @NotNull(
+                message = "Custo médio é obrigatório."
+        )
+        @PositiveOrZero(
+                message = "Custo médio deve ser maior ou igual a zero."
+        )
+                BigDecimal custoMedio
 
 ) {
 }

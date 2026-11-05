@@ -1,13 +1,10 @@
 package br.service;
 
-import br.dto.response.relatorio.DevedorDTO;
-import br.dto.response.relatorio.FiadoResumoDTO;
+import br.dto.response.relatorio.*;
 import br.repository.FiadoRepository;
 import br.repository.PagamentoRepository;
 import br.security.UsuarioAutenticadoService;
 import org.springframework.stereotype.Service;
-import br.dto.response.relatorio.DashboardFiados;
-import br.dto.response.relatorio.ResumoFiados;
 import br.entity.Fiado;
 import br.entity.Pagamento;
 import java.math.BigDecimal;
@@ -42,6 +39,20 @@ public class RelatorioFiadosService {
                                 tenantId
                         );
 
+        var fiadosPendentes =
+
+                fiados.stream()
+
+                        .filter(
+                                fiado ->
+                                        "pendente"
+                                                .equalsIgnoreCase(
+                                                        fiado.getStatus()
+                                                )
+                        )
+
+                        .toList();
+
         var pagamentos =
                 pagamentoRepository
                         .findByTenantId(
@@ -49,10 +60,8 @@ public class RelatorioFiadosService {
                         );
 
         BigDecimal totalFiado =
-                fiados.stream()
-                        .map(
-                                Fiado::getValorTotal
-                        )
+                fiadosPendentes.stream()
+                        .map(Fiado::getValorTotal)
                         .reduce(
                                 BigDecimal.ZERO,
                                 BigDecimal::add
@@ -83,14 +92,8 @@ public class RelatorioFiadosService {
                                 BigDecimal::add
                         );
         long pendentes =
-                fiados.stream()
-                        .filter(
-                                fiado ->
-                                        "pendente".equalsIgnoreCase(
-                                                fiado.getStatus()
-                                        )
-                        )
-                        .count();
+                fiadosPendentes.size();
+
 
         long pagos =
                 fiados.stream()
@@ -103,27 +106,20 @@ public class RelatorioFiadosService {
                         .count();
 
         long clientesDevedores =
-                fiados.stream()
-
-                        .filter(
-                                fiado ->
-                                        "pendente".equalsIgnoreCase(
-                                                fiado.getStatus()
-                                        )
-                        )
-
+                fiadosPendentes.stream()
                         .map(
                                 fiado ->
                                         fiado.getCliente()
                                                 .getId()
                         )
-
                         .distinct()
-
                         .count();
 
         var resumo =
+
                 new ResumoFiados(
+
+                        totalFiado,
 
                         valorEmAberto,
 
@@ -139,7 +135,7 @@ public class RelatorioFiadosService {
 
         var maioresDevedores =
 
-                fiados.stream()
+                fiadosPendentes.stream()
 
                         .map(
                                 Fiado::getCliente
@@ -150,13 +146,15 @@ public class RelatorioFiadosService {
                         .map(cliente -> {
 
                             BigDecimal totalFiadoCliente =
-
-                                    fiadoRepository
-                                            .findByClienteIdAndTenantId(
-                                                    cliente.getId(),
-                                                    tenantId
+                                    fiadosPendentes.stream()
+                                            .filter(
+                                                    fiado ->
+                                                            fiado.getCliente()
+                                                                    .getId()
+                                                                    .equals(
+                                                                            cliente.getId()
+                                                                    )
                                             )
-                                            .stream()
                                             .map(
                                                     Fiado::getValorTotal
                                             )
@@ -166,13 +164,15 @@ public class RelatorioFiadosService {
                                             );
 
                             BigDecimal totalPagoCliente =
-
-                                    pagamentoRepository
-                                            .findByClienteIdAndTenantId(
-                                                    cliente.getId(),
-                                                    tenantId
+                                    pagamentos.stream()
+                                            .filter(
+                                                    pagamento ->
+                                                            pagamento.getCliente()
+                                                                    .getId()
+                                                                    .equals(
+                                                                            cliente.getId()
+                                                                    )
                                             )
-                                            .stream()
                                             .map(
                                                     Pagamento::getValorPago
                                             )
@@ -251,6 +251,57 @@ public class RelatorioFiadosService {
 
                         .toList();
 
+        var evolucaoFiados =
+
+                fiadosPendentes.stream()
+
+                        .collect(
+
+                                java.util.stream.Collectors
+                                        .groupingBy(
+
+                                                fiado ->
+                                                        fiado.getDataLancamento()
+                                                                .toLocalDate(),
+
+                                                java.util.stream.Collectors
+                                                        .mapping(
+
+                                                                Fiado::getValorTotal,
+
+                                                                java.util.stream.Collectors
+                                                                        .reducing(
+                                                                                BigDecimal.ZERO,
+                                                                                BigDecimal::add
+                                                                        )
+                                                        )
+                                        )
+                        )
+
+                        .entrySet()
+
+                        .stream()
+
+                        .map(entry ->
+
+                                new EvolucaoFiados(
+
+                                        entry.getKey(),
+
+                                        entry.getValue()
+
+                                )
+                        )
+
+                        .sorted(
+                                java.util.Comparator
+                                        .comparing(
+                                                EvolucaoFiados::data
+                                        )
+                        )
+
+                        .toList();
+
 
         return new DashboardFiados(
 
@@ -258,7 +309,9 @@ public class RelatorioFiadosService {
 
                 maioresDevedores,
 
-                ultimosLancamentos
+                ultimosLancamentos,
+
+                evolucaoFiados
 
         );
     }
