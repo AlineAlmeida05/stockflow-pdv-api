@@ -24,8 +24,6 @@ public class Produto {
     @Column(nullable = false)
     private String codigo;
 
-    private String codigoBarras;
-
     private String promocaoMotivo;
 
     private String nome;

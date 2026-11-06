@@ -13,8 +13,6 @@ public record ProdutoResponse(
 
         String categoria,
 
-        String codigoBarras,
-
         BigDecimal custoMedio,
 
         BigDecimal precoVenda,
