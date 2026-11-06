@@ -73,55 +73,12 @@ public class MarketingAiService {
                 """;
     }
 
-    public MarketingAiSuggestionResponse sugerirConfiguracao(
-            String produtoNome
-    ) {
-
-        String nome =
-                produtoNome.toLowerCase();
-
-        if (
-                nome.contains("skol")
-                        ||
-                        nome.contains("heineken")
-                        ||
-                        nome.contains("brahma")
-                        ||
-                        nome.contains("corona")
-        ) {
-
-            return new MarketingAiSuggestionResponse(
-                    "Promocional",
-                    "Mega Promoção",
-                    "Gelo"
-            );
-        }
-
-        if (
-                nome.contains("jack")
-                        ||
-                        nome.contains("whisky")
-        ) {
-
-            return new MarketingAiSuggestionResponse(
-                    "Premium",
-                    "Lançamento",
-                    "Madeira"
-            );
-        }
-
-        return new MarketingAiSuggestionResponse(
-                "Promocional",
-                "Mega Promoção",
-                "Automático"
-        );
-    }
-
     public MarketingAiResultResponse gerarResultado(
             String produtoNome,
             BigDecimal precoPromocional,
             String tipoPromocao,
             String tom
+
     ) {
 
         String introducao;
@@ -158,15 +115,6 @@ public class MarketingAiService {
                                 produtoNome,
                                 precoPromocional
                         ),
-
-                List.of(
-                        "#promocao",
-                        "#adega",
-                        "#oferta",
-                        "#" + produtoNome
-                                .split(" ")[0]
-                                .toLowerCase()
-                ),
 
                 "%s\n\n%s\n\nR$ %.2f\n\n%s"
                         .formatted(

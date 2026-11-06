@@ -1020,8 +1020,9 @@ public class PromocaoService {
 
         PromocaoPainelResponse painel = listarPainel();
 
-        return !listarCandidatos().isEmpty()
-                || !listarAtivas().isEmpty();
+        return !painel.pendentes().isEmpty()
+                ||
+                !painel.ativas().isEmpty();
 
     }
 
