@@ -1,5 +1,6 @@
 package br.service;
 
+import br.dto.request.MovimentacaoEstoqueRequest;
 import br.dto.request.ProdutoCreateRequest;
 import br.dto.request.ProdutoUpdateRequest;
 import br.dto.response.ProdutoResponse;
@@ -13,6 +14,7 @@ import br.security.UsuarioAutenticadoService;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -23,15 +25,18 @@ public class ProdutoService {
     private final ProdutoRepository produtoRepository;
     private final UsuarioAutenticadoService usuarioAutenticadoService;
     private final AuditoriaService auditoriaService;
+    private final MovimentacaoEstoqueService movimentacaoEstoqueService;
 
     public ProdutoService(
             ProdutoRepository produtoRepository,
             UsuarioAutenticadoService usuarioAutenticadoService,
-            AuditoriaService auditoriaService) {
+            AuditoriaService auditoriaService,
+            MovimentacaoEstoqueService movimentacaoEstoqueService) {
 
         this.produtoRepository = produtoRepository;
         this.usuarioAutenticadoService = usuarioAutenticadoService;
         this.auditoriaService = auditoriaService;
+        this.movimentacaoEstoqueService = movimentacaoEstoqueService;
     }
 
     public List<ProdutoResponse> listar() {
@@ -88,19 +93,19 @@ public class ProdutoService {
         produto.setCategoria(
                 request.categoria());
 
-        produto.setCodigoBarras(
-                request.codigoBarras());
-
         produto.setPrecoVenda(
                 request.precoVenda());
 
-        produto.setEstoqueAtual(
-                request.estoqueAtual());
+        produto.setEstoqueAtual(0);
 
         produto.setEstoqueMinimo(
                 request.estoqueMinimo());
 
         produto.setAtivo(true);
+
+        produto.setCustoMedio(
+                BigDecimal.ZERO
+        );
 
         Usuario usuarioLogado = obterUsuarioLogado();
 
@@ -115,11 +120,23 @@ public class ProdutoService {
         produto.setDataCadastro(
                 LocalDateTime.now());
 
-        produto.setCustoMedio(
-                request.custoMedio()
-        );
-
         Produto produtoSalvo = produtoRepository.save(produto);
+
+        if (
+                request.estoqueInicial() > 0
+        ) {
+
+            movimentacaoEstoqueService.salvar(
+                    new MovimentacaoEstoqueRequest(
+                            produtoSalvo.getId(),
+                            "entrada",
+                            request.estoqueInicial(),
+                            produtoSalvo.getPrecoVenda(),
+                            "Estoque inicial do produto"
+                    )
+            );
+
+        }
 
         auditoriaService.registrar(
                 tenantAtual.getId(),
@@ -168,10 +185,6 @@ public class ProdutoService {
         produto.setCategoria(
                 request
                         .categoria());
-
-        produto.setCodigoBarras(
-                request
-                        .codigoBarras());
 
         produto.setPrecoVenda(
                 request
@@ -358,7 +371,6 @@ public class ProdutoService {
                 produto.getCodigo(),
                 produto.getNome(),
                 produto.getCategoria(),
-                produto.getCodigoBarras(),
                 produto.getCustoMedio(),
                 produto.getPrecoVenda(),
                 produto.getEstoqueAtual(),

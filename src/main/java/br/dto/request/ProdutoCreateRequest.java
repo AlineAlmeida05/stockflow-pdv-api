@@ -15,8 +15,6 @@ public record ProdutoCreateRequest(
 
         String categoria,
 
-        String codigoBarras,
-
         @NotNull(
                 message = "Preço de venda é obrigatório."
         )
@@ -26,12 +24,12 @@ public record ProdutoCreateRequest(
         BigDecimal precoVenda,
 
         @NotNull(
-                message = "Estoque atual é obrigatório."
+                message = "Estoque inicial é obrigatório."
         )
         @PositiveOrZero(
-                message = "Estoque mínimo deve ser maior que zero."
+                message = "Estoque inicial deve ser maior ou igual a zero."
         )
-        Integer estoqueAtual,
+        Integer estoqueInicial,
 
         @NotNull(
                 message = "Estoque mínimo é obrigatório."
@@ -39,15 +37,7 @@ public record ProdutoCreateRequest(
         @PositiveOrZero(
                 message = "Estoque mínimo deve ser maior ou igual a zero."
         )
-        Integer estoqueMinimo,
-
-        @NotNull(
-                message = "Custo médio é obrigatório."
-        )
-        @PositiveOrZero(
-                message = "Custo médio deve ser maior ou igual a zero."
-        )
-                BigDecimal custoMedio
+        Integer estoqueMinimo
 
 ) {
 }

@@ -15,8 +15,6 @@ public record ProdutoUpdateRequest(
 
         String categoria,
 
-        String codigoBarras,
-
         @NotNull(
                 message = "Preço de venda é obrigatório."
         )
