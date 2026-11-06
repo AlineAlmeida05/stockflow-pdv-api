@@ -131,7 +131,7 @@ public class ProdutoService {
                             produtoSalvo.getId(),
                             "entrada",
                             request.estoqueInicial(),
-                            produtoSalvo.getPrecoVenda(),
+                            request.precoCompraInicial(),
                             "Estoque inicial do produto"
                     )
             );

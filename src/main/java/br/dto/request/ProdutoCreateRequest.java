@@ -16,6 +16,14 @@ public record ProdutoCreateRequest(
         String categoria,
 
         @NotNull(
+                message = "Preço de compra inicial é obrigatório."
+        )
+        @Positive(
+                message = "Preço de compra inicial deve ser maior que zero."
+        )
+        BigDecimal precoCompraInicial,
+
+        @NotNull(
                 message = "Preço de venda é obrigatório."
         )
         @Positive(
