@@ -1,5 +1,6 @@
 package br.service;
 
+import br.exception.RegraNegocioException;
 import br.repository.MarketingCampaignRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -11,7 +12,6 @@ import br.entity.Produto;
 import br.exception.RecursoNaoEncontradoException;
 import br.entity.Usuario;
 import br.entity.Tenant;
-import br.entity.Empresa;
 import br.dto.response.MarketingAiResultResponse;
 import br.entity.MarketingCampaign;
 import org.springframework.web.server.ResponseStatusException;
@@ -25,21 +25,18 @@ public class MarketingCampaignService {
     private final MarketingCampaignRepository marketingCampaignRepository;
     private final MarketingAiService marketingAiService;
     private final ProdutoRepository produtoRepository;
-    private final EmpresaService empresaService;
     private final UsuarioAutenticadoService usuarioAutenticadoService;
 
     public MarketingCampaignService(
             MarketingCampaignRepository marketingCampaignRepository,
             MarketingAiService marketingAiService,
             ProdutoRepository produtoRepository,
-            EmpresaService empresaService,
             UsuarioAutenticadoService usuarioAutenticadoService
     ) {
 
         this.marketingCampaignRepository = marketingCampaignRepository;
         this.marketingAiService = marketingAiService;
         this.produtoRepository = produtoRepository;
-        this.empresaService = empresaService;
         this.usuarioAutenticadoService = usuarioAutenticadoService;
     }
 
@@ -47,15 +44,12 @@ public class MarketingCampaignService {
             MarketingCampaignCreateRequest request
     ) {
 
-        Usuario usuarioLogado = obterUsuarioLogado();
-
         Produto produto =
                 produtoRepository
                         .findByIdAndTenantId(
                                 request.produtoId(),
-                                usuarioLogado
-                                        .getTenant()
-                                        .getId()
+                                usuarioAutenticadoService
+                                        .tenantIdAtual()
                         )
                         .orElseThrow(
                                 () ->
@@ -64,11 +58,13 @@ public class MarketingCampaignService {
                                         )
                         );
 
-        Tenant tenant = usuarioLogado.getTenant();
+        validarProdutoElegivel(
+                produto
+        );
 
-        Empresa empresa =
-                empresaService
-                        .obterEntidadeEmpresa();
+        Tenant tenant =
+                usuarioAutenticadoService
+                        .tenantAtual();
 
         BigDecimal precoCampanha =
                 produto.getPrecoPromocional() != null
@@ -158,9 +154,9 @@ public class MarketingCampaignService {
 
     public List<MarketingCampaignResponse> listar() {
 
-        Usuario usuarioLogado = obterUsuarioLogado();
-
-        Tenant tenant = usuarioLogado.getTenant();
+        Tenant tenant =
+                usuarioAutenticadoService
+                        .tenantAtual();
 
         return marketingCampaignRepository
                 .findByTenantOrderByCriadoEmDesc(
@@ -203,22 +199,19 @@ public class MarketingCampaignService {
 
     }
 
-    private Usuario obterUsuarioLogado() {
+    private void validarProdutoElegivel(
+            Produto produto
+    ) {
 
-        Usuario usuarioLogado =
-                usuarioAutenticadoService
-                        .usuarioLogado();
+        if (!Boolean.TRUE.equals(
+                produto.getPromocaoAtiva()
+        )) {
 
-        if (usuarioLogado == null) {
-
-            throw new ResponseStatusException(
-                    HttpStatus.UNAUTHORIZED,
-                    "Usuário não autenticado."
+            throw new RegraNegocioException(
+                    "Produto não possui promoção ativa."
             );
 
         }
-
-        return usuarioLogado;
 
     }
 }
