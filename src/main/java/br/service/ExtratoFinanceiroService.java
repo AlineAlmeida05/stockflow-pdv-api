@@ -15,6 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 @Service
 public class ExtratoFinanceiroService {
@@ -39,16 +40,15 @@ public class ExtratoFinanceiroService {
     public List<MovimentacaoFinanceiraResponse>
     listarMovimentacoes() {
 
-        Usuario usuarioLogado = obterUsuarioLogado();
+        UUID tenantId =
+                usuarioAutenticadoService
+                        .tenantIdAtual();
 
         List<MovimentacaoFinanceiraResponse>
                 movimentacoesVenda =
 
-                vendaRepository
-                        .findByTenantId(
-                                usuarioLogado
-                                        .getTenant()
-                                        .getId()
+                vendaRepository.findByTenantId(
+                        tenantId
                         )
                         .stream()
 
@@ -73,12 +73,9 @@ public class ExtratoFinanceiroService {
         List<MovimentacaoFinanceiraResponse>
                 movimentacoesFiado =
 
-                fiadoRepository
-                        .findByTenantId(
-                                usuarioLogado
-                                        .getTenant()
-                                        .getId()
-                        )
+                fiadoRepository.findByTenantId(
+                        tenantId
+                )
                         .stream()
                         .map(fiado ->
                                 new MovimentacaoFinanceiraResponse(
@@ -100,11 +97,8 @@ public class ExtratoFinanceiroService {
         List<MovimentacaoFinanceiraResponse>
                 movimentacoesPagamento =
 
-                pagamentoRepository
-                        .findByTenantId(
-                                usuarioLogado
-                                        .getTenant()
-                                        .getId()
+                pagamentoRepository.findByTenantId(
+                                tenantId
                         )
                         .stream()
                         .map(pagamento ->
@@ -151,15 +145,14 @@ public class ExtratoFinanceiroService {
     public IndicadoresExtratoResponse
     obterIndicadores() {
 
-        Usuario usuarioLogado =
-                obterUsuarioLogado();
+        UUID tenantId =
+                usuarioAutenticadoService
+                        .tenantIdAtual();
 
         BigDecimal totalRecebido =
                 pagamentoRepository
                         .findByTenantId(
-                                usuarioLogado
-                                        .getTenant()
-                                        .getId()
+                                tenantId
                         )
                         .stream()
                         .map(
@@ -175,9 +168,7 @@ public class ExtratoFinanceiroService {
         BigDecimal totalFiado =
                 fiadoRepository
                         .findByTenantId(
-                                usuarioLogado
-                                        .getTenant()
-                                        .getId()
+                                tenantId
                         )
                         .stream()
                         .map(
@@ -200,9 +191,7 @@ public class ExtratoFinanceiroService {
         BigDecimal recebimentosHoje =
                 pagamentoRepository
                         .findByTenantId(
-                                usuarioLogado
-                                        .getTenant()
-                                        .getId()
+                                tenantId
                         )
                         .stream()
                         .filter(
@@ -226,9 +215,7 @@ public class ExtratoFinanceiroService {
 
                 (int) fiadoRepository
                         .findByTenantId(
-                                usuarioLogado
-                                        .getTenant()
-                                        .getId()
+                                tenantId
                         )
                         .stream()
                         .map(
@@ -245,25 +232,6 @@ public class ExtratoFinanceiroService {
                 recebimentosHoje,
                 clientesDevedores
         );
-
-    }
-
-    private Usuario obterUsuarioLogado() {
-
-        Usuario usuarioLogado =
-                usuarioAutenticadoService
-                        .usuarioLogado();
-
-        if (usuarioLogado == null) {
-
-            throw new ResponseStatusException(
-                    HttpStatus.UNAUTHORIZED,
-                    "Usuário não autenticado."
-            );
-
-        }
-
-        return usuarioLogado;
 
     }
 
