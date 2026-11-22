@@ -1,8 +1,6 @@
 package br.service;
 
-import br.dto.request.CancelarVendaRequest;
-import br.dto.request.ItemVendaRequest;
-import br.dto.request.VendaRequest;
+import br.dto.request.*;
 import br.dto.response.ItemVendaResponse;
 import br.dto.response.VendaDetalhesResponse;
 import br.dto.response.VendaResponse;
@@ -809,6 +807,312 @@ public class VendaService {
     private UUID obterTenantIdAtual() {
 
         return usuarioAutenticadoService.tenantIdAtual();
+
+    }
+
+    @Transactional
+    public UUID criarVendaDelivery(
+            VendaDeliveryRequest request
+    ) {
+
+        Usuario usuarioLogado = obterUsuarioLogado();
+
+        Tenant tenantAtual =
+                usuarioAutenticadoService
+                        .tenantAtual();
+
+        BigDecimal valorTotal = BigDecimal.ZERO;
+
+        Integer quantidadeItens = 0;
+
+        for (VendaDeliveryItemRequest item : request.itens()) {
+
+            Produto produto =
+                    produtoRepository
+                            .findByIdAndTenantId(
+                                    item.produtoId(),
+                                    obterTenantIdAtual()
+                            )
+                            .orElseThrow(() ->
+                                    new RecursoNaoEncontradoException(
+                                            "Produto não encontrado."
+                                    )
+                            );
+
+            BigDecimal precoAplicado;
+
+            if (Boolean.TRUE.equals(
+                    produto.getPromocaoAtiva())
+                    && produto.getPrecoPromocional() != null) {
+
+                precoAplicado =
+                        produto.getPrecoPromocional();
+
+            } else {
+
+                precoAplicado = produto.getPrecoVenda();
+
+            }
+
+            BigDecimal subtotal =
+                    precoAplicado.multiply(
+                            BigDecimal.valueOf(
+                                    item.quantidade()
+                            )
+                    );
+
+            valorTotal =
+                    valorTotal.add(
+                            subtotal
+                    );
+
+            quantidadeItens += item.quantidade();
+
+        }
+
+        Venda venda = new Venda();
+
+        venda.setDataVenda(
+                LocalDateTime.now()
+        );
+
+        venda.setFormaPagamento(
+                request.formaPagamento()
+        );
+
+        venda.setValorTotal(
+                valorTotal
+        );
+
+        venda.setQuantidadeItens(
+                quantidadeItens
+        );
+
+        venda.setStatus(
+                "finalizada"
+        );
+
+        venda.setClienteNome(
+                request.clienteNome()
+        );
+
+        venda.setTenant(
+                tenantAtual
+        );
+
+        venda.setUsuario(
+                usuarioLogado
+        );
+
+        venda = vendaRepository.save(
+                venda
+        );
+
+        for (VendaDeliveryItemRequest item : request.itens()) {
+
+            Produto produto =
+                    produtoRepository
+                            .findByIdAndTenantId(
+                                    item.produtoId(),
+                                    obterTenantIdAtual()
+                            )
+                            .orElseThrow(() ->
+                                    new RecursoNaoEncontradoException(
+                                            "Produto não encontrado."
+                                    )
+                            );
+
+            ItemVenda itemVenda = new ItemVenda();
+
+            itemVenda.setVenda(
+                    venda
+            );
+
+            itemVenda.setProduto(
+                    produto
+            );
+
+            itemVenda.setProdutoNome(
+                    produto.getNome()
+            );
+
+            itemVenda.setQuantidade(
+                    item.quantidade()
+            );
+
+            BigDecimal precoAplicado;
+
+            if (Boolean.TRUE.equals(
+                    produto.getPromocaoAtiva())
+                    && produto.getPrecoPromocional() != null) {
+
+                precoAplicado = produto.getPrecoPromocional();
+
+            } else {
+
+                precoAplicado = produto.getPrecoVenda();
+
+            }
+
+            itemVenda.setValorUnitario(
+                    precoAplicado
+            );
+
+            itemVenda.setSubtotal(
+                    precoAplicado.multiply(
+                            BigDecimal.valueOf(
+                                    item.quantidade()
+                            )
+                    )
+            );
+
+            itemVenda.setPromocaoAplicada(
+                    Boolean.TRUE.equals(
+                            produto.getPromocaoAtiva()
+                    )
+            );
+
+            itemVendaRepository.save(
+                    itemVenda
+            );
+
+            if (Boolean.TRUE.equals(
+                    produto.getPromocaoAtiva())) {
+
+                var promocaoOpt =
+                        promocaoRepository
+                                .findByProdutoAndAtivaTrue(
+                                        produto
+                                );
+
+                promocaoOpt.ifPresent(promocao -> {
+
+                    Integer vendidas = promocao.getUnidadesVendidas();
+
+                    if (vendidas == null) {
+                        vendidas = 0;
+                    }
+
+                    promocao.setUnidadesVendidas(
+                            vendidas + item.quantidade()
+                    );
+
+                    BigDecimal receitaAtual = promocao.getReceitaGerada();
+
+                    if (receitaAtual == null) {
+                        receitaAtual = BigDecimal.ZERO;
+                    }
+
+                    BigDecimal receitaVenda =
+                            precoAplicado.multiply(
+                                    BigDecimal.valueOf(
+                                            item.quantidade()
+                                    )
+                            );
+
+                    promocao.setReceitaGerada(
+                            receitaAtual.add(
+                                    receitaVenda
+                            )
+                    );
+
+                    promocaoRepository.save(
+                            promocao
+                    );
+
+                    if (promocao.getMetaUnidades() != null
+                            && promocao.getUnidadesVendidas()
+                            >= promocao.getMetaUnidades()) {
+
+                        promocaoService.finalizarMetaAtingida(
+                                promocao,
+                                produto
+                        );
+
+                    }
+                });
+            }
+
+            if (produto.getEstoqueAtual()
+                    < item.quantidade()) {
+
+                throw new RegraNegocioException(
+                        "Estoque insuficiente para o produto: "
+                                + produto.getNome()
+                );
+            }
+
+            produto.setEstoqueAtual(
+                    produto.getEstoqueAtual()
+                            - item.quantidade()
+            );
+
+            produto.setDataAtualizacao(
+                    LocalDateTime.now()
+            );
+
+            produtoRepository.save(
+                    produto
+            );
+
+            MovimentacaoEstoque movimentacao =
+                    new MovimentacaoEstoque();
+
+            movimentacao.setProduto(
+                    produto
+            );
+
+            movimentacao.setProdutoNome(
+                    produto.getNome()
+            );
+
+            movimentacao.setTipo(
+                    "saida"
+            );
+
+            movimentacao.setQuantidade(
+                    item.quantidade()
+            );
+
+            movimentacao.setPrecoCompra(
+                    BigDecimal.ZERO
+            );
+
+            movimentacao.setUsuario(
+                    usuarioLogado
+            );
+
+            movimentacao.setTenant(
+                    tenantAtual
+            );
+
+            movimentacao.setDataMovimentacao(
+                    LocalDateTime.now()
+            );
+
+            movimentacao.setObservacao(
+                    "Saída automática via Delivery"
+            );
+
+            movimentacaoRepository.save(
+                    movimentacao
+            );
+
+        }
+
+        auditoriaService.registrar(
+                tenantAtual.getId(),
+                tenantAtual.getNome(),
+                usuarioLogado.getId(),
+                usuarioLogado.getNome(),
+                "VENDA_DELIVERY_CRIADA",
+                "Venda",
+                venda.getId().toString(),
+                "Venda criada automaticamente a partir do pedido delivery "
+                        + request.pedidoDeliveryId()
+        );
+
+        return venda.getId();
 
     }
 

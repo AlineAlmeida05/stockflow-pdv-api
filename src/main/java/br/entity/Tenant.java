@@ -62,6 +62,9 @@ public class Tenant {
     @Column(name = "delivery_habilitado")
     private Boolean deliveryHabilitado;
 
+    @Column(name = "clientes_habilitado")
+    private Boolean clientesHabilitado;
+
     @PrePersist
     public void prePersist() {
 

@@ -54,6 +54,9 @@ public class SecurityConfig {
                                 "/api/auth/reset-password",
                                 "/api/auth/reset-password/validar",
                                 "/api/tenants/slug/**",
+
+                                "/delivery/cardapio/**",
+
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
                                 "/v3/api-docs/**"

@@ -38,7 +38,9 @@ public record TenantRequest(
 
         Boolean marketingIaHabilitado,
 
-        Boolean deliveryHabilitado
+        Boolean deliveryHabilitado,
+
+        Boolean clientesHabilitado
 
 ) {
 }
