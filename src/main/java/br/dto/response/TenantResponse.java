@@ -43,6 +43,8 @@ public record TenantResponse(
 
         Boolean deliveryHabilitado,
 
+        Boolean clientesHabilitado,
+
         LocalDateTime criadoEm
 
 ) {

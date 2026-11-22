@@ -1,0 +1,2 @@
+ALTER TABLE tenant
+    ADD COLUMN clientes_habilitado BOOLEAN NOT NULL DEFAULT FALSE;

@@ -69,6 +69,9 @@ public class TenantService {
         tenant.setUf(request.uf());
         tenant.setMarketingIaHabilitado( request.marketingIaHabilitado());
         tenant.setDeliveryHabilitado(request.deliveryHabilitado());
+        tenant.setClientesHabilitado(
+                request.clientesHabilitado()
+        );
 
         validarSuperAdmin();
 
@@ -268,6 +271,9 @@ public class TenantService {
         tenant.setUf(request.uf());
         tenant.setMarketingIaHabilitado(request.marketingIaHabilitado());
         tenant.setDeliveryHabilitado(request.deliveryHabilitado());
+        tenant.setClientesHabilitado(
+                request.clientesHabilitado()
+        );
 
         return montarResponse(
                 tenantRepository.save(tenant)
@@ -332,6 +338,8 @@ public class TenantService {
                 tenant.getMarketingIaHabilitado(),
 
                 tenant.getDeliveryHabilitado(),
+
+                tenant.getClientesHabilitado(),
 
                 tenant.getCriadoEm()
 
